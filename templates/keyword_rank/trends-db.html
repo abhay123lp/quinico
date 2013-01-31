@@ -1,0 +1,63 @@
+{% extends "base/base.json" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+{
+ "data":
+  {
+    "cols":
+     [
+       {"label":"Date","type":"string"},
+       {"label":"Value","type":"number"}
+     ],
+    "rows":[
+
+ {% for item in ranks %}
+  {% if forloop.first %}
+
+    {"c":[{"v":"{{item.date|date:"Y-m-d"}}"},{"v":{{item.rank}}}]}
+
+  {% else %}
+
+   ,{"c":[{"v":"{{item.date|date:"Y-m-d"}}"},{"v":{{item.rank}}}]}
+
+  {% endif %}
+  {% endfor %}
+
+]},
+
+ "options":
+   {
+    "title":"KEYWORD RANK: {{domain_name}} | {{keyword_name|escapejs}}",
+    "width":"{{dash_settings.0.width}}",
+    "height":"{{dash_settings.0.height}}",
+    "fontSize":"{{dash_settings.0.font}}",
+    "hAxis":{"textPosition":"out","slantedText":"true"},
+    "series":{"0":{"color":"#1c94c4","visibleInLegend":"false"}},
+    "curveType":"function",
+    "pointSize":"3"
+   }
+
+}
+
+{% endblock %}
+

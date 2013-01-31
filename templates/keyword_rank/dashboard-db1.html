@@ -1,0 +1,55 @@
+{% extends "base/base-table.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<table border=1 class="standard">
+ <tr>
+  <th colspan="4">
+   <font style="font-size:{{dash_settings.0.font}}px;">Keyword Position Changes</font>
+  </th>
+ </tr>
+ <tr>
+  <th colspan="4">
+   <font style="font-size:{{dash_settings.0.font}}px;">
+   {{domain}}
+   <br>
+   ({{country.0.gl}})
+   </font>
+  </th>
+ </tr>
+ <tr>
+   <th><font style="font-size:{{dash_settings.0.font}}px;">Since</font></th>
+   <th colspan="3"><font style="font-size:{{dash_settings.0.font}}px;">Changes</font></th>
+ </tr>
+ {% for date,values in changes %}
+ <tr>
+  <td><font style="font-size:{{dash_settings.0.font}}px;">{{date}}</font></td>
+  <td align="center"><img src="/html/images/up.png"><font style="font-size:{{dash_settings.0.font}}px;"> {{values.up}}</font></font></td>
+  <td align="center"><img src="/html/images/down.png"><font style="font-size:{{dash_settings.0.font}}px;"> {{values.down}}</font></td>
+  <td align="center"><img src="/html/images/unch.png"><font style="font-size:{{dash_settings.0.font}}px;"> {{values.unch}}</font></td>
+ </tr>
+ {% endfor %}
+</table>
+
+{% endblock %}
+
+

@@ -1,0 +1,17 @@
+{% extends "base/base.xml" %}
+{% block content %}
+
+<status>
+ <title>{{title}}</title>
+ <url>{{url}}</url>
+ <date>{{date|date:"Y-m-d"}}</date>
+ <metrics>
+  {% for key,value in metrics.0.items %}
+   <{{key}}> {{value}} </{{key}}>
+  {% endfor %}
+ </metrics>
+</status>
+
+{% endblock %}
+
+

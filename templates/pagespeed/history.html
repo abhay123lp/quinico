@@ -1,0 +1,78 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+{% load humanize %}
+
+<b><i>PAGESPEED HISTORY REPORT</i></b>
+
+<br>
+<br>
+
+ <table class="tiny_no_border">
+  <tr>
+   <td>Domain:<b>{{domain}}</b></td>
+   <td>Url:<b>{{url}}</b></td>
+   <td>Strategy:<b>{{strategy}}</b></td>
+  </tr>
+ </table>
+
+<br>
+
+<table class="standard">
+ <tr>
+  <th>date</th>
+  <th>score</th>
+  <th>hosts</th>
+  <th>resources</th>
+  <th>static<br>resources</th>
+  <th>css<br>resources</th>
+  <th>request<br>bytes</th>
+  <th>text resp<br>bytes</th>
+  <th>css resp<br>bytes</th>
+  <th>html resp<br>bytes</th>
+  <th>image resp<br>bytes</th>
+  <th>js resp<br>bytes</th>
+  <th>other resp<br>bytes</th>
+ </tr>
+
+ {% for row in dates %}
+ <tr>
+  <td>{{row.date|date:"Y-m-d"}}</td>
+  <td>{{row.score}}</td>
+  <td>{{row.numberHosts|intcomma}}</td>
+  <td>{{row.numberResources|intcomma}}</td>
+  <td>{{row.numberStaticResources|intcomma}}</td>
+  <td>{{row.numberCssResources|intcomma}}</td>
+  <td>{{row.totalRequestBytes|intcomma}}</td>
+  <td>{{row.textResponseBytes|intcomma}}</td>
+  <td>{{row.cssResponseBytes|intcomma}}</td>
+  <td>{{row.htmlResponseBytes|intcomma}}</td>
+  <td>{{row.imageResponseBytes|intcomma}}</td>
+  <td>{{row.javascriptResponseBytes|intcomma}}</td>
+  <td>{{row.otherResponseBytes|intcomma}}</td>
+ </tr>
+ {% endfor %}
+</table>
+
+
+{% endblock %}

@@ -1,0 +1,240 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<b><i>DASHBOARD ADMIN CONSOLE</i></b>
+
+<script type="text/javascript">
+
+   // Submit
+   $(function() {
+
+      //Save
+      $("#save").button();
+
+      //Launch
+      $(".link").button().css({width:75});
+   });
+
+</script>
+
+<br>
+<br>
+{% if not user.is_authenticated %}
+    <br>
+    You must login to customize your dashboard settings
+    <br>
+   {% endif %}
+   
+<br>
+<br>
+
+   <form method="POST" name="db_select" id="db_select" action="/dashboard/admin">
+   {% csrf_token %}
+
+ <table>
+  <tr>
+   <td>
+
+    <!-- Visual Settings -->
+    <table width="250" height="350" class="tiny_outside_border">
+     <tr>
+      <th colspan="2" valign="top">
+       Dashboard Settings
+      </th>
+     </tr>
+     <tr>
+      <td>Slots</td>
+      <td align="right">
+       <select class="standard" name="slots" id="slots" class="tiny">
+        <option value="2x2" {% if dash_settings.0.slots == '2x2'%}selected{% endif %}>2 x 2</option>
+        <option value="3x3" {% if dash_settings.0.slots == '3x3'%}selected{% endif %}>3 x 3</option>
+       </select>
+      </td>
+     </tr>
+     <tr>
+      <td>Frequency</td>
+      <td align="right"><input type="text" class="input_dash_nums" name="frequency" id="frequency" size="1" maxlength="5" value="{{dash_settings.0.frequency}}">
+     </tr>
+     <tr>
+      <td>Font Size</td>
+      <td align="right"><input type="text" class="input_dash_nums" name="font" id="font" size="1" maxlength="2" value="{{dash_settings.0.font}}">
+     </tr>
+     <tr>
+      <td>Chart/Graph Width</td>
+      <td align="right"><input type="text" class="input_dash_nums" name="width" id="width" size="1" maxlength="4" value="{{dash_settings.0.width}}">
+     </tr>
+     <tr>
+      <td>Chart/Graph Height</td>
+      <td align="right"><input type="text" class="input_dash_nums" name="height" id="height" size="1" maxlength="4" value="{{dash_settings.0.height}}">
+     </tr>
+    </table>
+
+   </td>
+   <td>
+
+    <!-- Standard Graph Inclusions -->
+    <table width="250" height="350" class="tiny_outside_border">
+     <tr>
+      <th colspan="2" valign="top">
+       Standard Graph Inclusions
+      </th>
+     </tr>
+     <tr>
+      <td colspan="2" height="10"></td>
+     </tr>
+     <tr>
+      <td>Keywords</td>
+      <td>
+        {% if subscription.0.keywords %}
+         <input type="checkbox" checked="yes" name="keywords"/>
+        {% else %}
+         <input type="checkbox" name="keywords"/>
+        {% endif %}
+      </td>
+     </tr>
+     <tr>
+      <td>Pagespeed</td>
+      <td>
+        {% if subscription.0.pagespeed %}
+         <input type="checkbox" checked="yes" name="pagespeed"/>
+        {% else %}
+         <input type="checkbox" name="pagespeed"/>
+        {% endif %}
+      </td>
+     </tr>
+     <tr>
+      <td>Webpagetest</td>
+      <td>
+        {% if subscription.0.webpagetest %}
+         <input type="checkbox" checked="yes" name="webpagetest"/>
+        {% else %}
+         <input type="checkbox" name="webpagetest"/>
+        {% endif %}
+      </td>
+     </tr>
+     <tr>
+      <td>SEO</td>
+      <td>
+        {% if subscription.0.seo %}
+         <input type="checkbox" checked="yes" name="seo"/>
+        {% else %}
+         <input type="checkbox" name="seo"/>
+        {% endif %}
+      </td>
+     </tr>
+     <tr>
+      <td>Webmaster</td>
+      <td>
+        {% if subscription.0.webmaster %}
+         <input type="checkbox" checked="yes" name="webmaster"/>
+        {% else %}
+         <input type="checkbox" name="webmaster"/>
+        {% endif %}
+      </td>
+     </tr>
+
+    </table>
+
+   </td>
+  </tr>
+
+  <tr>
+   <td height="25"></td>
+  </tr>
+
+  <tr>
+   <td colspan="2">
+
+    {% if user.is_authenticated %}
+
+    <!-- Custom Graph Inclusions -->
+    <table width="511" class="tiny_outside_border">
+     <tr>
+      <th colspan="2">Custom Graph Inclusions</th>
+     </tr>
+
+    {% if urls %}
+     <tr>
+      <td></td>
+      <td><b>delete</b></td>
+     </tr>
+    {% endif %}
+
+     {% for url in urls %}
+     <tr>
+      <td><textarea id="url_txt_{{url.id}}" name="url_txt_{{url.id}}" class="textarea_url" readonly>{{url.url}}</textarea></td>
+      <td><input type="checkbox" name="url_del_{{url.id}}"/></td>
+     </tr>
+     {% endfor %}
+
+     <tr>
+      <td colspan="2" height="25"></td>
+     </tr>
+
+     <tr>
+      <td colspan="2">
+        <a href="javascript:changeElement('add','urls','url','65');">Insert Row</a>
+        <br>
+        <a href="javascript:changeElement('remove','urls','url');">Remove Row</a>
+      </td>
+     </tr>
+     <tr>
+      <td colspan="2">
+       <div id="urls">
+        <input id="url_1" class="dash_url" name="url" type="text" size="65" value="">
+        <br id="url_br_1" name="url_br">
+       </div>
+      </td>
+     </tr>
+    </table>
+
+   {% endif %}
+
+   </td>
+  </tr>
+
+ </table>
+
+    <br>
+
+    <!-- Buttons -->
+    <table class="table.tiny_no_border">
+     <tr>
+      <td valign="top">
+       <input class="submit-button" id="save" type="submit" value="save" style="width:65"/>
+      </td>
+      <td valign="top">
+       <a class="link" href="/dashboard">Launch</a>
+      </td>
+     </tr>
+    </table>
+
+   </form>
+
+
+   <br>
+   <br>
+{% endblock %}
+
+
+

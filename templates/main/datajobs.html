@@ -1,0 +1,114 @@
+{% extends 'admin/base_site.html' %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+{% block content %}
+<br>
+<br>
+<form name="datajobs" method="POST" action="/admin/datajobs">
+{% csrf_token %}
+<table>
+ <tr>
+  <th>Job Name</th>
+  <th>Enabled</th>
+  <th>Job Hour</th>
+  <th>Job Minute</th>
+  <th>Status</th>
+ </tr>
+ {% for job in jobs %}
+ <tr>
+  <td>{{job.job_name}}</td>
+  <td><input type="checkbox" name="{{job.job_name}}_enabled" {% if job.job_status %}checked{% endif %}></td>
+  <td><input type="text" name="{{job.job_name}}_hour" value="{{job.job_hour}}"></td>
+  <td><input type="text" name="{{job.job_name}}_minute" value="{{job.job_minute}}"></td>
+  <td>{% if job.running %}<font color="red">running</font>{% else %}<font color="green">not running</font>{% endif %}</td>
+ {% endfor %}
+ </tr>
+ <tr>
+  <td colspan="2" align="left"><b>Time Zone:</b>{{TIME_ZONE}}</td>
+  <td align="right" colspan="3">
+   <input type="submit" value="save">
+  </td>
+ </tr>
+ {% if form.errors %}
+ <tr>
+  <td colspan="5" bgcolor="yellow">
+   {% if form.pagespeed_hour.errors %}
+    pagespeed error (hour): {% for error in form.pagespeed_hour.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.pagespeed_minute.errors %}
+    pagespeed error (minute): {% for error in form.pagespeed_minute.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.webmaster_hour.errors %}
+    webmaster error (hour): {% for error in form.webmaster_hour.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.webmaster_minute.errors %}
+    webmaster error (minute): {% for error in form.webmaster_minute.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.seomoz_hour.errors %}
+    seomoz error (hour): {% for error in form.seomoz_hour.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.seomoz_minute.errors %}
+    seomoz error (minute): {% for error in form.seomoz_minute.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.keyword_rank_hour.errors %}
+    keyword_rank error (hour): {% for error in form.keyword_rank_hour.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.keyword_rank_minute.errors %}
+    keyword_rank error (minute): {% for error in form.keyword_rank_minute.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.webpagetest_hour.errors %}
+    webpagetest error (hour): {% for error in form.webpagetest_hour.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.webpagetest_minute.errors %}
+    webpagetest error (minute): {% for error in form.webpagetest_minute.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+  </td>
+ </tr>
+ {% endif %}
+</table>
+</form>
+
+<br>
+<br>
+{% if cron %}
+<div class="help">
+RAW CRONTAB
+<br>
+** Crontab will be completely re-written on save **
+<br>
+<br>
+{% for line in cron %}
+{{line}}<br>
+{% endfor %}
+</div>
+{% endif %}
+
+{% endblock %}
+

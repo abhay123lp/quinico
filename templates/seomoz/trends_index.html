@@ -1,0 +1,165 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<b><i>SEO TRENDS</i></b>
+
+<br>
+<br>
+
+  <script>
+   // Date Pickers and Submit
+   $(function() {
+
+      //From Date
+      $("#date_from").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //To Date
+      $("#date_to").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //Submit
+      $("#submit").button();
+   });
+  </script>
+
+  
+  <script>
+   // Submit
+   $(function() {
+
+      //Submit
+      $("#submit").button();
+   });
+  </script>
+
+
+
+   <form name="seo_select" id="seo_select" action="/seomoz/trends" method="get">
+    <table>
+
+     <tr>
+      <td>Url</td>
+      <td>
+       <select class="standard" name="url" id="url">
+       {% for url in urls %}
+           <option value="{{url}}">{{url}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
+
+     <tr>
+      <td>Metric</td>
+      <td>
+       <select class="standard" name="metric" id="metric">
+        {% if account_type.0.config_value == 'free' %}
+        <option value="uid">{% for row in descriptions %}{% if row.metric == 'uid' %}{{row.column_description}} (uid){% endif %}{% endfor %}</option>
+        <option value="ueid">{% for row in descriptions %}{% if row.metric == 'ueid' %}{{row.column_description}} (ueid){% endif %}{% endfor %}</option>
+        <option value="fmrp">{% for row in descriptions %}{% if row.metric == 'fmrp' %}{{row.column_description}} (fmrp){% endif %}{% endfor %}</option>
+        <option value="umrp">{% for row in descriptions %}{% if row.metric == 'umrp' %}{{row.column_description}} (umrp){% endif %}{% endfor %}</option>
+        <option value="upa">{% for row in descriptions %}{% if row.metric == 'upa' %}{{row.column_description}} (upa){% endif %}{% endfor %}</option>
+        <option value="pda">{% for row in descriptions %}{% if row.metric == 'pda' %}{{row.column_description}} (pda){% endif %}{% endfor %}</option>
+        {% else %}
+         {% if account_type.0.config_value == 'paid' %}
+        <option value="uid">{% for row in descriptions %}{% if row.metric == 'uid' %}{{row.column_description}} (uid){% endif %}{% endfor %}</option>
+        <option value="ueid">{% for row in descriptions %}{% if row.metric == 'ueid' %}{{row.column_description}} (ueid){% endif %}{% endfor %}</option>
+        <option value="feid">{% for row in descriptions %}{% if row.metric == 'feid' %}{{row.column_description}} (feid){% endif %}{% endfor %}</option>
+        <option value="peid">{% for row in descriptions %}{% if row.metric == 'peid' %}{{row.column_description}} (peid){% endif %}{% endfor %}</option>
+        <option value="ujid">{% for row in descriptions %}{% if row.metric == 'ujid' %}{{row.column_description}} (ujid){% endif %}{% endfor %}</option>
+        <option value="uifq">{% for row in descriptions %}{% if row.metric == 'uifq' %}{{row.column_description}} (uifq){% endif %}{% endfor %}</option>
+        <option value="uipl">{% for row in descriptions %}{% if row.metric == 'uipl' %}{{row.column_description}} (uipl){% endif %}{% endfor %}</option>
+        <option value="fid">{% for row in descriptions %}{% if row.metric == 'fid' %}{{row.column_description}} (fid){% endif %}{% endfor %}</option>
+        <option value="pid">{% for row in descriptions %}{% if row.metric == 'pid' %}{{row.column_description}} (pid){% endif %}{% endfor %}</option>
+        <option value="fuid">{% for row in descriptions %}{% if row.metric == 'fuid' %}{{row.column_description}} (fuid){% endif %}{% endfor %}</option>
+        <option value="puid">{% for row in descriptions %}{% if row.metric == 'puid' %}{{row.column_description}} (puid){% endif %}{% endfor %}</option>
+        <option value="fipl">{% for row in descriptions %}{% if row.metric == 'fipl' %}{{row.column_description}} (fipl){% endif %}{% endfor %}</option>
+        <option value="fmrp">{% for row in descriptions %}{% if row.metric == 'fmrp' %}{{row.column_description}} (fmrp){% endif %}{% endfor %}</option>
+        <option value="umrp">{% for row in descriptions %}{% if row.metric == 'umrp' %}{{row.column_description}} (umrp){% endif %}{% endfor %}</option>
+        <option value="upa">{% for row in descriptions %}{% if row.metric == 'upa' %}{{row.column_description}} (upa){% endif %}{% endfor %}</option>
+        <option value="pda">{% for row in descriptions %}{% if row.metric == 'pda' %}{{row.column_description}} (pda){% endif %}{% endfor %}</option>
+        <option value="pmrp">{% for row in descriptions %}{% if row.metric == 'pmrp' %}{{row.column_description}} (pmrp){% endif %}{% endfor %}</option>
+        <option value="utrp">{% for row in descriptions %}{% if row.metric == 'utrp' %}{{row.column_description}} (utrp){% endif %}{% endfor %}</option>
+        <option value="ftrp">{% for row in descriptions %}{% if row.metric == 'ftrp' %}{{row.column_description}} (ftrp){% endif %}{% endfor %}</option>
+        <option value="ptrp">{% for row in descriptions %}{% if row.metric == 'ptrp' %}{{row.column_description}} (ptrp){% endif %}{% endfor %}</option>
+        <option value="uemrp">{% for row in descriptions %}{% if row.metric == 'uemrp' %}{{row.column_description}} (uemrp){% endif %}{% endfor %}</option>
+        <option value="pejp">{% for row in descriptions %}{% if row.metric == 'pejp' %}{{row.column_description}} (pejp){% endif %}{% endfor %}</option>
+        <option value="fjp">{% for row in descriptions %}{% if row.metric == 'fjp' %}{{row.column_description}} (fjp){% endif %}{% endfor %}</option>
+        <option value="pjp">{% for row in descriptions %}{% if row.metric == 'pjp' %}{{row.column_description}} (pjp){% endif %}{% endfor %}</option>
+         {% endif %}
+        {% endif %}
+         
+       </select>
+      </td>
+     </tr>
+
+     <tr>
+       <td>
+        Date from
+       </td>
+       <td>
+        <input class="input_date" name="date_from" id="date_from" type="text" value="{{date_from}}">
+       </td>
+     <tr>
+
+     <tr>
+       <td>
+        Date to
+       </td>
+       <td>
+        <input class="input_date" name="date_to" id="date_to" type="text" value="{{date_to}}">
+       </td>
+     <tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+      </td>
+     </tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <p class="error">
+        {% if form.date_to.errors %}
+         <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.date_from.errors %}
+         <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.metric.errors %}
+         <br>{% for error in form.metric.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.url.errors %}
+         <br>{% for error in form.url.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.format.errors %}
+         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
+        {% endif %}
+       </p>
+      </td>
+     </tr>
+
+    </table>
+   </form>
+
+{% endblock %}

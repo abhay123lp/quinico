@@ -1,0 +1,146 @@
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+<html>
+<head>
+<title>{{title}}</title>
+<meta http-equiv="Content-type" content="text/html; charset=utf-8" /> 
+
+<link type="text/css" href="/html/css/ui-lightness/jquery-ui-1.8.22.custom.css" rel="stylesheet" />
+<script type="text/javascript" src="/html/js/jquery-1.7.2.min.js"></script>
+<script type="text/javascript" src="/html/js/jquery-ui-1.8.22.custom.min.js"></script>
+<script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script> 
+
+
+<link rel="StyleSheet" href="/html/css/quinico.css" type="text/css">
+<script type="text/javascript" src="/html/js/quinico.js"></script>
+<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+
+</head>
+
+<body>
+<br>
+<center>
+
+
+<table>
+ <tr>
+  <td>
+
+   <table class="outside_border">
+    <tr>
+     <td align="center">
+      <a href="/"><img src="/html/images/logo.png"></a>
+     </td>
+    </tr>
+    {% if alert %}
+    <tr>
+     <td align="center">
+      <div class="alert">{{alert|safe}}</div>
+     </td>
+    </tr>
+    {% endif %}
+    <tr>
+     <td align="right">
+      {% if back_link %}
+      <a class="nav" href="{{back_link}}">&laquo; older</a>
+      {% endif %}
+
+      {% if forward_link %}
+      <a class="nav" href="{{forward_link}}">newer &raquo;</a>
+      {% endif %}
+
+      {% if help_blurb %}
+      <img height="25" width="25" src="/html/images/info.jpg" title="Help" onclick="hide_show('help')">
+      {% endif %}
+
+      {% if csv_link %}
+      <a href="{{csv_link}}"><img height="25" width="25" src="/html/images/csv.jpg" title="Raw Data Download: Download Data in CSV format."></a>
+      {% endif %}
+
+      {% if json_link %}
+      <a href="{{json_link}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
+      {% endif %}
+
+      {% if json_link1 %}
+      <a href="{{json_link1}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link #1: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
+      {% endif %}
+
+      {% if json_link2 %}
+      <a href="{{json_link2}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link #2: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
+      {% endif %}
+
+      {% if db_link %}
+      <a href="{{db_link}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+      {% endif %}
+
+      {% if db_link1 %}
+      <a href="{{db_link1}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link #1: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+      {% endif %}
+
+      {% if db_link2 %}
+      <a href="{{db_link2}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link #2: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+      {% endif %}
+     </td>
+    </tr>
+    <tr>
+     <td>
+      <hr>
+     </td>
+    </tr>
+    <tr>
+     <td align="center">
+      {% block content %}{% endblock %}
+     </td>
+    </tr>
+   </table>
+
+   <br>
+
+   <table class="tiny_no_border" align="center">
+    <tr>
+     <td>
+      <a class="nu" href="/">Home</a>
+      |
+      {% if user.is_authenticated %}
+      <a class="nu" href="/admin">Admin</a>
+      |
+       <a class="nu" href="/accounts/logout">Logout</a>
+       ({{user.username}})
+      {% else %}
+       <a class="nu" href="/accounts/login">Login</a>
+      {% endif %}
+      {% if app_version %}
+      |
+      <a class="nu" href="http://www.quinico.com">Quinico</a> v{{app_version}}
+      {% endif %}
+     </td>
+    </tr>
+   </table>
+
+  </td>
+  <td valign="top">
+   <div id="help" class="help" style="display:none;">{% autoescape off %}{{help_blurb}}{% endautoescape %}</div>
+  </td>
+ </tr>
+</table>
+
+</center>
+</body>
+</html>

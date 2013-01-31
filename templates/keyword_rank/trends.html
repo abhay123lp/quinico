@@ -1,0 +1,100 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+
+<b><i>KEYWORD TRENDS REPORT</i></b>
+
+<br>
+<br>
+
+ <table class="tiny_no_border">
+  <tr>
+   <td>Geolocation:<b>{{country.0.gl}}</b></td>
+   <td width="10"></td>
+   <td>Google Domain:<b>{{country.0.googlehost}}</b></td>
+   <td width="10"></td>
+  </tr>
+ </table>
+
+<br>
+
+<table border="0">
+ <tr>
+  <td align="center">
+   <script type="text/javascript">
+    google.load("visualization","1",{packages:["corechart"]});
+    google.setOnLoadCallback(drawChart);
+    function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string','Date');
+        data.addColumn('number','Value');
+        data.addRows([
+
+        {% for item in ranks %}
+         {% if forloop.first %}
+            ['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
+         {% else %}
+            ,['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
+         {% endif %}
+        {% endfor %}
+
+        ]);
+
+        var options = {
+            'title':'{{domain_name}} | {{keyword_name|escapejs}}',
+            'titleTextStyle':{fontSize:'14'},
+ 	    'width':750,
+            'height':375,
+            'fontSize':10,
+            'hAxis':{textPosition:'out'},
+            'hAxis':{slantedText:'true'},
+            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
+            'curveType':'function',
+            'pointSize':3
+        };
+
+        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
+        var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
+        formatter.format(data,1); 
+        chart.draw(data,options);
+    }
+   </script>
+   <div id="chart_div" style="width:750px; height:375px;"></div>
+   </td>
+  </tr>
+  <tr>
+   <td align="center">
+     <table class="standard_l" width="600">
+      <th colspan="2">Top Results (last day)</th>
+      {% for item in top_ten %}
+      <tr><td align="center">{{item.rank}}</td><td>{{item.url__url}}</td></tr>
+      {% endfor %} 
+     </table>
+   </td>
+ </tr>
+</table>
+
+
+
+{% endblock %}
+

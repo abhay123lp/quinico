@@ -1,0 +1,393 @@
+/*
+
+Copyright 2012 - Tom Alessi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+
+
+/* Global Font Settings */
+html {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   font-size: 12px; 
+} 
+
+a {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   font-size: 12px; 
+   text-decoration: none;
+}
+
+p {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   font-size: 12px; 
+}
+
+input, textarea, select {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   display:inline-block;
+   padding:4px;
+   margin-bottom:9px;
+   font-size:13px;
+   color:#3f3f3f;
+   border:1px solid #ccc;
+   -webkit-border-radius:3px;
+   -moz-border-radius:3px;
+   border-radius:3px
+   -webkit-box-shadow: inset 0 1px 1px 
+   transition: border linear .2s,box-shadow linear .2s;
+}
+
+/* Error Text */
+p.error {
+   font-size:12px;
+   font-weight:bold;
+   color:red;
+   margin: 0;
+   padding: 0;
+   text-align: left;
+}
+
+/* Standard date input text */
+input.input_date {
+   width:100;
+   height:35px;
+}
+
+/* Dashboard number parameters input */
+input.input_dash_nums {
+   width:50;
+   height:35px;
+}
+
+/* Dashboard URL input */
+input.dash_url {
+   width:435px;
+   height:35px;
+}
+
+/* Alert Div */
+div.alert {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   padding:4px;
+   font-size:12px;
+   border:1px solid red;
+   -webkit-border-radius:3px;
+   -moz-border-radius:3px;
+   border-radius:3px
+   -webkit-box-shadow: inset 0 1px 1px
+   transition: border linear .2s,box-shadow linear .2s;
+   background-color:#FFFFE0;
+   text-align:left;
+   width:650px;
+}
+
+/* Help Div */
+div.help {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   padding:4px;
+   font-size:13px;
+   color:#3f3f3f;
+   border:1px solid #ccc;
+   -webkit-border-radius:3px;
+   -moz-border-radius:3px;
+   border-radius:3px
+   -webkit-box-shadow: inset 0 1px 1px
+   transition: border linear .2s,box-shadow linear .2s;
+   background-color:#FFFFE0;
+   text-align:left;
+   max-width:300px;
+}
+
+/* Dashboard URL textarea */
+textarea.textarea_url {
+   background-color:#E8E8E8;
+   resize:none;
+   overflow:hidden;
+   width:435px;
+   height:60px;
+}
+
+/* Recent SEO data run textarea */
+textarea.textarea_recent {
+   background-color:#E8E8E8;
+   resize:none;
+   overflow:hidden;
+   width:100;
+   height:85px;
+}
+
+/* No blue borders on image links */
+img {
+   border-style: none;
+}
+
+
+/* JQuery UI components */
+div.ui-datepicker, .ui-datepicker td{
+ font-size:10px;
+}
+
+.ui-button { 
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   font-size: 14px; 
+   font-weight:bold; 
+   width:150px;
+}
+
+select.standard {
+   height:35px;
+}
+
+
+
+
+
+
+/* Dashboard Table */
+table.dashboard {
+   border-collapse:collapse;
+}
+
+table.dashboard td {
+   border: 3px solid #1c94c4;
+   padding:15px 15px 15px 15px
+}
+
+table.dashboard tr {
+   border: 3px solid #1c94c4;
+}
+
+
+
+/* Table with outside border only */
+table.outside_border {
+   border: 1px solid #CCCCCC;
+}
+
+table.outside_border td {
+   border:0;
+   padding:5px 5px 5px 5px
+}
+
+table.outside_border th {
+   border:0;
+}
+
+table.outside_border tr {
+   border:0;
+}
+
+
+/* tiny select */
+select.tiny {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   font-size:0.9em;
+   border:1px solid #dddddd;
+   padding:2px;
+}
+
+/* Tiny table with outside border only */
+table.tiny_outside_border {
+   border: 1px solid #CCCCCC;
+}
+table.tiny_outside_border td {
+   font-size:0.8em;
+   border-style:none;
+   padding:3px 7px 2px 7px;
+   text-align:left;
+   color:black;
+}
+
+/* Tiny table with no border */
+table.tiny_no_border {
+   font-family:Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+}
+table.tiny_no_border th {
+   font-size:0.8em;
+   border-style:none;
+   padding-top:5px;
+   padding-bottom:4px;
+   background-color:#83B0EC;
+   text-align:center;
+   color:black;
+}
+table.tiny_no_border td {
+   font-size:0.8em;
+   border-style:none;
+   padding:3px 7px 2px 7px;
+   text-align:center;
+   color:black;
+}
+
+
+/* Tiny table with left text alignment */
+table.tiny_l {
+   font-family:Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+   border: 1px solid #CCCCCC;
+}
+table.tiny_l th {
+   font-size:0.7em;
+   border-style:none;
+   padding-top:5px;
+   padding-bottom:4px;
+   background-color:#83B0EC;
+   text-align:left;
+   color:black;
+}
+table.tiny_l td {
+   font-size:0.7em;
+   border-style:none;
+   padding:3px 7px 2px 7px;
+   text-align:left;
+   color:black;
+}
+
+
+
+/* Standard Table Center Aligned */
+table.standard {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+}
+table.standard th {
+   font-size:0.8em;
+   border:1px solid #CCCCCC;
+   padding-top:5px;
+   padding-left:5px;
+   padding-right:5px;
+   padding-bottom:4px;
+   background-color:#1c94c4;
+   vertical-align:top;
+   text-align:center;
+   color:white;
+}
+table.standard td {
+   font-size:0.8em;
+   border:1px solid #CCCCCC;
+   padding:3px 7px 2px 7px;
+   color:black;
+   text-align:center;
+}
+
+
+
+
+/* Standard Table Left Aligned */
+table.standard_l {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+}
+table.standard_l th {
+   font-size:0.8em;
+   border:1px solid #CCCCCC;
+   padding:10px 10px 10px 10px;
+   background-color:#1c94c4;
+   vertical-align:top;
+   text-align:left;
+   color:white;
+}
+table.standard_l td {
+   font-size:0.8em;
+   border:1px solid #CCCCCC;
+   padding:10px 10px 10px 10px;
+   color:black;
+   text-align:left;
+}
+
+
+
+/* Standard Table no border */
+table.standard_no_border {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+}
+table.standard_no_border th {
+   font-size:0.8em;
+   border-style:none;
+   padding:5px 5px 5px 5px;
+   background-color:#1c94c4;
+   vertical-align:top;
+   text-align:left;
+   color:white;
+}
+table.standard_no_border td {
+   font-size:0.8em;
+   border-style:none;
+   padding:5px 5px 5px 5px;
+   color:black;
+   text-align:left;
+}
+
+
+
+/* Links */
+a.tt {text-decoration:none;}
+a.tt:link {color:black;}
+a.tt:visited {color:black;}
+a.tt:hover {background:#FFFFAA; text-decoration:none;}
+a.tt span {display:none; padding:2px 3px; margin-left:8px; width:200px;}
+a.tt:hover span{display:inline; position:absolute; background:#FFFFAA; border:1px solid #cccccc; color:#6c6c6c;}
+
+/* Links for forward/backward nav */
+a.nav {
+   text-decoration:none;
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   font-size:14
+   
+}
+
+/* Tablesorter Styling */
+table.tablesorter {
+   font-family: Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+}
+table.tablesorter thead tr th, table.tablesorter tfoot tr th {
+   font-size:0.8em;
+   border:1px solid #CCCCCC;
+   padding-top:5px;
+   padding-left:5px;
+   padding-right:20px;
+   padding-bottom:4px;
+   background-color:#1c94c4;
+   vertical-align:top;
+   text-align:center;
+   color:white;
+}
+table.tablesorter thead tr .header {
+        background-image: url(/html/images/tablesorter/bg.gif);
+        background-repeat: no-repeat;
+        background-position: center right;
+        cursor: pointer;
+}
+table.tablesorter tbody td {
+   font-size:0.8em;
+   border:1px solid #CCCCCC;
+   padding:3px 7px 2px 7px;
+   color:black;
+}
+table.tablesorter tbody tr.odd td {
+   background-color:#F0F0F6;
+}
+table.tablesorter thead tr .headerSortUp {
+   background-image: url(/html/images/tablesorter/asc.gif);
+}
+table.tablesorter thead tr .headerSortDown {
+   background-image: url(/html/images/tablesorter/desc.gif);
+}
+table.tablesorter thead tr .headerSortDown, table.tablesorter thead tr .headerSortUp {
+   background-color: #8dbdd8;
+}

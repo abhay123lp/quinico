@@ -1,0 +1,82 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+{% load humanize %}
+
+<b><i>WEBPAGETEST HISTORY REPORT</i></b>
+
+<br>
+<br>
+
+ <table class="tiny_no_border">
+  <tr>
+   <td>Url:<b>{{test.0.domain}}{{test.0.url}}</b></td>
+   <td>Location:<b>{{test.0.location}}</b></td>
+   <td>Timezone:<b>{{TIME_ZONE}}</b></td>
+  </tr>
+ </table>
+
+<br>
+
+<table class="standard">
+ <tr>
+  <th>date</th>
+  <th>viewNumber</th>
+  <th>loadTime</th>
+  <th>ttfb</th>
+  <th>bytesOut</th>
+  <th>bytesOutDoc</th>
+  <th>bytesIn</th>
+  <th>bytesInDoc</th>
+  <th>requests</th>
+  <th>requestsDoc</th>
+  <th>render</th>
+  <th>fullyLoaded</th>
+  <th>docTime</th>
+  <th>score_cache</th>
+  <th>score_cdn</th>
+  <th>score_gzip</th>
+ </tr>
+
+ {% for row in dates %}
+ <tr>
+  <td>{{row.date|date:"Y-m-d H:i:s"}}</td>
+  <td>{{row.viewNumber|intcomma}}</td>
+  <td>{{row.loadTime|intcomma}}</td>
+  <td>{{row.ttfb|intcomma}}</td>
+  <td>{{row.bytesOut|intcomma}}</td>
+  <td>{{row.bytesOutDoc|intcomma}}</td>
+  <td>{{row.bytesIn|intcomma}}</td>
+  <td>{{row.bytesInDoc|intcomma}}</td>
+  <td>{{row.requests|intcomma}}</td>
+  <td>{{row.requestsDoc|intcomma}}</td>
+  <td>{{row.render|intcomma}}</td>
+  <td>{{row.fullyLoaded|intcomma}}</td>
+  <td>{{row.docTime|intcomma}}</td>
+  <td>{{row.score_cache|intcomma}}</td>
+  <td>{{row.score_cdn|intcomma}}</td>
+  <td>{{row.score_gzip|intcomma}}</td>
+ </tr>
+ {% endfor %}
+
+</table>
+{% endblock %}

@@ -1,0 +1,93 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<b><i>CRAWL ERRORS SUMMARY</i></b>
+
+<br>
+<br>
+
+  
+  <script>
+   $(function() {
+
+      //Submit
+      $("#submit").button();
+
+      //Date
+      $("#date").datepicker({dateFormat: 'yy-mm-dd'});
+
+   });
+  </script>
+
+
+
+   <form name="ce_select" id="ce_select" action="/webmaster/summary" method="get">
+    <table>
+
+     <tr>
+      <td>Domain</td>
+      <td>
+       <select class="standard" name="domain" id="domain">
+       {% for domain in domains %}
+           <option value="{{domain}}">{{domain}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
+
+     <tr>
+       <td>
+        Date
+       </td>
+       <td>
+        <input class="input_date" name="date" id="date" type="text" value="{{date|date:"Y-m-d"}}">
+       </td>
+     <tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+      </td>
+     </tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <p class="error">
+        {% if form.date.errors %}
+         <br>{% for error in form.date.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.domain.errors %}
+         <br>{% for error in form.domain.errors %}{{error}}{% endfor %}
+        {% endif %}
+       </p>
+      </td>
+     </tr>
+
+    </table>
+   </form>
+
+
+
+{% endblock %}

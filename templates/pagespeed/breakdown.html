@@ -1,0 +1,83 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<b><i>PAGESPEED SUMMARY REPORT</i></b>
+
+<br>
+<br>
+
+ <table class="tiny_no_border">
+  <tr>
+   <td>
+    Date:<b>{{date}}</b>
+   </td>
+  </tr>
+  <tr>
+   <td height="15">
+   </td>
+  </tr>
+  <tr>
+   <td>
+    <a href="{{a_url}}" class="submit-button" id="switch" name="switch">Switch Strategy</a>
+    <script>
+    $("#switch").button();
+    </script>
+   </td>
+  </tr>
+ </table>
+
+<br>
+
+<script type="text/javascript">
+         google.load("visualization", "1", {packages:["corechart"]});
+         google.setOnLoadCallback(drawChart);
+         function drawChart() {
+            var data = new google.visualization.DataTable();
+            data.addColumn('string', 'Value');
+            data.addColumn('number', 'Count');
+            data.addRows([
+   
+               ['javascript',{{scores.0.javascriptResponseBytes}}],
+               ['image',{{scores.0.imageResponseBytes}}],
+               ['html',{{scores.0.htmlResponseBytes}}],
+               ['text',{{scores.0.textResponseBytes}}],
+               ['css',{{scores.0.cssResponseBytes}}],
+               ['other',{{scores.0.otherResponseBytes}}],
+      
+           ]);
+
+            var options = {
+               'title':'{{domain}}{{url}} | {{strategy}}',
+  	    };
+	
+            var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
+            var formatter = new google.visualization.NumberFormat(
+               {fractionDigits:'0'}
+            );
+            formatter.format(data,1); 
+            chart.draw(data, options);
+         }
+      </script>
+      <div id="chart_div" style="width: 750px; height: 425px;"></div>
+
+{% endblock %}

@@ -1,0 +1,166 @@
+/*
+
+Copyright 2012 - Tom Alessi
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+*/
+
+function updateDropdown(selectedOption,formName,selectName,input_array) {
+
+   var option = document.getElementById(selectedOption).value;
+
+   // The select menu to modify, and its parent form, to modify
+   var select_menu = document.forms[formName].elements[selectName];
+
+   // Remove all existing options from the select menu
+   select_menu.options.length = 0;
+
+   var data = window[input_array];
+
+   for (i=0; i<data[option].length; i++) {
+
+      // Encode the keyword
+      var encoded_item = encodeURIComponent(data[option][i])
+
+      // Setup the dropdown
+      select_menu.options[select_menu.options.length] = new Option(data[option][i],encoded_item);
+   }
+}
+
+
+function getJSONData(u) {
+
+   var request = $.ajax({
+       type: "GET",
+       url: u,
+       dataType: 'json',
+       async: false
+   }).responseText;
+
+   return request;
+}
+
+
+function getHTMLData(u) {
+
+   var request = $.ajax({
+       type: "GET",
+       url: u,
+       dataType: 'html',
+       async: false
+   }).responseText;
+
+   return request;
+}
+
+
+function switchGraph(u,slot) {
+
+   var request = getJSONData(u);
+
+   // Create our data table out of JSON data loaded from the server.
+   // We need to create a JSON object first and then obtain the data portion
+   var data = new google.visualization.DataTable($.parseJSON(request)['data']);
+
+   var chart = new google.visualization.LineChart(document.getElementById(slot));
+   chart.draw(data,$.parseJSON(request)['options']);
+
+}
+
+
+function switchPie(u,slot) {
+
+   var request = getJSONData(u);
+
+   // Create our data table out of JSON data loaded from the server.
+   // We need to create a JSON object first and then obtain the data portion
+   var data = new google.visualization.DataTable($.parseJSON(request)['data']);
+
+   var chart = new google.visualization.PieChart(document.getElementById(slot));
+   chart.draw(data,$.parseJSON(request)['options']);
+
+}
+
+
+function switchHTML(u,slot) {
+
+   // Grab the HTML data
+   var request = getHTMLData(u);
+
+   // Set the DIV contents
+   document.getElementById(slot).innerHTML = request;
+}
+
+
+function switchImage(u,slot,w,h) {
+
+   // Set the DIV contents
+   img = '<img src=\"' + u + '\" width=\"' + w + '\" height=\"' + h + '\">'
+   document.getElementById(slot).innerHTML = img
+}
+
+
+function changeElement(action,divName,fieldName,size) {
+
+   var div = document.getElementById(divName);
+
+   // Obtain all of the input fields in the div
+   var inputs = div.getElementsByTagName("input");
+   var last_item = inputs.length - 1;
+   var last = inputs[last_item].id;
+
+   if (action == 'add') {
+      var count = Number(last.split("_")[1]) + 1;
+      var input = document.createElement('input');
+      var br = document.createElement('br');
+
+      input.id = fieldName + "_" + count;
+      br.id = fieldName + "_" + 'br_' + count;
+
+      input.name = fieldName;
+      br.name = fieldName + 'br_';
+
+      input.type = "text";
+      input.className = "dash_url";
+      input.size = size;
+      div.appendChild(input);
+      div.appendChild(br);
+   } else {
+      var count = Number(last.split("_")[1]);
+
+      // If there is only one textfield, quit
+      if (count == 1) {return;}
+    
+      // Remove the field
+      var field_name = fieldName + "_" + count;
+      var input = document.getElementById(field_name);
+      div.removeChild(input);
+
+      // Remove the break
+      var br_name = fieldName + "_" + 'br_' + count;
+      var br = document.getElementById(br_name);
+      div.removeChild(br);
+
+   }
+}
+
+
+function hide_show(element) {
+
+   if (document.getElementById(element).style.display == 'none') {
+      document.getElementById(element).style.display = '';
+   } else {
+      document.getElementById(element).style.display = 'none';
+   }
+}

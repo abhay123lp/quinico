@@ -1,0 +1,134 @@
+{% extends "base/base-dashboard.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+{% autoescape off %}
+
+   <script>
+
+   // Load the visualization API and the line chart package
+   google.load("visualization","1",{packages:["corechart"]});
+
+   {% comment %} Setup the lookup table {% endcomment %}
+   var url_type = [];
+   {% for url,type in url_list.items %}
+      url_type['{{url}}'] = '{{type}}';
+   {% endfor %}
+
+   {% comment %} Setup the url list {% endcomment %}
+   var url_list = [
+   {% for url,type in url_list.items %}
+    {% if forloop.first %}
+     "{{url}}"
+    {% else %}
+     ,"{{url}}"
+    {% endif %}
+   {% endfor %}
+   ];
+
+   {% if dash_settings.0.slots == '2x2'%}
+      var slots = ['slot1','slot2','slot3','slot4'];
+   {% else %}{% if dash_settings.0.slots == '3x3' %}
+      var slots = ['slot1','slot2','slot3','slot4','slot5','slot6','slot7','slot8','slot9'];
+   {% endif %}{% endif %}
+
+   // Scramble the array order
+   url_list.sort(function() {return 0.5 - Math.random()})
+
+   //counters
+   var url = 0;
+   var slot = 0;
+
+   function rotate(continuous) {
+      if (url == url_list.length) {
+         url = 0;
+      }
+      if (slot == slots.length) {
+         slot = 0;
+      }
+
+      // Send to the correct switcher
+      if (url_type[url_list[url]] == 'graph') {
+         switchGraph(url_list[url],slots[slot]);
+      } else if (url_type[url_list[url]] == 'pie') {
+         switchPie(url_list[url],slots[slot]);
+      } else if (url_type[url_list[url]] == 'html') {
+         switchHTML(url_list[url],slots[slot]);
+      } else if (url_type[url_list[url]] == 'image') {
+         switchImage(url_list[url],slots[slot],{{dash_settings.0.width}},{{dash_settings.0.height}});
+      }
+
+      // Increment the counters
+      url++;
+      slot++;
+
+      if (continuous == true) {
+          // Wait and then change another slot
+          setTimeout("rotate(true)",{{dash_settings.0.frequency}}000);
+      }
+   }
+   </script>
+
+   <table style="border-collapse:collapse;">
+   {% if dash_settings.0.slots == '2x2'%}
+    <tr style="border:3px solid #1c94c4;">
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot1"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot2"></div></td>
+    </tr>
+    <tr style="border:3px solid #1c94c4;">
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot3"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot4"></div></td>
+    </tr>
+   {% else %}{% if dash_settings.0.slots == '3x3' %}
+    <tr style="border:3px solid #1c94c4;">
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot1"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot2"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot3"></div></td>
+    </tr>
+    <tr style="border:3px solid #1c94c4;">
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot4"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot5"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot6"></div></td>
+    </tr>
+    <tr style="border:3px solid #1c94c4;">
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot7"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot8"></div></td>
+     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot9"></div></td>
+    </tr>
+   {% endif %}{% endif %}
+   </table>
+
+   <script>
+
+   // Populate the initial slots immediately
+   for (i=1;i<=slots.length;i++) {
+      rotate(false);
+   }
+
+   // Now start the continuous rotation
+   rotate(true);
+
+   //var test = setInterval("rotate()",{{dash_settings.0.frequency}}000);
+  </script>
+
+{% endautoescape %}
+{% endblock %}

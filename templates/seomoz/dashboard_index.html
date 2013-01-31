@@ -1,0 +1,110 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<b><i>SEO DASHBOARD</i></b>
+
+<br>
+<br>
+
+   <script>
+    // Date Pickers and Submit
+    $(function() {
+
+      //Date
+      $("#date").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //Submit
+      $("#submit").button();
+    });
+   </script>
+
+   <form name="seo_select" id="seo_select" action="/seomoz/dashboard" method="get">
+    <table>
+
+     <tr>
+      <td>Url</td>
+      <td>
+       <select class="standard" name="url" id="url">
+       {% for url in list %}
+           <option value="{{url}}">{{url}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
+
+     <tr>
+      <td>
+       Date
+      </td>
+      <td>
+       <input class="input_date" name="date" id="date" type="text" value="{{today.date|date:'Y-m-d'}}">
+      </td>
+     </tr>
+
+     <tr>
+      <td valign="top">
+       Recent<br>
+       Data<br>
+       Runs
+      </td>
+      <td>
+       <textarea class="textarea_recent">
+{% for date in dates %}{{date.date|date:'Y-m-d'}}
+{% endfor %}
+       </textarea>
+      </td>
+     </tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+      </td>
+     </tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <p class="error">
+        {% if form.date.errors %}
+         <br>{% for error in form.date.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.url.errors %}
+         <br>{% for error in form.url.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.format.errors %}
+         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
+        {% endif %}
+       </p>
+      </td>
+     </tr>
+
+    </table>
+
+   </form>
+
+   <div id="cal_div" STYLE="position:absolute;visibility:hidden;background-color:white;layer-background-color:white;"></div>
+
+
+
+{% endblock %}

@@ -1,0 +1,116 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2012 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<b><i>API STATUS</i></b>
+
+<br>
+<br>
+
+<script type="text/javascript">
+
+   // Date Pickers and Submit
+   $(function() {
+
+      //From Date
+      $("#date_from").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //To Date
+      $("#date_to").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //Submit
+      $("#submit").button();
+   });
+
+</script>
+
+
+
+   <form name="api_select" id="api_select" action="/status/api" method="get">
+    <table>
+
+     <tr>
+      <td>API</td>
+      <td>
+       <select class="standard" name="api" id="api">
+        <option value="keyword_rank">Google Search API</option>
+        <option value="pagespeed">Google Pagespeed API</option>
+        <option value="webmaster">Google Webmaster API</option>
+        <option value="seomoz">SEOMoz API</option>
+        <option value="webpagetest">Webpagetest API</option>
+       </select>
+      </td>
+     </tr>
+
+     <tr>
+       <td>
+        Date from
+       </td>
+       <td>
+        <input class="input_date" name="date_from" id="date_from" type="text" value="{{date_from}}">
+       </td>
+     <tr>
+
+     <tr>
+       <td>
+        Date to
+       </td>
+       <td>
+        <input class="input_date" name="date_to" id="date_to" type="text" value="{{date_to}}">
+       </td>
+     <tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+      </td>
+     </tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <p class="error">
+        {% if form.date_to.errors %}
+         <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.date_from.errors %}
+         <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.api.errors %}
+         <br>{% for error in form.api.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.format.errors %}
+         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
+        {% endif %}
+       </p>
+      </td>
+     </tr>
+
+    </table>
+   </form>
+
+
+{% endblock %}
+
+
+
