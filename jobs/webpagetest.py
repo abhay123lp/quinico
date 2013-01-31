@@ -104,10 +104,10 @@ def query_webpagetest(t_id,domain,u,l):
         xml_url = raw_json['data']['xmlUrl']
         logger.info('xml url: %s' % xml_url)
     except Exception as e:
-        logger.error('WPT error encountered in parsing json: domain:%s,error:%s,raw_data:%s' % (domain,e,raw_json))
+        logger.error('Error encountered in parsing json: domain:%s,error:%s,raw_data:%s' % (domain,e,raw_json))
         ql.add_api_calls('webpagetest',1,1)
         if settings.SMTP_NOTIFY_ERROR:
-            qm.send('Error','WPT error encountered in parsing json:\ndomain:%s\nerror:%s\nraw_data:%s' % (domain,e,raw_json))
+            qm.send('Error','Error encountered in parsing json:\ndomain:%s\nerror:%s\nraw_data:%s' % (domain,e,raw_json))
         return
 
     # We'll check at periodic intervals to see if the test has completed and we'll check a maximum
@@ -144,6 +144,27 @@ def query_webpagetest(t_id,domain,u,l):
 
     xml = ET.fromstring(x_response)
 
+    # Sometimes either view1 or view2 failed - if that is the case, return without doing anything
+    # This needs to be investigated (why does it happen?)
+    try:
+       view1 = xml.findall('./data/successfulFVRuns')[0].text 
+       view2 = xml.findall('./data/successfulRVRuns')[0].text 
+       logger.debug('Successful FV:%s, Successful RV:%s' % (view1,view2))
+    except Exception as e:
+        logger.error('Error encountered searching for FV or RV status for %s:%s:%s.  Data not saved for this test.' % (domain,xml_url,e))
+        ql.add_api_calls('webpagetest',1,1)
+        if settings.SMTP_NOTIFY_ERROR:
+            qm.send('Error','Error encountered searching for FV or RV status for %s:%s:%s.  Data not saved for this test.' % (domain,xml_url,e))
+        return
+
+    if not view1 == '1' or not view2 == '1':
+        logger.error('Unsuccessful FV or RV returned from WPT API for %s.  Data not saved for this test.' % domain)
+        ql.add_api_calls('webpagetest',1,1)
+        if settings.SMTP_NOTIFY_ERROR:
+            qm.send('Error','Unsuccessful FV or RV returned from WPT API for %s.  Data not saved for this test.' % domain)
+        return
+
+
     # Create a datetime object for right now
     time_now = datetime.datetime.now()
 
@@ -175,10 +196,10 @@ def query_webpagetest(t_id,domain,u,l):
             except Exception as e:
                 # The value was not there, so add a zero
                 values.append(0)
-                logger.error('WPT error encountered searching for %s in view %s for %s:nError:%s,Url:%s' % (output_value,view,domain,e,xml_url))
+                logger.error('Error encountered searching for %s in view %s for %s:nError:%s,Url:%s' % (output_value,view,domain,e,xml_url))
                 ql.add_api_calls('webpagetest',1,1)
                 if settings.SMTP_NOTIFY_ERROR:
-                    qm.send('Error','WPT error encountered searching for %s in view %s for %s.\nError:%s\nUrl:%s' % (output_value,view,domain,e,xml_url))
+                    qm.send('Error','Error encountered searching for %s in view %s for %s.\nError:%s\nUrl:%s' % (output_value,view,domain,e,xml_url))
 
         sql = """
            INSERT INTO webpagetest_score (date,test_id,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements)

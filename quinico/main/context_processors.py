@@ -64,7 +64,14 @@ def redirect(request):
     # key to the referring page so they can be redirected to the page they 
     # were on after login
     elif 'HTTP_REFERER' in request.META:
-        return{'next':request.META['HTTP_REFERER']}
+
+        # If the referring page is 'http://<quinico server>/accounts/login', then its probably
+        # a failed login, so send them back to the homepage after login
+        # since we don't know the true referrer
+        if request.META['HTTP_REFERER'] == 'http://%s/accounts/login/' % request.META['HTTP_HOST']:
+            return{'next':'/'}
+        else:
+            return{'next':request.META['HTTP_REFERER']}
 
     # Its not an @login_required view and there is no referrer, so send
     # them back to the home page after login
