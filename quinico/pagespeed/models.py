@@ -38,7 +38,7 @@ class Domain(models.Model):
 class Url(models.Model):
     """URLs that will be tested (for any domain) """
 
-    url = models.CharField(max_length=1000, unique=True)
+    url = models.CharField(max_length=255, unique=True)
 
     # Represent the object as unicode
     def __unicode__(self):

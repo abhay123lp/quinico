@@ -95,8 +95,8 @@ def query_webpagetest(t_id,domain,u,l):
     # Sometimes the JSON returned from WPT is incomplete.  In this case, unfortunately,
     # we have to bail
     try:
-        test_id = raw_json['data']['testId']
-        logger.info('test id: %s' % test_id)
+        testId = raw_json['data']['testId']
+        logger.info('test id: %s' % testId)
 
         json_url = raw_json['data']['jsonUrl']
         logger.info('json url: %s' % json_url)
@@ -112,12 +112,12 @@ def query_webpagetest(t_id,domain,u,l):
 
     # We'll check at periodic intervals to see if the test has completed and we'll check a maximum
     # number of times and then give up
-    status_url = stat_url % test_id 
+    status_url = stat_url % testId 
     test_status_code = ''
     counter = 0
     while test_status_code != 200:
         if counter != 0:
-           logger.info('Counter is at %s with a maximum of %s periods.  Sleeping %s seconds before proceeding with next status check' % (counter,wpt_attempts,wpt_wait))
+           logger.info('Counter is at %s with a maximum of %s periods.  Sleeping %s seconds.' % (counter,wpt_attempts,wpt_wait))
            ql.pause(int(wpt_wait))
         
         test_status_code = check_status(status_url)
@@ -125,45 +125,30 @@ def query_webpagetest(t_id,domain,u,l):
 
         # Could not obtain a status so quit checking
         if counter >= int(wpt_attempts):
-           break
-
-    # One last test
-    if test_status_code != 200:
-        logger.error('Cound not obtain status for this test, moving on')
-        ql.add_api_calls('webpagetest',1,1)
-        if settings.SMTP_NOTIFY_ERROR:
-            qm.send('Error','Could not obtain WPT status for test:%s' % (status_url))
-        return
+            logger.error('Could not obtain WPT status for %s within %s intervals' % (status_url,wpt_attempts))
+            if settings.SMTP_NOTIFY_ERROR:
+                qm.send('Error','Could not obtain WPT status for %s within %s intervals' % (status_url,wpt_attempts))
+            return
 
     # We received a good status (the test is done)
     # Now grab the data (these API calls are not counted against our total)
     logger.info('downloading report from %s' % xml_url)
     x_response = ql.http_request1('webpagetest',xml_url,None)
     if not x_response:
+        logger.error('Could not obtain WPT test results for %s from %s.' % (domain,xml_url))
+        if settings.SMTP_NOTIFY_ERROR:
+            qm.send('Error','Could not obtain WPT test results for %s from %s.' % (domain,xml_url))
         return
 
     xml = ET.fromstring(x_response)
 
-    # Sometimes either view1 or view2 failed - if that is the case, return without doing anything
-    # This needs to be investigated (why does it happen?)
+    # Sometimes either view1 or view2 failed during the test
     try:
        view1 = xml.findall('./data/successfulFVRuns')[0].text 
        view2 = xml.findall('./data/successfulRVRuns')[0].text 
        logger.debug('Successful FV:%s, Successful RV:%s' % (view1,view2))
     except Exception as e:
-        logger.error('Error encountered searching for FV or RV status for %s:%s:%s.  Data not saved for this test.' % (domain,xml_url,e))
-        ql.add_api_calls('webpagetest',1,1)
-        if settings.SMTP_NOTIFY_ERROR:
-            qm.send('Error','Error encountered searching for FV or RV status for %s:%s:%s.  Data not saved for this test.' % (domain,xml_url,e))
-        return
-
-    if not view1 == '1' or not view2 == '1':
-        logger.error('Unsuccessful FV or RV returned from WPT API for %s.  Data not saved for this test.' % domain)
-        ql.add_api_calls('webpagetest',1,1)
-        if settings.SMTP_NOTIFY_ERROR:
-            qm.send('Error','Unsuccessful FV or RV returned from WPT API for %s.  Data not saved for this test.' % domain)
-        return
-
+        logger.warning('Error encountered searching for FV or RV status for %s : %s : %s.' % (domain,xml_url,e))
 
     # Create a datetime object for right now
     time_now = datetime.datetime.now()
@@ -187,6 +172,7 @@ def query_webpagetest(t_id,domain,u,l):
         # Add the values we know about
         values.append(time_now)
         values.append(t_id)
+        values.append(testId)
         values.append(view)
 
         # Run through the values we are looking for from WPT (if they are not there, errors are raised)
@@ -196,14 +182,11 @@ def query_webpagetest(t_id,domain,u,l):
             except Exception as e:
                 # The value was not there, so add a zero
                 values.append(0)
-                logger.error('Error encountered searching for %s in view %s for %s:nError:%s,Url:%s' % (output_value,view,domain,e,xml_url))
-                ql.add_api_calls('webpagetest',1,1)
-                if settings.SMTP_NOTIFY_ERROR:
-                    qm.send('Error','Error encountered searching for %s in view %s for %s.\nError:%s\nUrl:%s' % (output_value,view,domain,e,xml_url))
+                logger.warning('Error encountered searching for %s in view %s for %s:nError: %s,Url: %s' % (output_value,view,domain,e,xml_url))
 
         sql = """
-           INSERT INTO webpagetest_score (date,test_id,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+           INSERT INTO webpagetest_score (date,test_id,testId,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
         if not options.test:
             qs.execute(sql,values)

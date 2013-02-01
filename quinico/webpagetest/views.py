@@ -277,7 +277,8 @@ def history(request):
 	    # Values that we'll export in CSV
 	    headings = ['date','viewNumber','loadTime','ttfb','bytesOut','bytesOutDoc',
 			'bytesIn','bytesInDoc','requests','requestsDoc','render',
-			'fullyLoaded','docTime','score_cache','score_cdn','score_gzip']
+			'fullyLoaded','docTime','score_cache','score_cdn','score_gzip',
+                        'testId']
 
 	    # Add time information to the dates and the timezone (use the server's timezone)
 	    date_from += ' 00:00:00'

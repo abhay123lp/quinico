@@ -85,6 +85,7 @@ class Score(models.Model):
 
     date = models.DateTimeField(null=False,blank=False)
     test = models.ForeignKey(Test)
+    testId = models.CharField(max_length=25)
     viewNumber = models.IntegerField(max_length=1)
     loadTime = models.IntegerField(max_length=5)
     ttfb = models.IntegerField(max_length=5)
