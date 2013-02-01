@@ -36,7 +36,7 @@ class Domain(models.Model):
 
 
 class Url(models.Model):
-    """URLs that will be tested (for any domain) """
+    """URLs that will be tested (for any domain)"""
 
     url = models.CharField(max_length=255, unique=True)
 
@@ -46,13 +46,29 @@ class Url(models.Model):
 
 
 class Test(models.Model):
-    """Domains and Urls that will be tested """
+    """Domains and Urls that will be tested"""
 
     domain = models.ForeignKey(Domain)
     url = models.ForeignKey(Url)
 
     class Meta:
         unique_together = ['domain','url']
+
+
+class Result(models.Model):
+    """Pagespeed recommendation results"""
+
+    result = models.CharField(max_length=200, unique=True)
+
+
+class Recommendation(models.Model):
+    """Pagespeed recommendations """
+
+    date = models.DateField(null=False,blank=False)
+    test = models.ForeignKey(Test)
+    result = models.ForeignKey(Result)
+    score = models.IntegerField(max_length=3)
+    impact = models.DecimalField(decimal_places=3,max_digits=6)
 
 
 class API_Calls(models.Model):
