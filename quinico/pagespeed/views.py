@@ -70,12 +70,90 @@ def report(request):
         # Close the file
         json_file.close()
 
+        # Report Results for the template, in this format
+        data = []
+        # data[{
+        #       name: 'AvoidCssImport'
+        #       formattedName: 'Avoid CSS @import',
+        #       score: 100,
+        #       impact: 0.1,
+        #       urls: [
+        #              {
+        #               header: 'The following external stylesheets were included in http://www.foo.bar',
+        #		urls: [
+        #                      'http://www.foo.bar',
+        #                      'http://www.clown.com
+  	#		      ]
+        #              }
+        #	      ]
+        #      }
+        #     ]
+        #
+
+        # Manipulate the data so its easier to provide in the template
+        for result in json_data['formattedResults']['ruleResults']:
+            # Create a temporary structure to hold this result
+            data_tmp = {}
+            data_tmp['name'] = result
+            data_tmp['formattedName'] = json_data['formattedResults']['ruleResults'][result]['localizedRuleName']
+            data_tmp['score'] = json_data['formattedResults']['ruleResults'][result]['ruleScore']
+            data_tmp['impact'] = json_data['formattedResults']['ruleResults'][result]['ruleImpact']
+
+            if 'urlBlocks' in json_data['formattedResults']['ruleResults'][result]:
+                
+                # We've got some URLs so create an array to hold them
+                data_tmp['urls'] = []
+
+                for block in json_data['formattedResults']['ruleResults'][result]['urlBlocks']:
+
+                    # Each block will have its own dict
+                    block_tmp = {}
+
+                    ## First the Header ##
+
+                    # The optimization, in human readable form
+                    header = block['header']['format']
+
+                    # If there are args, then we need to interpolate them in
+                    if 'args' in block['header']:
+                        for counter,item in enumerate(block['header']['args'],start=1):
+                            header = header.replace('$%s' % counter,item['value'])
+
+                    # Add the header
+                    block_tmp['header'] = header
+
+                    ## Now the Urls ##
+
+                    # First see if there are urls
+                    if 'urls' in block:
+
+                        urls_tmp = []
+
+                        for url in block['urls']:
+                            url_format = url['result']['format']
+
+                            # Now see if we need to interpolate
+                            if 'args' in url['result']:
+                                for counter,item in enumerate(url['result']['args'],start=1):
+                                    url_format = url_format.replace('$%s' % counter,item['value'])
+
+                            urls_tmp.append(url_format)
+
+                        # Add the url data
+                        block_tmp['urls'] = urls_tmp
+
+                    # Add the block data
+                    data_tmp['urls'].append(block_tmp) 
+
+            # Add the tmp data structure
+            data.append(data_tmp)        
+
         # Print the page
         return render_to_response(
            'pagespeed/report.html',               
            {
               'title':'Quinico | Pagespeed Report',
-              'report':json_data,
+              'report':data,
        },
        context_instance=RequestContext(request)
     )

@@ -23,6 +23,56 @@
 
 <b><i>PAGESPEED REPORT</i></b>
 
-{{report}}
+<br>
+<br>
+
+<script type="text/javascript">
+$(document).ready(function() {
+        $("#ps_report").tablesorter(
+           {
+            sortList: [[2,1]]
+           }
+         );
+});
+</script>
+
+
+
+<br>
+<table id="ps_report" class="tablesorter"> 
+ <thead>
+ <tr>
+  <th>Rule Name</th>
+  <th>Score</th>
+  <th>Impact</th>
+  <th>Detail</th>
+ </tr>
+ </tread>
+ <tbody>
+ {% for row in report %}
+ <tr>
+  <td valign="top" style="text-align:left;">{{row.formattedName}}</td>
+  <td valign="top" style="text-align:left;">{{row.score}}</td>
+  <td valign="top" style="text-align:left;">{{row.impact}}</td>
+  <td valign="top" style="text-align:left;" width="450"> 
+  {% if row.urls %}
+   <img src="/html/images/plus.gif" id="img_{{row.name}}" onclick="hide_show_img('div_{{row.name}}','img_{{row.name}}'); return false">
+   <br>
+   <div id="div_{{row.name}}" style="display:none; word-wrap: break-word; word-break: break-all;">
+   {% for url in row.urls %}
+    <b>{{url.header}}</b>
+    {% for u in url.urls %}
+     <li>{{u}}
+    {% endfor %}
+    <br>
+    <br>
+   {% endfor %}
+  {% endif %}
+   </div>
+  </td>
+ </tr>
+{% endfor %}
+ </tbody>
+</table>
 
 {% endblock %}

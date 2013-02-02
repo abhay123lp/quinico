@@ -156,11 +156,23 @@ function changeElement(action,divName,fieldName,size) {
 }
 
 
+// Hide/Show an element
 function hide_show(element) {
 
    if (document.getElementById(element).style.display == 'none') {
       document.getElementById(element).style.display = '';
    } else {
       document.getElementById(element).style.display = 'none';
+   }
+}
+
+// Hide/Show an element using an image plus/minus
+function hide_show_img(div,img) {
+   if (document.getElementById(div).style.display == 'none') {
+      document.getElementById(div).style.display = '';
+      document.getElementById(img).src = '/html/images/minus.gif';
+   } else {
+      document.getElementById(div).style.display = 'none';
+      document.getElementById(img).src = '/html/images/plus.gif';
    }
 }
