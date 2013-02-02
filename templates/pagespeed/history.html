@@ -53,6 +53,7 @@
   <th>image resp<br>bytes</th>
   <th>js resp<br>bytes</th>
   <th>other resp<br>bytes</th>
+  <th>report</th>
  </tr>
 
  {% for row in dates %}
@@ -70,6 +71,11 @@
   <td>{{row.imageResponseBytes|intcomma}}</td>
   <td>{{row.javascriptResponseBytes|intcomma}}</td>
   <td>{{row.otherResponseBytes|intcomma}}</td>
+  <td>
+   {% if not row.report == '' %}
+   <a href="/pagespeed/report?id={{row.id}}" target="_blank"><img src="/html/images/report.png"></a>
+   {% endif %}
+  </td>
  </tr>
  {% endfor %}
 </table>

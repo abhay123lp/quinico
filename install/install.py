@@ -47,12 +47,12 @@ def create_log(app_dir,apache_uid):
         print 'Log directory already exists, removing it before recreating.'
         try:
             shutil.rmtree('%s/log' % app_dir)
-        except Exception, e:
+        except Exception as e:
             terminate(e)
  
     try:
         os.makedirs('%s/log' % app_dir)
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
     # Create the log file and set the permissions
@@ -60,7 +60,7 @@ def create_log(app_dir,apache_uid):
     try:
         fl = open('%s/log/quinico.log' % app_dir,'w')
         os.chown('%s/log/quinico.log' % app_dir,int(apache_uid),-1)
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -73,13 +73,13 @@ def create_pid(app_dir,apache_uid):
         print 'Pid directory already exists, removing it before recreating.'
         try:
             shutil.rmtree('%s/jobs/pid' % app_dir)
-        except Exception, e:
+        except Exception as e:
             terminate(e)
  
     try:
         os.makedirs('%s/jobs/pid' % app_dir)
         os.chown('%s/jobs/pid' % app_dir,int(apache_uid),-1)
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -102,7 +102,7 @@ def customize_settings(app_dir,dst_local):
         f_sp = open('%s/quinico/settings.py' % app_dir,'w')
         f_sp.write(s_sp)
         f_sp.close() 
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -141,7 +141,7 @@ def customize_local_settings(db_user,db_pass,db_host,db_port,dst_local,app_dir,
         # Set permissions to 600 and ownership apache_uid:root
         os.chown('%s/local_settings.py' % dst_local,int(apache_uid),-1)
         os.chmod('%s/local_settings.py' % dst_local,0600)
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -170,7 +170,7 @@ def customize_wsgi_conf(app_dir,wsgi_dir,django_admin,dst_local):
         f_wc = open('%s/wsgi.conf' % dst_local,'w')
         f_wc.write(s_wc)
         f_wc.close() 
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -190,7 +190,7 @@ def customize_wsgi_py(app_dir,dst_local):
         f_wp = open('%s/wsgi.py' % dst_local,'w')
         f_wp.write(s_wp)
         f_wp.close() 
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -206,7 +206,7 @@ def apache_symlink(dst_local,web_conf):
             print '%s/wsgi.conf symlink exists, removing and recreating it' % dst_local
             os.unlink('%s/wsgi.conf' % web_conf)
         os.symlink('%s/wsgi.conf' % dst_local,'%s/wsgi.conf' % web_conf)
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -224,7 +224,7 @@ def quinico_symlink(app_dir,quinico_src):
 
         # Create the symlink
         os.symlink(quinico_src,'%squinico' % app_dir)
-    except Exception, e:
+    except Exception as e:
         terminate(e)
 
 
@@ -255,14 +255,14 @@ def copy_local(src_local,dst_local):
         print '%s exists, removing and recopying it.' % dst_local
         try:
             shutil.rmtree(dst_local)
-        except Exception, e:
+        except Exception as e:
             terminate(e)
 
     # Copy the local.tmp directory to the new quinico-local directory
     print 'Copying %s to %s' % (src_local,dst_local)
     try:
         shutil.copytree(src_local,dst_local)
-    except Exception, e:
+    except Exception as e:
         print 'Error occurred: %s' % e
         terminate(e)
 

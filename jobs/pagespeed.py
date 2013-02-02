@@ -28,52 +28,14 @@ import logging
 import quinico
 import urllib
 import json
+import uuid
+import datetime
 from optparse import OptionParser
 from django.conf import settings
 from qclasses import qemail
 from qclasses import qsql
 from qclasses import qlib
 
-
-def add_result(result):
-    """
-    Add a pagespeed recommendation result
-    """
-
-    logger.info('Adding a Pagespeed result to database: %s' % result)
-
-    sql = """
-           INSERT INTO pagespeed_result (result)
-           SELECT %s
-           FROM dual
-           WHERE not exists (SELECT * from pagespeed_result WHERE result=%s)"""
-
-    qs.execute(sql,(result,result))
-    if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-        qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
-
-
-def add_reco(t_id,result,rule_score,rule_impact):
-    """
-    Add a recommendation
-    """
-
-    # Format the rule_impact to 3 sigfigs
-    rule_impact = '{0:.3f}'.format(float(rule_impact))
-
-    logger.info('Adding a pagespeed recommendation: %s, %s, %s, %s' % (t_id,result,rule_score,rule_impact))
-
-    sql = """
-           INSERT INTO pagespeed_recommendation (date,test_id,result_id,score,impact)
-           VALUES (DATE(NOW()),
-           %s,
-           (SELECT id from pagespeed_result where result=%s),
-           %s,
-           %s)"""
-
-    qs.execute(sql,(t_id,result,rule_score,rule_impact))
-    if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-        qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
 
 def obtain_tests():
@@ -124,7 +86,6 @@ def query_pagespeed(t_id,domain,u,strategy):
     raw_json = json.loads(response)
 
     ## Add the high level scores that we save for every test ##
-
     # We are looking for the following items, in this order:
     items = [
         'numberHosts',
@@ -148,11 +109,42 @@ def query_pagespeed(t_id,domain,u,strategy):
     results.append(strategy)
     results.append(raw_json['score'])
     
+    # Add the rest of the items
     for item in items:
         if item in raw_json['pageStats']:
             results.append(raw_json['pageStats'][item])
         else:
             results.append(0) 
+
+    # Add the full report
+
+    # Directory name
+    date_path = datetime.datetime.now().strftime('%Y/%m/%d')
+
+    # Unique filename
+    file_name = uuid.uuid4()
+    
+    # Save the report to disk
+    # Do everything at once to make error handling easier
+    try:
+        # Create the date directory if its not already there
+        if not os.path.exists('%s/%s' % (pagespeed_upload,date_path)):
+            os.makedirs('%s/%s' % (pagespeed_upload,date_path))
+
+        # Save the file
+        report_file = open('%s/%s/%s' % (pagespeed_upload,date_path,file_name),'w')
+        report_file.write(json.dumps(raw_json))
+        report_file.close()
+      
+        # Save the file name for the DB
+        results.append('%s/%s' % (date_path,file_name))
+    except Exception as e:
+        logger.error('Error saving report file for %s: %s' % (domain,e))
+        if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+            qm.send('Error','Error saving report file for %s: %s' % (domain,e))
+
+        # Save nothing to the DB
+        results.append('')
 
     sql = """
            INSERT INTO pagespeed_score (
@@ -170,31 +162,17 @@ def query_pagespeed(t_id,domain,u,strategy):
                                         htmlResponseBytes,
                                         imageResponseBytes,
                                         javascriptResponseBytes,
-                                        otherResponseBytes
+                                        otherResponseBytes,
+                                        report
                                        )
            VALUES (DATE(NOW()),
-           %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+           %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
     if not options.test:
         qs.execute(sql,results)
         if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
             qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
-
-    ## Add the specific recommendations that we are interested in ##
-
-    for result in raw_json['formattedResults']['ruleResults']:
-        rule_score = raw_json['formattedResults']['ruleResults'][result]['ruleScore']
-        rule_impact = raw_json['formattedResults']['ruleResults'][result]['ruleImpact']
-
-        # If the score is below what we are saving and 
-        # the impact is above what we are saving, add it
-        if int(rule_score) <= int(pagespeed_score_below) and float(rule_impact) >= float(pagespeed_impact_above):
-            # Add the result name, if its not already there
-            logger.info('adding %s with %s and %s' % (result,rule_score,rule_impact))
-            if not options.test:
-                add_result(result)
-                add_reco(t_id,result,rule_score,rule_impact)
 
 
 #
@@ -280,20 +258,12 @@ if google_key is None:
 else:
    logger.info('Google Key = %s' % google_key)
 
-pagespeed_score_below = ql.return_config('pagespeed_score_below')
-if pagespeed_score_below is None:
-    logger.error('Google Pagespeed Score Below is not defined, perhaps someone deleted it')
+pagespeed_upload = ql.return_config('pagespeed_upload')
+if pagespeed_upload is None:
+    logger.error('Google Pagespeed upload location is not defined, perhaps someone deleted it')
     ql.terminate()
 else:
-   logger.info('Google Pagespeed Score Below = %s' % pagespeed_score_below)
-
-pagespeed_impact_above = ql.return_config('pagespeed_impact_above')
-if pagespeed_impact_above is None:
-    logger.error('Google Pagespeed Impact Above is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('Google Pagespeed Impact Above = %s' % pagespeed_impact_above)
-
+   logger.info('Google Pagespeed upload location = %s' % pagespeed_upload)
 
 # Remove any pagespeed data from today as this new data
 # should override them

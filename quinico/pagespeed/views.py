@@ -21,6 +21,7 @@
 
 
 import datetime
+import json
 import logging
 import urllib
 import csv
@@ -31,17 +32,65 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from quinico.main.models import Config
 from quinico.pagespeed.models import Domain
-from quinico.pagespeed.models import Url
 from quinico.pagespeed.models import Score
 from quinico.pagespeed.models import Test
-from quinico.pagespeed.forms import PagespeedTrendForm
+from quinico.pagespeed.models import Url
 from quinico.pagespeed.forms import PagespeedBreakdownForm
 from quinico.pagespeed.forms import PagespeedHistoryForm
+from quinico.pagespeed.forms import PagespeedReportForm
+from quinico.pagespeed.forms import PagespeedTrendForm
 from quinico.dashboard.models import Dash_Settings
 
 
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
+
+
+def report(request):
+    """Pagespeed Report View
+    Provide the full Pagespeed report
+    """
+
+    form = PagespeedReportForm(request.GET)
+    if form.is_valid():
+        id = form.cleaned_data['id']
+
+        # Obtain the Pagespeed report upload location
+        pagespeed_upload = Config.objects.filter(config_name='pagespeed_upload').values('config_value')[0]['config_value']
+
+        # Obtain the report name
+        report = Score.objects.filter(id=id).values('report')[0]['report']
+ 
+        # Load the file
+        json_file = open('%s/%s' % (pagespeed_upload,report))
+
+        # Deserialize it
+        json_data = json.load(json_file)
+
+        # Close the file
+        json_file.close()
+
+        # Print the page
+        return render_to_response(
+           'pagespeed/report.html',               
+           {
+              'title':'Quinico | Pagespeed Report',
+              'report':json_data,
+       },
+       context_instance=RequestContext(request)
+    )
+
+    # Invalid request, give them the error page
+    else:
+        # Print the page
+        return render_to_response(
+           'error/error.html',               
+           {
+              'title':'Quinico | Error',
+              'test':test,
+       },
+       context_instance=RequestContext(request)
+    )
 
 
 def trends(request):

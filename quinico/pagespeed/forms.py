@@ -117,6 +117,22 @@ class StrategyField(forms.Field):
             raise forms.ValidationError('Improperly formatted strategy:%s' % (value))
 
 
+class IdField(forms.Field):
+    """An ID field
+
+    Requirements:
+       - Must not be empty
+       - Must contain only digits
+
+    """
+
+    def validate(self, value):
+        if value is None or value == '': 
+            raise forms.ValidationError('No id selected')
+        if not re.match(r'^\d+$', value):
+            raise forms.ValidationError('Improperly formatted id:%s' % (value))
+
+
 ### FORMS ###
 
 
@@ -152,3 +168,8 @@ class PagespeedHistoryForm(forms.Form):
     strategy = StrategyField()
     format = FormatField()
 
+
+class PagespeedReportForm(forms.Form):
+    """Form for querying the entire Pagespeed report"""
+
+    id = IdField()

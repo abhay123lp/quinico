@@ -55,22 +55,6 @@ class Test(models.Model):
         unique_together = ['domain','url']
 
 
-class Result(models.Model):
-    """Pagespeed recommendation results"""
-
-    result = models.CharField(max_length=200, unique=True)
-
-
-class Recommendation(models.Model):
-    """Pagespeed recommendations """
-
-    date = models.DateField(null=False,blank=False)
-    test = models.ForeignKey(Test)
-    result = models.ForeignKey(Result)
-    score = models.IntegerField(max_length=3)
-    impact = models.DecimalField(decimal_places=3,max_digits=6)
-
-
 class API_Calls(models.Model):
     """Count of Pagespeed API calls"""
 
@@ -103,4 +87,5 @@ class Score(models.Model):
     imageResponseBytes = models.IntegerField(max_length=11)
     javascriptResponseBytes = models.IntegerField(max_length=11)
     otherResponseBytes = models.IntegerField(max_length=11)
+    report = models.CharField(max_length=50, unique=True)
 
