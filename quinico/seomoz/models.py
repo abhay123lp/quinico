@@ -105,7 +105,3 @@ class Description(models.Model):
     full_description = models.CharField(max_length=200)
     represent = models.CharField(max_length=7)
 
-    # Represent the object as unicode
-    def __unicode__(self):
-        return self.metric
-

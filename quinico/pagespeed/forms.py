@@ -90,14 +90,14 @@ class MetricField(forms.Field):
 
     Requirements:
        - Must not be empty
-       - Must contain only alpha-numeric
+       - Must contain only alpha-numeric and _
 
     """
 
     def validate(self, value):
         if value is None or value == '':
             raise forms.ValidationError('No metric selected')
-        if not re.match(r'^[A-Za-z]+$', value):
+        if not re.match(r'^[A-Za-z_]+$', value):
             raise forms.ValidationError('Improperly formatted metric:%s' % (value))
 
 

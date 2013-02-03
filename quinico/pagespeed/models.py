@@ -72,7 +72,7 @@ class API_Errors(models.Model):
 class Score(models.Model):
     """Pagespeed Score"""
 
-    date = models.DateField(null=False,blank=False)
+    date = models.DateTimeField(null=False,blank=False)
     test = models.ForeignKey(Test)
     strategy = models.CharField(max_length=11)
     score = models.IntegerField(max_length=3)

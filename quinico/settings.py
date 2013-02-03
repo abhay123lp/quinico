@@ -166,7 +166,7 @@ LOGGING = {
     'loggers': {
         'quinico': {
             'handlers': ['logfile'],
-            'level': 'WARNING',
+            'level': 'INFO',
             'propagate': False
         },
     }

@@ -24,8 +24,8 @@
 {% csrf_token %}
 <table>
  <tr>
-  <th>Parameter</th>
-  <th>Current Value</th>
+  <th width="200">Parameter</th>
+  <th width="300">Current Value</th>
   <th>Update</th>
   <th>New Value</th>
  </tr>
@@ -118,6 +118,14 @@
    {% endif %}
    {% if form.dashboard_frequency.errors %}
     Dashboard Frequency error: {% for error in form.dashboard_frequency.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.pagespeed_upload.errors %}
+    Pagespeed Upload error: {% for error in form.pagespeed_upload.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.pagespeed_locale.errors %}
+    Pagespeed Locale error: {% for error in form.pagespeed_locale.errors %}{{error}}{% endfor %}
     <br>
    {% endif %}
   </td>

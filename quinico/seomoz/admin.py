@@ -25,7 +25,6 @@
 
 from quinico.seomoz.models import Url
 from quinico.seomoz.models import Competitor
-from quinico.seomoz.models import Description
 from django.contrib import admin
 
 
@@ -47,17 +46,6 @@ class CompetitorAdmin(admin.ModelAdmin):
     list_display = ('url','comp')
 
 
-class DescriptionAdmin(admin.ModelAdmin):
-    """Description admin class for manipulating SEO metric descriptions"""
-
-    fieldsets = [
-       ('Metric Description',{'fields':['metric','column_description','full_description','represent']})
-    ]
-
-    list_display = ('metric','column_description','full_description','represent')
-
-
 # Register the classes with the admin
 admin.site.register(Url,UrlAdmin)
 admin.site.register(Competitor,CompetitorAdmin)
-admin.site.register(Description,DescriptionAdmin)

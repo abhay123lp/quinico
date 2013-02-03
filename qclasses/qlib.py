@@ -225,7 +225,7 @@ class lib:
         Make a web query with urllib
         """
 
-        self.logger.debug('requesting URL:%s' % url)
+        self.logger.info('requesting URL:%s' % url)
 
         # Count the API call, if requested to do so
         if count:

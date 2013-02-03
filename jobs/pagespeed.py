@@ -72,11 +72,18 @@ def query_pagespeed(t_id,domain,u,strategy):
     params = {}
     params['url'] = 'http://%s%s' % (domain,u)
     params['strategy'] = strategy
+    params['locale'] = pagespeed_locale
 
     url = base_url % urllib.urlencode(params) 
 
     # Can't url_encode the google key
     url += '&key=%s' % google_key
+
+    # Create a datetime object for right now
+    time_now = datetime.datetime.now()
+
+    # Add the server's timezone and then convert to UTC before adding to the DB
+    time_now = ql.convert_date_utc(time_now,settings.TIME_ZONE)
 
     response = ql.http_request1('pagespeed',url,1)
     if not response:
@@ -105,6 +112,7 @@ def query_pagespeed(t_id,domain,u,strategy):
     results = []
 
     # Add the first few items
+    results.append(time_now)
     results.append(t_id)
     results.append(strategy)
     results.append(raw_json['score'])
@@ -165,8 +173,8 @@ def query_pagespeed(t_id,domain,u,strategy):
                                         otherResponseBytes,
                                         report
                                        )
-           VALUES (DATE(NOW()),
-           %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+           VALUES (
+           %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
     if not options.test:
         qs.execute(sql,results)
@@ -264,6 +272,13 @@ if pagespeed_upload is None:
     ql.terminate()
 else:
    logger.info('Google Pagespeed upload location = %s' % pagespeed_upload)
+
+pagespeed_locale = ql.return_config('pagespeed_locale')
+if pagespeed_locale is None:
+    logger.error('Google Pagespeed locale is not defined, perhaps someone deleted it')
+    ql.terminate()
+else:
+   logger.info('Google Pagespeed locale = %s' % pagespeed_locale)
 
 # Remove any pagespeed data from today as this new data
 # should override them

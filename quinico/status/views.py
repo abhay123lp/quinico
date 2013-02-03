@@ -25,6 +25,7 @@ import logging
 import sys
 import csv
 
+from django.db.models import Sum
 from django.shortcuts import render_to_response
 from django.http import HttpResponse
 from django.template import RequestContext
@@ -39,7 +40,6 @@ from quinico.pagespeed.models import API_Errors as pagespeed_errors
 from quinico.seomoz.models import API_Calls as seomoz_calls
 from quinico.seomoz.models import API_Errors as seomoz_errors
 from quinico.status.forms import APIStatusForm
-from django.db.models import Sum
 
 
 # Get an instance of a logger

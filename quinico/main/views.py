@@ -141,7 +141,9 @@ def datajobs(request):
                 # Schedule the job
                 job = cron.new(command='export PYTHONPATH=%s && %s/jobs/pagespeed.py' % (app_dir,app_dir),
                                comment='Quinico Pagespeed Data Job')
-                job.hour.on(pagespeed_hour)
+                nums = pagespeed_hour.split(',')
+                for num in nums:
+                    job.hour.on(num)
                 job.minute.on(pagespeed_minute)
             else:
                 Data_Job.objects.filter(job_name='pagespeed').update(job_status=False,
@@ -283,6 +285,8 @@ def config(request):
             params['seomoz_access_id'] = form.cleaned_data['seomoz_access_id']
             params['seomoz_account_type'] = form.cleaned_data['seomoz_account_type']
             params['seomoz_secret_key'] = form.cleaned_data['seomoz_secret_key']
+            params['pagespeed_upload'] = form.cleaned_data['pagespeed_upload']
+            params['pagespeed_locale'] = form.cleaned_data['pagespeed_locale']
             params['smtp_notify_data_start'] = form.cleaned_data['smtp_notify_data_start']
             params['smtp_notify_seomoz_new'] = form.cleaned_data['smtp_notify_seomoz_new']
             params['wpt_attempts'] = form.cleaned_data['wpt_attempts']

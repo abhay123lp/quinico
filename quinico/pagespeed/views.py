@@ -25,6 +25,8 @@ import json
 import logging
 import urllib
 import csv
+import pytz
+from django.db.models import Avg
 from django.utils import simplejson
 from django.conf import settings
 from django.http import HttpResponse
@@ -205,26 +207,40 @@ def trends(request):
                 date_from = now - then
                 date_from = date_from.strftime("%Y-%m-%d")
 
+            # Add time information to the dates and the timezone (use the server's timezone)
+            # We need to keep the originals unchanged for the CSV link
+            date_from_tz = date_from
+            date_from_tz += ' 00:00:00'
+            date_from_tz = datetime.datetime.strptime(date_from_tz, '%Y-%m-%d %H:%M:%S')
+            date_from_tz = pytz.timezone(settings.TIME_ZONE).localize(date_from_tz)
+
+            date_to_tz = date_to
+            date_to_tz += ' 23:59:59'
+            date_to_tz = datetime.datetime.strptime(date_to_tz, '%Y-%m-%d %H:%M:%S')
+            date_to_tz = pytz.timezone(settings.TIME_ZONE).localize(date_to_tz)
+
 	    # Unquote the url to UTF-8 and then decode
 	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
 
 	    # Obtain the scores for this test
+            # Convert the times to the server timezone first and then take the date portion
 	    scores = Score.objects.filter(test_id__domain__domain=domain,
                                           test_id__url__url=u_unenc,
-                                          date__range=[date_from,date_to],
+                                          date__range=[date_from_tz,date_to_tz],
                                           strategy=strategy
-                                         ).values('date',metric).order_by('date')
+                                         ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
+                                         ).values('date').annotate(Avg(metric)).order_by('date')
 
 	    # Construct the dashboard, download and monitoring links
             base_url = 'http://%s/pagespeed/trends?domain=%s' % (request.META['HTTP_HOST'],domain)
 	    db_link = '%s&url=%s&metric=%s&strategy=%s&format=db' % (base_url,url,metric,strategy)
 	    json_link = '%s&url=%s&metric=%s&strategy=%s&format=json' % (base_url,url,metric,strategy)
 	    csv_link = '%s&url=%s&metric=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,
-                                                                                               url,
-                                                                                               metric,
-                                                                                               strategy,
-                                                                                               date_from,
-                                                                                               date_to)
+                                                                                                    url,
+                                                                                                    metric,
+                                                                                                    strategy,
+                                                                                                    date_from,
+                                                                                                    date_to)
 
 	    # Print the page
 
@@ -234,7 +250,7 @@ def trends(request):
 		# JSON request
                 if format == 'json':
                     return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
-                                                           metric: row[metric]} for row in scores]),
+                                                           metric: row['%s__avg' % metric]} for row in scores]),
                                         mimetype="application/json")
 
 		# Dashboard request
@@ -273,7 +289,7 @@ def trends(request):
 		    writer = csv.writer(response)
 		    writer.writerow(['date','value'])
 		    for row in scores:
-			writer.writerow([row['date'],row[metric]])
+			writer.writerow([row['date'].strftime("%Y-%m-%d"),row['%s__avg' % metric]])
 		    return response
 
 	    # Just a standard HTML response is being requested
@@ -567,6 +583,15 @@ def history(request):
 	    headings = ['date','score','numberHosts','numberResources','numberStaticResources','numberCssResources',
 			'totalRequestBytes','textResponseBytes','cssResponseBytes','htmlResponseBytes','imageResponseBytes',
 			'javascriptResponseBytes','otherResponseBytes']
+
+            # Add time information to the dates and the timezone (use the server's timezone)
+            date_from += ' 00:00:00'
+            date_from = datetime.datetime.strptime(date_from, '%Y-%m-%d %H:%M:%S')
+            date_from = pytz.timezone(settings.TIME_ZONE).localize(date_from)
+
+            date_to += ' 23:59:59'
+            date_to = datetime.datetime.strptime(date_to, '%Y-%m-%d %H:%M:%S')
+            date_to = pytz.timezone(settings.TIME_ZONE).localize(date_to)
 
 	    # Obtain the data
 	    dates = Score.objects.filter(test_id__domain__domain=domain,

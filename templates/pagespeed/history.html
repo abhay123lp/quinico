@@ -58,7 +58,7 @@
 
  {% for row in dates %}
  <tr>
-  <td>{{row.date|date:"Y-m-d"}}</td>
+  <td>{{row.date|date:"Y-m-d H:i:s"}}</td>
   <td>{{row.score}}</td>
   <td>{{row.numberHosts|intcomma}}</td>
   <td>{{row.numberResources|intcomma}}</td>

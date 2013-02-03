@@ -23,6 +23,7 @@
 """
 
 
+import os
 import re
 from django import forms
 from quinico.main.models import Help
@@ -47,6 +48,7 @@ class MultipleHourField(forms.Field):
             nums = value.split(',')
             
             # Don't allow the same hour more than once
+            # and make sure its in a valid range
             nums_uniq = {}
             for num in nums:
                 if int(num) in nums_uniq:
@@ -129,13 +131,43 @@ class DashboardSlotsField(forms.Field):
             raise forms.ValidationError('Not a valid entry: %s' % value)
 
 
+class LocaleField(forms.Field):
+    """Locale Field
+
+       Requirements:
+          - Can be only lowercase, uppercase and _ characters
+
+    """
+
+    def validate(self, value):
+        if value is None or value == '':
+            pass
+        elif not re.match(r'^[a-zA-Z_]+$', value):
+            raise forms.ValidationError('Not a valid entry: %s' % value)
+
+
+class PathField(forms.Field):
+    """Unix Path Field
+
+       Requirements:
+          - Can be only a valid Unix path
+
+    """
+
+    def validate(self, value):
+        if value is None or value == '':
+            pass
+        elif not os.path.exists(value):
+            raise forms.ValidationError('Path does not exist: %s' % value)
+
+
 ### FORMS ###
 
 
 class JobsForm(forms.Form):
     """Form for updating data collection jobs"""
 
-    pagespeed_hour = HourField()
+    pagespeed_hour = MultipleHourField()
     pagespeed_minute = MinuteField()
     webmaster_hour = HourField()
     webmaster_minute = MinuteField()
@@ -170,6 +202,8 @@ class ConfigForm(forms.Form):
     dashboard_font = forms.IntegerField(required=False)
     dashboard_frequency = forms.IntegerField(required=False)
     alert = forms.CharField(required=False)
+    pagespeed_locale = LocaleField()
+    pagespeed_upload = PathField()
 
 
 class HelpAdminForm(forms.ModelForm):
