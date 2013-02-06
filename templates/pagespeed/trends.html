@@ -73,7 +73,7 @@
         };
 
         var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
+        var formatter = new google.visualization.NumberFormat({fractionDigits:'1'});
         formatter.format(data,1);
         chart.draw(data,options);
     }

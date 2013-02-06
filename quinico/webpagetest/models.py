@@ -81,7 +81,7 @@ class API_Errors(models.Model):
 
 
 class Score(models.Model):
-    """Pagespeed Score"""
+    """Webpagetest Scores"""
 
     date = models.DateTimeField(null=False,blank=False)
     test = models.ForeignKey(Test)
@@ -122,3 +122,4 @@ class Score(models.Model):
     image_savings = models.IntegerField(max_length=11)
     aft = models.IntegerField(max_length=5)
     domElements = models.IntegerField(max_length=5)
+    test_failed = models.BooleanField(default=False)

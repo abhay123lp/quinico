@@ -61,7 +61,19 @@ def report(request):
         pagespeed_upload = Config.objects.filter(config_name='pagespeed_upload').values('config_value')[0]['config_value']
 
         # Obtain the report name
-        report = Score.objects.filter(id=id).values('report')[0]['report']
+        details = Score.objects.filter(id=id).values('test_id','date','strategy','report')
+
+        # Domain and URL
+        domain = Test.objects.filter(id=details[0]['test_id']).values('domain_id__domain','url_id__url')
+
+        # Date
+        date = details[0]['date']
+
+        # Strategy
+        strategy = details[0]['strategy']
+
+        # Report
+        report = details[0]['report']
  
         # Load the file
         json_file = open('%s/%s' % (pagespeed_upload,report))
@@ -155,6 +167,10 @@ def report(request):
            'pagespeed/report.html',               
            {
               'title':'Quinico | Pagespeed Report',
+              'date':date,
+              'domain':domain[0]['domain_id__domain'],
+              'url':domain[0]['url_id__url'],
+              'strategy':strategy,
               'report':data,
        },
        context_instance=RequestContext(request)
@@ -230,6 +246,9 @@ def trends(request):
                                           strategy=strategy
                                          ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
                                          ).values('date').annotate(Avg(metric)).order_by('date')
+
+            logger.debug(scores.query)
+            logger.debug(scores)
 
 	    # Construct the dashboard, download and monitoring links
             base_url = 'http://%s/pagespeed/trends?domain=%s' % (request.META['HTTP_HOST'],domain)
@@ -381,8 +400,17 @@ def breakdown(request):
 
 	    # If the date is missing, set it b/c this is probably
 	    # an API or DB request (just give the most recent)
-            if not date:
-		logger.debug('Obtaining last run of pagespeed for %s with %s' % (domain,strategy))
+            if date:
+
+                # Add hours, minutes, seconds to make it the beginning of the day
+                date += ' 00:00:00'
+                # Create a datetime object and format properly
+                date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+                # Add our timezone
+                date = pytz.timezone(settings.TIME_ZONE).localize(date)
+
+            # No date, so just give the last run date as the date, formatted properly
+            else:
 		last_run = Score.objects.filter(test_id__domain__domain=domain,
                                                 test_id__url__url=u_unenc,
                                                 strategy=strategy
@@ -390,34 +418,68 @@ def breakdown(request):
 	   
 		if last_run[0]['date']:
 		    date = last_run[0]['date']
-		    logger.debug('Last run of pagespeed: %s' % date)
+
+                    # Obtain as yyyy-mm-dd so we can make it the beginning of the day
+                    date = date.strftime('%Y-%m-%d')
+                    # Add hours, minutes, seconds to make it the beginning of the day
+                    date += ' 00:00:00'
+                    # Create a datetime object and format properly
+                    date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
+                    # Add our timezone
+                    date = pytz.timezone(settings.TIME_ZONE).localize(date)
+                    
+                # Looks like the pagespeed job has never been run
 		else:
-		    logger.debug('pagespeed data collection has never been run')
+                    message = 'The report returned no data.  It appears the Pagespeed data job has never been run'
+                    return render_to_response(
+                        'misc/generic.html',
+                        {
+                         'title':'Quinico | No Data',
+                         'back_link':back_link,
+                         'forward_link':forward_link,
+                         'message':message
+                        },
+                        context_instance=RequestContext(request)
+                     )
 
             # Create forward/backward links for navigation if this is not an API request
             if not format:
-                ref = datetime.datetime.strptime(date,'%Y-%m-%d')
-                date_back = (ref - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+                # The reference date will be the given date, or the last run date
+                date_back = (date - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
                 back_link = '/pagespeed/breakdown?domain=%s&url=%s&strategy=%s&date=%s' % (domain,url,strategy,date_back)
-                date_forward = (ref + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+                date_forward = (date + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
                 forward_link = '/pagespeed/breakdown?domain=%s&url=%s&strategy=%s&date=%s' % (domain,url,strategy,date_forward)
 
 	    # Obtain the data for this domain for the date in question
+   
+            # DJango does not give us an easy way to match on the date of a datetime, so we'll do a range between
+            # 00:00:00 and 23:59:59
+            # The 'date' will already be in the form yyyy-mm-dd 00:00:00 so we just need the end of the day
+            d_to = date.strftime('%Y-%m-%d')
+            d_to += ' 23:59:59'
+            d_to = datetime.datetime.strptime(d_to,'%Y-%m-%d %H:%M:%S')
+            d_to = pytz.timezone(settings.TIME_ZONE).localize(d_to)
+
 	    scores = Score.objects.filter(test_id__domain__domain=domain,
                                           test_id__url__url=u_unenc,
-                                          date=date,strategy=strategy
-                                         ).values('test_id__url__url',
-					          'numberResources',
-					          'numberStaticResources',
-					          'numberCssResources',
-					          'totalRequestBytes',
-					          'textResponseBytes',
-					          'cssResponseBytes',
-					          'htmlResponseBytes',
-					          'imageResponseBytes',
-					          'javascriptResponseBytes',
-					          'otherResponseBytes',
+                                          date__range=[date,d_to],
+                                          strategy=strategy,
+                                         ).extra({'date':'date(date)'}
+                                         ).values('date').annotate(
+					          Avg('numberResources'),
+					          Avg('numberStaticResources'),
+					          Avg('numberCssResources'),
+					          Avg('totalRequestBytes'),
+					          Avg('textResponseBytes'),
+					          Avg('cssResponseBytes'),
+					          Avg('htmlResponseBytes'),
+					          Avg('imageResponseBytes'),
+					          Avg('javascriptResponseBytes'),
+					          Avg('otherResponseBytes')
 					         )
+
+            logger.debug(scores.query)
+            logger.debug(scores)
 
             # If there is no data, let the user know
             if not scores:
@@ -441,7 +503,7 @@ def breakdown(request):
 	    else:
 		a_strategy = strategy
             base_url = 'http://%s/pagespeed/breakdown?domain' % (request.META['HTTP_HOST'])
-	    a_url = '%s=%s&url=%s&date=%s&strategy=%s' % (base_url,domain,url,date,a_strategy)
+	    a_url = '%s=%s&url=%s&date=%s&strategy=%s' % (base_url,domain,url,date.strftime('%Y-%m-%d'),a_strategy)
 
 	    # Construct the dashboard, download and monitoring links
 	    db_link = '%s=%s&url=%s&strategy=%s&format=db' % (base_url,domain,url,strategy)
@@ -453,8 +515,20 @@ def breakdown(request):
 	    if format:
 		# JSON request
 		if format == 'json':
-                    return HttpResponse(simplejson.dumps([row for row in scores]),
-                                        mimetype="application/json")
+                    return HttpResponse(simplejson.dumps([{
+                                                           'date': row['date'].strftime("%Y-%m-%d"),
+                                                           'numberResources': row['numberResources__avg'],
+                                                           'numberstatisResources': row['numberStaticResources__avg'],
+                                                           'numberCssResources': row['numberCssResources__avg'],
+                                                           'totalRequestBytes': row['totalRequestBytes__avg'],
+                                                           'textResponseBytes': row['textResponseBytes__avg'],
+                                                           'cssResponseBytes': row['cssResponseBytes__avg'],
+                                                           'htmlResponseBytes': row['htmlResponseBytes__avg'],
+                                                           'imageResponsebytes': row['imageResponseBytes__avg'],
+                                                           'javascriptResponseBytes': row['javascriptResponseBytes__avg'],
+                                                           'otherResponseBytes': row['otherResponseBytes__avg']
+                                                          } for row in scores]),
+                                                          mimetype="application/json")
 
 		# Dashboard request
 		elif format == 'db':
@@ -584,6 +658,10 @@ def history(request):
 			'totalRequestBytes','textResponseBytes','cssResponseBytes','htmlResponseBytes','imageResponseBytes',
 			'javascriptResponseBytes','otherResponseBytes']
 
+	    # Construct the csv link
+            base_url = 'http://%s/pagespeed/history?domain=%s' % (request.META['HTTP_HOST'],domain)
+	    csv_link = '%s&url=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,url,strategy,date_from,date_to)
+
             # Add time information to the dates and the timezone (use the server's timezone)
             date_from += ' 00:00:00'
             date_from = datetime.datetime.strptime(date_from, '%Y-%m-%d %H:%M:%S')
@@ -600,9 +678,6 @@ def history(request):
                                          strategy=strategy
                                         ).values().order_by('-date')
 
-	    # Construct the csv link
-            base_url = 'http://%s/pagespeed/history?domain=%s' % (request.META['HTTP_HOST'],domain)
-	    csv_link = '%s&url=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,url,strategy,date_from,date_to)
 
 	    # Print the page
 

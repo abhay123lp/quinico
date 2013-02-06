@@ -29,7 +29,7 @@
  <table class="tiny_no_border">
   <tr>
    <td>
-    Date:<b>{{date}}</b>
+    Date:<b>{{date|date:"Y-m-d"}}</b>
    </td>
   </tr>
   <tr>
@@ -57,12 +57,12 @@
             data.addColumn('number', 'Count');
             data.addRows([
    
-               ['javascript',{{scores.0.javascriptResponseBytes}}],
-               ['image',{{scores.0.imageResponseBytes}}],
-               ['html',{{scores.0.htmlResponseBytes}}],
-               ['text',{{scores.0.textResponseBytes}}],
-               ['css',{{scores.0.cssResponseBytes}}],
-               ['other',{{scores.0.otherResponseBytes}}],
+               ['javascript',{{scores.0.javascriptResponseBytes__avg}}],
+               ['image',{{scores.0.imageResponseBytes__avg}}],
+               ['html',{{scores.0.htmlResponseBytes__avg}}],
+               ['text',{{scores.0.textResponseBytes__avg}}],
+               ['css',{{scores.0.cssResponseBytes__avg}}],
+               ['other',{{scores.0.otherResponseBytes__avg}}],
       
            ]);
 

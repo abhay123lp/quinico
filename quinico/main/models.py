@@ -28,11 +28,11 @@ from django.db import models
 class Config(models.Model):
     """Configuration Parameters"""
 
-    config_name = models.CharField(max_length=50, unique=True);
-    friendly_name = models.CharField(max_length=50, unique=True);
-    config_value = models.CharField(max_length=500,blank=True);
-    description = models.CharField(max_length=200,blank=True);
-    display = models.CharField(max_length=8,blank=False);
+    config_name = models.CharField(max_length=50, unique=True)
+    friendly_name = models.CharField(max_length=50, unique=True)
+    config_value = models.CharField(max_length=500,blank=True)
+    description = models.CharField(max_length=200,blank=True)
+    display = models.CharField(max_length=8,blank=False)
 
     # Represent the object as unicode
     def __unicode__(self):
@@ -42,8 +42,8 @@ class Config(models.Model):
 class Help(models.Model):
     """Help Documents"""
 
-    help_name = models.CharField(max_length=100, unique=True);
-    help_value = models.CharField(max_length=1000);
+    help_name = models.CharField(max_length=100, unique=True)
+    help_value = models.CharField(max_length=1000)
 
     # Represent the objects as unicode
     def __unicode__(self):
@@ -53,8 +53,8 @@ class Help(models.Model):
 class Data_Job(models.Model):
     """Data Jobs"""
 
-    job_name = models.CharField(max_length=25, unique=True);
-    job_status = models.BooleanField(default=False);
-    job_hour = models.CharField(max_length=25,blank=True);
-    job_minute = models.CharField(max_length=25,blank=True);
+    job_name = models.CharField(max_length=25, unique=True)
+    job_status = models.BooleanField(default=False)
+    job_hour = models.CharField(max_length=25,blank=True)
+    job_minute = models.CharField(max_length=25,blank=True)
 

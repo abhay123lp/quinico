@@ -142,14 +142,6 @@ def query_webpagetest(t_id,domain,u,l):
 
     xml = ET.fromstring(x_response)
 
-    # Sometimes either view1 or view2 failed during the test
-    try:
-       view1 = xml.findall('./data/successfulFVRuns')[0].text 
-       view2 = xml.findall('./data/successfulRVRuns')[0].text 
-       logger.debug('Successful FV:%s, Successful RV:%s' % (view1,view2))
-    except Exception as e:
-        logger.warning('Error encountered searching for FV or RV status for %s : %s : %s.' % (domain,xml_url,e))
-
     # Create a datetime object for right now
     time_now = datetime.datetime.now()
 
@@ -164,8 +156,10 @@ def query_webpagetest(t_id,domain,u,l):
 
         if view == 1:
            view_num = 'firstView'
+           view_type = 'FV'
         elif view == 2:
            view_num = 'repeatView'
+           view_type = 'RV'
 
         values = []
 
@@ -175,7 +169,8 @@ def query_webpagetest(t_id,domain,u,l):
         values.append(testId)
         values.append(view)
 
-        # Run through the values we are looking for from WPT (if they are not there, errors are raised)
+        # Run through the values we are looking for from WPT (if they are not there, errors are raised.)
+        # In this case, just add a zero
         for output_value in output_values:
             try:
                 values.append(xml.findall('./data/run/%s/results/%s' % (view_num,output_value))[0].text)
@@ -184,9 +179,27 @@ def query_webpagetest(t_id,domain,u,l):
                 values.append(0)
                 logger.warning('Error encountered searching for %s in view %s for %s:nError: %s,Url: %s' % (output_value,view,domain,e,xml_url))
 
+        # Add the test status (we should have one successful run for FV and RV)
+        # Start with success
+        test_failed = 0
+
+        try:
+            successful_runs = xml.findall('./data/successful%sRuns' % (view_type))[0].text
+            logger.debug('Successful %s runs:%s' % (view_type,successful_runs))
+
+            if not successful_runs == '1':
+                test_failed = 1
+
+        except Exception as e:
+            logger.warning('Error encountered searching %s runs for %s : %s : %s.' % (view_type,domain,xml_url,e))
+            test_failed = 1
+        
+        # Add the view status
+        values.append(test_failed)
+
         sql = """
-           INSERT INTO webpagetest_score (date,test_id,testId,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+           INSERT INTO webpagetest_score (date,test_id,testId,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements,test_failed)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
         if not options.test:
             qs.execute(sql,values)

@@ -148,8 +148,7 @@ def query_pagespeed(t_id,domain,u,strategy):
         results.append('%s/%s' % (date_path,file_name))
     except Exception as e:
         logger.error('Error saving report file for %s: %s' % (domain,e))
-        if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-            qm.send('Error','Error saving report file for %s: %s' % (domain,e))
+        qm.send('Error','Error saving report file for %s: %s' % (domain,e))
 
         # Save nothing to the DB
         results.append('')

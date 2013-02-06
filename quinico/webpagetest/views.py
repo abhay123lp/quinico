@@ -25,6 +25,7 @@ import logging
 import urllib
 import csv
 import pytz
+from django.db.models import Avg
 from django.utils import simplejson
 from django.conf import settings
 from django.http import HttpResponse
@@ -36,7 +37,6 @@ from quinico.webpagetest.models import Score
 from quinico.webpagetest.forms import WebpagetestTrendForm
 from quinico.webpagetest.forms import WebpagetestHistoryForm
 from quinico.dashboard.models import Dash_Settings
-from qclasses import qsql
 
 
 # Get an instance of a logger
@@ -75,81 +75,54 @@ def trends(request):
                 date_from = now - then
                 date_from = date_from.strftime("%Y-%m-%d")
 
+            # Add time information to the dates and the timezone (use the server's timezone)
+            date_from = date_from
+            date_from += ' 00:00:00'
+            date_from = datetime.datetime.strptime(date_from, '%Y-%m-%d %H:%M:%S')
+            date_from = pytz.timezone(settings.TIME_ZONE).localize(date_from)
+
+            date_to = date_to
+            date_to += ' 23:59:59'
+            date_to = datetime.datetime.strptime(date_to, '%Y-%m-%d %H:%M:%S')
+            date_to = pytz.timezone(settings.TIME_ZONE).localize(date_to)
+
 	    # Obtain the domain, url and location for the chart display
 	    test = Test.objects.filter(id=test_id)
 
 	    # Obtain the scores for this test
-	    # I give up on using the DJango ORM for this query.
-	    # Reverting to native SQL
+            scores1 = Score.objects.filter(test_id=test_id,
+                                           date__range=[date_from,date_to],
+                                           viewNumber='1',
+                                         ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
+                                         ).values('date').annotate(Avg(metric)).order_by('date')
 
-	    # Create a qsql instance
-	    qs = qsql.sql(
-			  settings.DATABASES['default']['HOST'],
-			  settings.DATABASES['default']['USER'],
-			  settings.DATABASES['default']['PASSWORD'],
-			  settings.DATABASES['default']['NAME'],
-			  logger
-			 )
+            logger.debug(scores1.query)
+            logger.debug(scores1)
 
-	    # First view
-	    sql1 =  'SELECT DATE(date),round(avg(' + metric + '),0) '
-	    sql1 += 'FROM webpagetest_score '
-	    sql1 += 'WHERE viewNumber=1 '
-	    sql1 += 'AND test_id=' + test_id + ' '
-	    sql1 += 'AND DATE(date) BETWEEN \'' + date_from + '\' AND \'' + date_to + '\' '
-	    sql1 += 'GROUP BY DATE(date) '
-	    sql1 += 'ORDER BY DATE(date) ASC'
-	    (rowcount1,scores1) = qs.execute(sql1)
+	    # Obtain the scores for this test
+            scores2 = Score.objects.filter(test_id=test_id,
+                                           date__range=[date_from,date_to],
+                                           viewNumber='2',
+                                         ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
+                                         ).values('date').annotate(Avg(metric)).order_by('date')
 
-	    if qs.status != 0:
-		logger.error(qs.emessage)
-		return render_to_response(
-		 'error/error.html',
-		  {
-		    'title':'Quinico | Error',
-		    'error':'SQL Error'
-		  },
-		  context_instance=RequestContext(request)
-		)
-
-	    # Second view
-	    sql2 =  'SELECT DATE(date),round(avg(' + metric + '),0) '
-	    sql2 += 'FROM webpagetest_score '
-	    sql2 += 'WHERE viewNumber=2 '
-	    sql2 += 'AND test_id=' + test_id + ' '
-	    sql2 += 'AND DATE(date) BETWEEN \'' + date_from + '\' AND \'' + date_to + '\' '
-	    sql2 += 'GROUP BY DATE(date) '
-	    sql2 += 'ORDER BY DATE(date) ASC'
-
-	    (rowcount2,scores2) = qs.execute(sql2)
-
-	    if qs.status != 0:
-		logger.error(qs.emessage)
-		return render_to_response(
-		 'error/error.html',
-		  {
-		    'title':'Quinico | Error',
-		    'error':'SQL Error'
-		  },
-		  context_instance=RequestContext(request)
-		)
-
-	    # Disconnect from the DB server
-	    qs.close()
+            logger.debug(scores2.query)
+            logger.debug(scores2)
 
 	    # Put the data together so its easier to manipulate in the template
-
-	    # Dict to hold everything of the following form: scores['2012-01-01']['4023']['321']
+	    # like this: scores[{'date':'2012-01-01','view1':'4023',view2':'321'}]
 	    scores = []
 
-	    # Use view1 as the date record in case the 2nd view didn't run for some reason
+	    # We'll always have two views for every date because the data job will just enter zeroes
+            # if one view fails
 	    for i in range(len(scores1)):
-		# Create a new dict for each date.  Assume scores2 matches scores1.  
-                # If it doesn't, we may be in trouble.
-		dict = {'date':scores1[i][0],'view1':scores1[i][1],'view2':scores2[i][1]}
+		# Create a new dict for each date.
+		dict = {'date':scores1[i]['date'],'view1':scores1[i]['%s__avg' % metric],'view2':scores2[i]['%s__avg' % metric]}
 
 		# Push onto the main scores array
 		scores.append(dict)
+
+            logger.debug(scores)
 
 	    # Construct the dashboard, download and monitoring links
             base_url = 'http://%s/webpagetest/trends?' % (request.META['HTTP_HOST'])
@@ -278,7 +251,11 @@ def history(request):
 	    headings = ['date','viewNumber','loadTime','ttfb','bytesOut','bytesOutDoc',
 			'bytesIn','bytesInDoc','requests','requestsDoc','render',
 			'fullyLoaded','docTime','score_cache','score_cdn','score_gzip',
-                        'testId']
+                        'test_failed','testId']
+
+	    # Construct the csv link
+            base_url = 'http://%s/webpagetest/history' % (request.META['HTTP_HOST'])
+	    csv_link = '%s?test_id=%s&date_from=%s&date_to=%s&format=csv' % (base_url,test_id,date_from,date_to)
 
 	    # Add time information to the dates and the timezone (use the server's timezone)
 	    date_from += ' 00:00:00'
@@ -292,9 +269,6 @@ def history(request):
 	    # Obtain the data
 	    dates = Score.objects.filter(test_id=test_id,date__range=[date_from,date_to]).values().order_by('-date')
 
-	    # Construct the csv link
-            base_url = 'http://%s/webpagetest/history' % (request.META['HTTP_HOST'])
-	    csv_link = '%s?test_id=%s&date_from=%s&date_to=%s&format=csv' % (base_url,test_id,date_from,date_to)
 
 	    # Print the page
 
