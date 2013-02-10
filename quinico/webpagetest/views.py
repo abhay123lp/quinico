@@ -62,6 +62,7 @@ def trends(request):
             date_to = form.cleaned_data['date_to']
             date_from = form.cleaned_data['date_from']
             metric = form.cleaned_data['metric']
+            include_failed = form.cleaned_data['include_failed']
             format = form.cleaned_data['format']
 
             # If the from or to dates are missing, set them b/c this is probably
@@ -89,10 +90,16 @@ def trends(request):
 	    # Obtain the domain, url and location for the chart display
 	    test = Test.objects.filter(id=test_id)
 
+            if include_failed:
+                test_failed = 1
+            else:
+                test_failed = 0
+
 	    # Obtain the scores for this test
             scores1 = Score.objects.filter(test_id=test_id,
                                            date__range=[date_from,date_to],
                                            viewNumber='1',
+                                           test_failed__lte=test_failed,
                                          ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
                                          ).values('date').annotate(Avg(metric)).order_by('date')
 
@@ -103,6 +110,7 @@ def trends(request):
             scores2 = Score.objects.filter(test_id=test_id,
                                            date__range=[date_from,date_to],
                                            viewNumber='2',
+                                           test_failed__lte=test_failed,
                                          ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
                                          ).values('date').annotate(Avg(metric)).order_by('date')
 

@@ -96,6 +96,7 @@ class WebpagetestTrendForm(forms.Form):
     format = FormatField()
     metric = MetricField()
     test_id = IdField()
+    include_failed = forms.BooleanField(required=False)
 
 
 class WebpagetestHistoryForm(forms.Form):
