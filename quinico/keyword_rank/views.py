@@ -87,6 +87,8 @@ def trends(request):
     # If request.GET is empty, show the index, otherwise validate
     # the form and provide the results
 
+    request.encoding = 'utf-8'
+
     if request.GET:
         # Check the form elements
         form = KeywordTrendForm(request.GET)
@@ -110,12 +112,9 @@ def trends(request):
                 date_from = now - then
                 date_from = date_from.strftime("%Y-%m-%d")
 
-            # Unquote the keyword to UTF-8 and then decode
-            k_unenc = urllib.unquote(keyword.encode('utf-8')).decode('utf-8')
-
             # Obtain the keyword ranks for this keyword and domain
             ranks = Rank.objects.filter(domain__domain=domain,
-                                        keyword__keyword=k_unenc,
+                                        keyword__keyword=keyword,
                                         date__range=[date_from,date_to]
                                        ).values('date','rank').order_by('date')
 
@@ -128,13 +127,14 @@ def trends(request):
 
             # Obtain the top ten ranks for this keyword
             top_ten = Top_Ten.objects.filter(domain__domain=domain,
-                                             keyword__keyword=k_unenc,
+                                             keyword__keyword=keyword,
                                              date=last_date[0]['date']
                                             ).values('rank','url__url').order_by('rank')
 
             # Construct the dashboard, download and monitoring links
-            # Quote special characters
-            keyword_enc = urllib.quote(keyword)
+
+            # Add percent encoding to the keywords
+            keyword_enc = urllib.quote_plus(keyword.encode('utf-8'))
             base_url = 'http://%s/keyword_rank/trends?domain' % request.META['HTTP_HOST']
             db_link = '%s=%s&keyword=%s&format=db' % (base_url,domain,keyword_enc)
             json_link = '%s=%s&keyword=%s&format=json' % (base_url,domain,keyword_enc)
@@ -168,7 +168,7 @@ def trends(request):
                       {
                         'title':'Quinico | Keyword Trends',
                         'domain_name':domain,
-                        'keyword_name':k_unenc,
+                        'keyword_name':keyword,
                         'ranks':ranks,
                         'dash_settings':dash_settings
                       },
@@ -197,7 +197,7 @@ def trends(request):
                     'title':'Quinico | Keyword Trends',
                     'domain_name':domain,
                     'country':country,
-                    'keyword_name':k_unenc,
+                    'keyword_name':keyword,
                     'ranks':ranks,
                     'top_ten':top_ten,
                     'db_link':db_link,

@@ -125,33 +125,8 @@ def query_pagespeed(t_id,domain,u,strategy):
             results.append(0) 
 
     # Add the full report
-
-    # Directory name
-    date_path = datetime.datetime.now().strftime('%Y/%m/%d')
-
-    # Unique filename
-    file_name = uuid.uuid4()
-    
-    # Save the report to disk
-    # Do everything at once to make error handling easier
-    try:
-        # Create the date directory if its not already there
-        if not os.path.exists('%s/%s' % (pagespeed_upload,date_path)):
-            os.makedirs('%s/%s' % (pagespeed_upload,date_path))
-
-        # Save the file
-        report_file = open('%s/%s/%s' % (pagespeed_upload,date_path,file_name),'w')
-        report_file.write(json.dumps(raw_json))
-        report_file.close()
-      
-        # Save the file name for the DB
-        results.append('%s/%s' % (date_path,file_name))
-    except Exception as e:
-        logger.error('Error saving report file for %s: %s' % (domain,e))
-        qm.send('Error','Error saving report file for %s: %s' % (domain,e))
-
-        # Save nothing to the DB
-        results.append('')
+    report_file = ql.save_report(report_path,'pagespeed',json.dumps(raw_json))
+    results.append(report_file)
 
     sql = """
            INSERT INTO pagespeed_score (
@@ -265,12 +240,13 @@ if google_key is None:
 else:
    logger.info('Google Key = %s' % google_key)
 
-pagespeed_upload = ql.return_config('pagespeed_upload')
-if pagespeed_upload is None:
-    logger.error('Google Pagespeed upload location is not defined, perhaps someone deleted it')
+# Downloaded Report Path
+report_path = ql.return_config('report_path')
+if report_path is None:
+    logger.error('Report path location is not defined, perhaps someone deleted it')
     ql.terminate()
 else:
-   logger.info('Google Pagespeed upload location = %s' % pagespeed_upload)
+   logger.info('Report path location = %s' % report_path)
 
 pagespeed_locale = ql.return_config('pagespeed_locale')
 if pagespeed_locale is None:

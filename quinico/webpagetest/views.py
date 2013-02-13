@@ -259,7 +259,7 @@ def history(request):
 	    headings = ['date','viewNumber','loadTime','ttfb','bytesOut','bytesOutDoc',
 			'bytesIn','bytesInDoc','requests','requestsDoc','render',
 			'fullyLoaded','docTime','score_cache','score_cdn','score_gzip',
-                        'test_failed','testId']
+                        'view_failed','test_failed','testId']
 
 	    # Construct the csv link
             base_url = 'http://%s/webpagetest/history' % (request.META['HTTP_HOST'])

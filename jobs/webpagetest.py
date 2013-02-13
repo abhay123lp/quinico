@@ -142,6 +142,9 @@ def query_webpagetest(t_id,domain,u,l):
 
     xml = ET.fromstring(x_response)
 
+    # Save the full report
+    report_file = ql.save_report(report_path,'webpagetest',x_response)
+
     # Create a datetime object for right now
     time_now = datetime.datetime.now()
 
@@ -152,6 +155,10 @@ def query_webpagetest(t_id,domain,u,l):
     output_values = ['loadTime','TTFB','bytesOut','bytesOutDoc','bytesIn','bytesInDoc','connections','requests','requestsDoc','responses_200','responses_404','responses_other','result','render','fullyLoaded','cached','docTime','domTime','score_cache','score_cdn','score_gzip','score_cookies','score_keep-alive','score_minify','score_combine','score_compress','score_etags','gzip_total','gzip_savings','minify_total','minify_savings','image_total','image_savings','aft','domElements']
 
     # We are doing only one run with a repeat view
+    # If one view fails, then the whole test will be marked as failed
+    # (Start with a good test status)
+    test_failed = 0
+    
     for view in [1,2]:
 
         if view == 1:
@@ -179,27 +186,33 @@ def query_webpagetest(t_id,domain,u,l):
                 values.append(0)
                 logger.warning('Error encountered searching for %s in view %s for %s:nError: %s,Url: %s' % (output_value,view,domain,e,xml_url))
 
-        # Add the test status (we should have one successful run for FV and RV)
+        # Add the view status (we should have one successful run for FV and RV)
         # Start with success
-        test_failed = 0
+        view_failed = 0
 
         try:
             successful_runs = xml.findall('./data/successful%sRuns' % (view_type))[0].text
             logger.debug('Successful %s runs:%s' % (view_type,successful_runs))
 
             if not successful_runs == '1':
+                view_failed = 1
                 test_failed = 1
 
         except Exception as e:
             logger.warning('Error encountered searching %s runs for %s : %s : %s.' % (view_type,domain,xml_url,e))
+            view_failed = 1
             test_failed = 1
         
-        # Add the view status
+        # Add the view and test status
+        values.append(view_failed)
         values.append(test_failed)
 
+        # Add the report file (it will be the same report file for both views)
+        values.append(report_file)
+
         sql = """
-           INSERT INTO webpagetest_score (date,test_id,testId,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements,test_failed)
-           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
+           INSERT INTO webpagetest_score (date,test_id,testId,viewNumber,loadTime,ttfb,bytesOut,bytesOutDoc,bytesIn,bytesInDoc,connections,requests,requestsDoc,responses_200,responses_404,responses_other,result,render,fullyLoaded,cached,docTime,domTime,score_cache,score_cdn,score_gzip,score_cookies,score_keep_alive,score_minify,score_combine,score_compress,score_etags,gzip_total,gzip_savings,minify_total,minify_savings,image_total,image_savings,aft,domElements,view_failed,test_failed,report)
+           VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)"""
 
         if not options.test:
             qs.execute(sql,values)
@@ -312,6 +325,14 @@ if wpt_key is None:
     ql.terminate()
 else:
    logger.info('wpt_key = %s' % wpt_key)
+
+# Downloaded Report Path
+report_path = ql.return_config('report_path')
+if report_path is None:
+    logger.error('Report path location is not defined, perhaps someone deleted it')
+    ql.terminate()
+else:
+   logger.info('Report path location = %s' % report_path)
 
 # Max attempts per test
 wpt_attempts = ql.return_config('wpt_attempts')

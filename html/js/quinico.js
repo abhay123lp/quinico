@@ -16,6 +16,8 @@ limitations under the License.
 
 */
 
+// Update a select field with a new list.
+// Don't encode the resultant items
 function updateDropdown(selectedOption,formName,selectName,input_array) {
 
    var option = document.getElementById(selectedOption).value;
@@ -30,13 +32,46 @@ function updateDropdown(selectedOption,formName,selectName,input_array) {
 
    for (i=0; i<data[option].length; i++) {
 
-      // Encode the keyword
+      // Setup the dropdown
+      select_menu.options[select_menu.options.length] = new Option(data[option][i],data[option][i]);
+   }
+}
+
+
+// Update a select field with a new list.
+// Encode the resultant items
+function updateDropdownEncode(selectedOption,formName,selectName,input_array) {
+
+   var option = document.getElementById(selectedOption).value;
+
+   // The select menu to modify, and its parent form, to modify
+   var select_menu = document.forms[formName].elements[selectName];
+
+   // Remove all existing options from the select menu
+   select_menu.options.length = 0;
+
+   var data = window[input_array];
+
+   for (i=0; i<data[option].length; i++) {
+
+      // Encode item
       var encoded_item = encodeURIComponent(data[option][i])
 
       // Setup the dropdown
       select_menu.options[select_menu.options.length] = new Option(data[option][i],encoded_item);
    }
 }
+
+
+// URL encode a select value after a form submit
+function encodeValues(formName,selectName) {
+
+   element = document.getElementById(selectName).options[document.getElementById(selectName).selectedIndex].value
+   alert(element);
+   var encodedElement = encodeURIComponent(element);
+   alert(encodedElement);
+   document.getElementById(selectName).options[document.getElementById(selectName).selectedIndex].value = encodedElement;
+   }
 
 
 function getJSONData(u) {

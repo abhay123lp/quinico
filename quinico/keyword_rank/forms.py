@@ -117,7 +117,8 @@ class KeywordTrendForm(forms.Form):
     date_from = DateField()
     date_to = DateField()
     domain = DomainField()
-    keyword = KeywordField()
+    #keyword = KeywordField()
+    keyword = forms.CharField()
     format = FormatField()
 
 

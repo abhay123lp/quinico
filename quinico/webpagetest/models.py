@@ -123,3 +123,8 @@ class Score(models.Model):
     aft = models.IntegerField(max_length=5)
     domElements = models.IntegerField(max_length=5)
     test_failed = models.BooleanField(default=False)
+    view_failed = models.BooleanField(default=False)
+    report = models.CharField(max_length=65)
+
+    class Meta:
+        unique_together = ['id','report']

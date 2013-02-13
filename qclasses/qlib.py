@@ -29,6 +29,7 @@ import datetime
 import time
 import urllib
 import urllib2
+import uuid
 
 
 class lib:
@@ -318,7 +319,7 @@ class lib:
 
             # See if the PID is running
             if os.path.exists('/proc/%s' % pid):
-                self.logger.info('%s is still running' % pid)
+                self.logger.info('%s is still running.  Only one instance is allowed to run.' % pid)
                 return True
             else:
                 self.logger.info('%s is not running, removing defunct pid file %s' % (pid,file))
@@ -364,3 +365,36 @@ class lib:
             return True
 
         return False
+
+
+    def save_report(self,upload_path,service,raw_data):
+        """Save a raw report file to disk"""
+
+        # Directory name
+        date_path = datetime.datetime.now().strftime('%Y/%m/%d')
+
+        # Generate a unique filename
+        file_name = uuid.uuid4()
+
+        # Save the report to disk
+        # Do everything at once to make error handling easier
+        try:
+            # Create the date directory if its not already there
+            if not os.path.exists('%s/%s/%s' % (upload_path,service,date_path)):
+                os.makedirs('%s/%s/%s' % (upload_path,service,date_path))
+
+            # Save the file
+            report_file = open('%s/%s/%s/%s' % (upload_path,service,date_path,file_name),'w')
+            report_file.write(raw_data)
+            report_file.close()
+
+            # Return the file name so it can be saved
+            return '%s/%s/%s' % (service,date_path,file_name)
+        except Exception as e:
+            self.logger.error('Error saving report file: %s' % e)
+            if self.notify_error:
+                self.qm.send('Error','Error saving report file: %s' % e)
+
+            # Return an empty string for this report
+            return ''
+

@@ -4,6 +4,7 @@
 import os
 os.environ['LANG'] = 'en_US.UTF-8'
 
+# Never, ever deploy a site to production with DEBUG = True
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -166,7 +167,7 @@ LOGGING = {
     'loggers': {
         'quinico': {
             'handlers': ['logfile'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False
         },
     }

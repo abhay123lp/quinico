@@ -87,7 +87,7 @@ class Score(models.Model):
     imageResponseBytes = models.IntegerField(max_length=11)
     javascriptResponseBytes = models.IntegerField(max_length=11)
     otherResponseBytes = models.IntegerField(max_length=11)
-    report = models.CharField(max_length=50)
+    report = models.CharField(max_length=65)
 
     class Meta:
         unique_together = ['id','report']

@@ -49,6 +49,9 @@ class sql:
         try:
             # Connect
             self.db = MySQLdb.connect(host=host,user=username,passwd=password,db=database,charset='utf8',use_unicode=True)
+
+            # Commit everything without needing to specify it
+            self.db.autocommit(True)
         except MySQLdb.Error as e:
            if not self.logger is None:
                self.logger.error('Error connecting to MySQL: %s' % e)

@@ -55,8 +55,10 @@
   <th>score_cache</th>
   <th>score_cdn</th>
   <th>score_gzip</th>
+  <th>view failed</th>
   <th>test failed</th>
-  <th>report</th>
+  <th>raw report</th>
+  <th>report link</th>
  </tr>
 
  {% for row in dates %}
@@ -77,7 +79,13 @@
   <td>{{row.score_cache|intcomma}}</td>
   <td>{{row.score_cdn|intcomma}}</td>
   <td>{{row.score_gzip|intcomma}}</td>
+  <td>{{row.view_failed}}</td>
   <td>{{row.test_failed}}</td>
+  <td>
+   {% if not row.report == '' %}
+   <a href="/webpagetest/report?id={{row.id}}" target="_blank"><img src="/html/images/report.png"></a>
+   {% endif %}
+  </td>
   <td><a href="http://www.webpagetest.org/result/{{row.testId}}" target="_blank"><img src="/html/images/report.png"></a></td>
  </tr>
  {% endfor %}

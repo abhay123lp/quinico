@@ -362,7 +362,7 @@ else:
             logger.warning('No keywords defined for %s' % domain)
         else:
             for k_row in k_rows:
-                keyword = k_row[0].decode('utf-8')
+                keyword = k_row[0]
                 logger.info('Found a keyword: %s, now processing rankings' % (keyword))
                 (rank,url,top_ten) = obtain_ranking(domain,
 						    gl,

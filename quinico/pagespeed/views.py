@@ -57,8 +57,8 @@ def report(request):
     if form.is_valid():
         id = form.cleaned_data['id']
 
-        # Obtain the Pagespeed report upload location
-        pagespeed_upload = Config.objects.filter(config_name='pagespeed_upload').values('config_value')[0]['config_value']
+        # Obtain the report download location
+        report_path = Config.objects.filter(config_name='report_path').values('config_value')[0]['config_value']
 
         # Obtain the report name
         details = Score.objects.filter(id=id).values('test_id','date','strategy','report')
@@ -76,7 +76,7 @@ def report(request):
         report = details[0]['report']
  
         # Load the file
-        json_file = open('%s/%s' % (pagespeed_upload,report))
+        json_file = open('%s/%s' % (report_path,report))
 
         # Deserialize it
         json_data = json.load(json_file)
