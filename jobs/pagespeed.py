@@ -30,6 +30,9 @@ import urllib
 import json
 import uuid
 import datetime
+import Queue
+import threading
+import time
 from optparse import OptionParser
 from django.conf import settings
 from qclasses import qemail
@@ -37,8 +40,54 @@ from qclasses import qsql
 from qclasses import qlib
 
 
+class Worker(threading.Thread):
+    """Worker thread for talking to external API 
+    and acquiring/committing data
 
-def obtain_tests():
+    To avoid contention, each thread will have its own ql, qs and
+    qemail instance
+    """
+
+    def __init__(self, queue, google_key, pagespeed_locale, report_path):
+        threading.Thread.__init__(self)
+        self.queue = queue
+        self.google_key = google_key
+        self.pagespeed_locale = pagespeed_locale
+        self.report_path = report_path
+
+    def run(self):
+        t_name = threading.current_thread().name
+        logger.info('Starting thread: %s' % t_name)
+
+        # Create qm, qs and ql instances
+        (qm,qs,ql) = create_resources()
+
+        while True:
+            # Pop the next job off the queue and don't block if empty
+            try:
+                row = self.queue.get(False)
+                t_id = row[0]
+                t_domain = row[1]
+                t_url = row[2]
+
+                logger.info('%s found a test: id:%s, domain:%s, url:%s' % (t_name,t_id,t_domain,t_url))
+
+                query_pagespeed(qs,qm,ql,t_id,t_domain,t_url,'desktop',self.google_key,self.pagespeed_locale,self.report_path)
+                #query_pagespeed(qs,qm,ql,t_id,t_domain,t_url,'mobile',self.google_key,self.pagespeed_locale,self.report_path)
+
+                # Let the queue know I am done
+                self.queue.task_done()
+            except Queue.Empty:
+                logger.info('Queue is empty, stopping thread %s' % t_name)
+                break
+            except Exception as e:
+                # Most likely there was a problem with the Pagespeed
+                # API.  Close down this thread.
+                logger.error('Exception encountered with thread %s: %s' % (t_name,e))
+                break
+
+
+def obtain_tests(qs,qm):
     """
     Obtain a list of tests
     """
@@ -60,7 +109,7 @@ def obtain_tests():
     return rows
 
 
-def query_pagespeed(t_id,domain,u,strategy):
+def query_pagespeed(qs,qm,ql,t_id,domain,u,strategy,google_key,pagespeed_locale,report_path):
     """
     Query the Google Pagespeed API
     """
@@ -156,11 +205,155 @@ def query_pagespeed(t_id,domain,u,strategy):
             qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
 
+def create_resources():
+    """Create and return the following resources
+       - a qlib instance
+       - a qemail instance
+       - a qsql instance
+    """
+       
+    # Grab the Quinico webapp settings
+    os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
 
-#
-# BEGIN MAIN PROGRAM EXECUTION
-#
+    # Obtain database parameters from DJango
+    host = settings.DATABASES['default']['HOST']
+    user = settings.DATABASES['default']['USER']
+    password = settings.DATABASES['default']['PASSWORD']
+    name = settings.DATABASES['default']['NAME']
 
+    # Create a qemail instance
+    qm = qemail.notify(settings.SMTP_HOST,
+                      settings.SMTP_SENDER,
+                      settings.SMTP_RECIPIENT,
+                      logger
+                     )
+
+    # Create a qsql instance
+    qs = qsql.sql(host,user,password,name,logger)
+
+    # Create a qlib instance
+    ql = qlib.lib(qs,qm,settings.SMTP_NOTIFY_ERROR,logger)
+
+    return (qm,qs,ql)
+
+
+def main():
+    """ Main Program Execution"""
+
+    # Create qm, qs and ql instances so we can do some work
+    (qm,qs,ql) = create_resources()
+
+    # Send a test message, if requested to do so and then quit
+    if options.message:
+        qm.send('Pagespeed Test','Test message from the Quinico Pagespeed data collection job')
+        exit(0)
+
+    # If we could not connect to MySQL, quit and notify someone
+    if qs.status != 0:
+        ql.terminate()
+
+    # Check if another instance is already running
+    if ql.check_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR):
+        ql.terminate()
+
+    # Set a PID
+    if (ql.set_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR)):
+        ql.terminate()
+
+    # Let someone know we are starting data collection
+    logger.info('Started Pagespeed data collection job')
+    smtp_notify_data_start = int(ql.return_config('smtp_notify_data_start'))
+    if smtp_notify_data_start:
+        qm.send('Pagespeed Job Starting','Starting Quinico Pagespeed data collection job')
+
+    # Obtain configuration parameters
+    # If we cannot obtain any of these, we have to quit
+    
+    # Google key
+    google_key = ql.return_config('google_key')
+    if google_key is None:
+        logger.error('Google Key is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Google Key = %s' % google_key)
+
+    # Downloaded Report Path
+    report_path = ql.return_config('report_path')
+    if report_path is None:
+        logger.error('Report path location is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Report path location = %s' % report_path)
+
+    pagespeed_locale = ql.return_config('pagespeed_locale')
+    if pagespeed_locale is None:
+        logger.error('Google Pagespeed locale is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Google Pagespeed locale = %s' % pagespeed_locale)
+
+    # Remove any pagespeed data from today as this new data
+    # should override them
+    if not options.test:
+        ql.remove_data('pagespeed_score')
+
+    # Check all domains and urls
+    tests = obtain_tests(qs,qm)
+    if not tests:
+        logger.error('No pagespeed tests defined')
+        ql.terminate()
+    else:
+        # Create a queue for the tests
+        queue = Queue.Queue()
+
+        # Check all tests and add to the queue 
+        for row in tests:
+            queue.put(row)
+
+        # Start the workers.  
+        #   Notes:
+        #   - Do not daemonize the threads nor join on the queue
+        #   - If the threads experience exceptions, or if they detect
+        #     that the queue is empty, they will die
+        #   - Keep the main thread open until its the only one left
+        #   - The above prevents the threads dieing due to exceptions w/ the API
+        #     and the queue never emptying.   We'd rather have this process die
+        #     and someone get alerted and investigate
+        for i in range(2):
+
+            # Create a worker and pass it the following information:
+            #   - The queue
+            #   - The Google Key
+            #   - The Pagespeed locale
+            #   - The Report Path
+            w = Worker(queue,google_key,pagespeed_locale,report_path)
+
+            # Start the worker
+            w.start()
+
+        # If all threads except this one are done, then quit
+        while threading.active_count() > 1: 
+            print threading.active_count()
+            time.sleep(1)
+
+
+    # All done
+    logger.info('All done with pagespeed tests')
+
+    # Disconnect from the DB server
+    qs.close()
+
+    # Remove the PID file
+    if (ql.remove_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR)):
+        ql.terminate()
+
+
+
+# -- GLOBALLY AVAILABLE -- #
+
+# Setup an instance of the Quinico logger
+# Logging is thread-safe so all threads will share the same logger
+logger = logging.getLogger('quinico')
 
 # Parse Arguments
 parser = OptionParser(description='Google Pagespeed query \
@@ -181,112 +374,13 @@ parser.add_option('-t','--test',
                         except for API calls/errors.')
 (options, args) = parser.parse_args()
 
-# Grab the Quinico webapp settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
 
-# Setup an instance of the Quinico logger
-logger = logging.getLogger('quinico')
+# This program can only run is executed directly
+if __name__ == "__main__":
 
-# Obtain database parameters from DJango
-host = settings.DATABASES['default']['HOST']
-user = settings.DATABASES['default']['USER']
-password = settings.DATABASES['default']['PASSWORD']
-name = settings.DATABASES['default']['NAME']
+    # Run main program
+    main()
 
-# Create a qemail instance
-qm = qemail.notify(settings.SMTP_HOST,
-                  settings.SMTP_SENDER,
-                  settings.SMTP_RECIPIENT,
-                  logger
-                 )
-
-# Send a test message, if requested to do so and then quit
-if options.message:
-    qm.send('Pagespeed Test','Test message from the Quinico Pagespeed data collection job')
+    # Quit progam
     exit(0)
 
-# Create a qsql instance
-qs = qsql.sql(host,user,password,name,logger)
-
-# Create a qlib instance
-ql = qlib.lib(qs,qm,settings.SMTP_NOTIFY_ERROR,logger)
-
-# If we could not connect to MySQL, quit and notify someone
-if qs.status != 0:
-    ql.terminate()
-
-# Check if another instance is already running
-if ql.check_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR):
-    ql.terminate()
-
-# Set a PID
-if (ql.set_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR)):
-    ql.terminate()
-
-# Let someone know we are starting data collection
-logger.info('Started Pagespeed data collection job')
-smtp_notify_data_start = int(ql.return_config('smtp_notify_data_start'))
-if smtp_notify_data_start:
-    qm.send('Pagespeed Job Starting','Starting Quinico Pagespeed data collection job')
-
-# Obtain configuration parameters
-# If we cannot obtain any of these, we have to quit
-
-# Google key
-google_key = ql.return_config('google_key')
-if google_key is None:
-    logger.error('Google Key is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('Google Key = %s' % google_key)
-
-# Downloaded Report Path
-report_path = ql.return_config('report_path')
-if report_path is None:
-    logger.error('Report path location is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('Report path location = %s' % report_path)
-
-pagespeed_locale = ql.return_config('pagespeed_locale')
-if pagespeed_locale is None:
-    logger.error('Google Pagespeed locale is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('Google Pagespeed locale = %s' % pagespeed_locale)
-
-# Remove any pagespeed data from today as this new data
-# should override them
-if not options.test:
-    ql.remove_data('pagespeed_score')
-
-
-# Check all domains and urls
-tests = obtain_tests()
-if not tests:
-    logger.error('No pagespeed tests defined')
-    ql.terminate()
-else:
-    for row in tests:
-        t_id = row[0]
-        t_domain = row[1]
-        t_url = row[2]
-
-        logger.info('Found a test: id:%s, domain:%s, url:%s' % (t_id,t_domain,t_url))
-
-        query_pagespeed(t_id,t_domain,t_url,'desktop')
-        query_pagespeed(t_id,t_domain,t_url,'mobile')
-
-
-# All done
-logger.info('All done with pagespeed tests')
-
-# Disconnect from the DB server
-qs.close()
-
-# Remove the PID file
-if (ql.remove_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR)):
-    ql.terminate()
-
-# Quit progam
-exit(0)
