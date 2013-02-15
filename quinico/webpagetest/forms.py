@@ -107,3 +107,9 @@ class WebpagetestHistoryForm(forms.Form):
     test_id = IdField()
     format = FormatField()
 
+
+class WebpagetestReportForm(forms.Form):
+    """Form for querying the entire Webpagetest report"""
+
+    id = IdField()
+

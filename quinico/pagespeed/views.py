@@ -75,8 +75,19 @@ def report(request):
         # Report
         report = details[0]['report']
  
-        # Load the file
-        json_file = open('%s/%s' % (report_path,report))
+        try:
+            # Load the file
+            json_file = open('%s/%s' % (report_path,report))
+        except:
+            # Give the error page
+            return render_to_response(
+               'error/error.html',               
+               {
+                  'title':'Quinico | Error',
+                  'error':'File not found:%s/%s' % (report_path,report)
+               },
+               context_instance=RequestContext(request)
+            )
 
         # Deserialize it
         json_data = json.load(json_file)
@@ -178,15 +189,15 @@ def report(request):
 
     # Invalid request, give them the error page
     else:
-        # Print the page
+        # Give the error page
         return render_to_response(
            'error/error.html',               
            {
               'title':'Quinico | Error',
-              'test':test,
-       },
-       context_instance=RequestContext(request)
-    )
+              'error':'Invalid request',
+           },
+           context_instance=RequestContext(request)
+        )
 
 
 def trends(request):

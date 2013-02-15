@@ -54,14 +54,14 @@ class Competitor(models.Model):
 class API_Calls(models.Model):
     """Count of SEOMoz API calls"""
 
-    call_date = models.DateField(null=False,blank=False)
+    call_date = models.DateField(null=False,blank=False,unique=True)
     count = models.IntegerField(max_length=11)
 
 
 class API_Errors(models.Model):
     """Count of SEOMoz API errors"""
 
-    call_date = models.DateField(null=False,blank=False)
+    call_date = models.DateField(null=False,blank=False,unique=True)
     count = models.IntegerField(max_length=11)
 
 

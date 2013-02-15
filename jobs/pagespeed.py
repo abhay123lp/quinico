@@ -48,12 +48,9 @@ class Worker(threading.Thread):
     qemail instance
     """
 
-    def __init__(self, queue, google_key, pagespeed_locale, report_path):
+    def __init__(self, queue):
         threading.Thread.__init__(self)
         self.queue = queue
-        self.google_key = google_key
-        self.pagespeed_locale = pagespeed_locale
-        self.report_path = report_path
 
     def run(self):
         t_name = threading.current_thread().name
@@ -72,8 +69,8 @@ class Worker(threading.Thread):
 
                 logger.info('%s found a test: id:%s, domain:%s, url:%s' % (t_name,t_id,t_domain,t_url))
 
-                query_pagespeed(qs,qm,ql,t_id,t_domain,t_url,'desktop',self.google_key,self.pagespeed_locale,self.report_path)
-                #query_pagespeed(qs,qm,ql,t_id,t_domain,t_url,'mobile',self.google_key,self.pagespeed_locale,self.report_path)
+                query_pagespeed(qs,qm,ql,t_id,t_domain,t_url,'desktop')
+                query_pagespeed(qs,qm,ql,t_id,t_domain,t_url,'mobile')
 
                 # Let the queue know I am done
                 self.queue.task_done()
@@ -109,7 +106,7 @@ def obtain_tests(qs,qm):
     return rows
 
 
-def query_pagespeed(qs,qm,ql,t_id,domain,u,strategy,google_key,pagespeed_locale,report_path):
+def query_pagespeed(qs,qm,ql,t_id,domain,u,strategy):
     """
     Query the Google Pagespeed API
     """
@@ -243,14 +240,18 @@ def main():
     # Create qm, qs and ql instances so we can do some work
     (qm,qs,ql) = create_resources()
 
-    # Send a test message, if requested to do so and then quit
-    if options.message:
-        qm.send('Pagespeed Test','Test message from the Quinico Pagespeed data collection job')
-        exit(0)
-
     # If we could not connect to MySQL, quit and notify someone
     if qs.status != 0:
         ql.terminate()
+
+    # Send a test message, if requested to do so and then quit
+    if options.message:
+        qm.send('Pagespeed Test','Test message from the Quinico Pagespeed data collection job')
+
+        # Disconnect from the DB server
+        qs.close()
+
+        exit(0)
 
     # Check if another instance is already running
     if ql.check_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR):
@@ -270,6 +271,7 @@ def main():
     # If we cannot obtain any of these, we have to quit
     
     # Google key
+    global google_key
     google_key = ql.return_config('google_key')
     if google_key is None:
         logger.error('Google Key is not defined, perhaps someone deleted it')
@@ -278,6 +280,7 @@ def main():
        logger.info('Google Key = %s' % google_key)
 
     # Downloaded Report Path
+    global report_path
     report_path = ql.return_config('report_path')
     if report_path is None:
         logger.error('Report path location is not defined, perhaps someone deleted it')
@@ -285,6 +288,8 @@ def main():
     else:
        logger.info('Report path location = %s' % report_path)
 
+    # Pagespeed Locale
+    global pagespeed_locale
     pagespeed_locale = ql.return_config('pagespeed_locale')
     if pagespeed_locale is None:
         logger.error('Google Pagespeed locale is not defined, perhaps someone deleted it')
@@ -292,10 +297,13 @@ def main():
     else:
        logger.info('Google Pagespeed locale = %s' % pagespeed_locale)
 
-    # Remove any pagespeed data from today as this new data
-    # should override them
-    if not options.test:
-        ql.remove_data('pagespeed_score')
+    # Pagespeed Threads
+    pagespeed_threads = ql.return_config('pagespeed_threads')
+    if pagespeed_threads is None:
+        logger.error('Google Pagespeed threads is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Google Pagespeed threads = %s' % pagespeed_threads)
 
     # Check all domains and urls
     tests = obtain_tests(qs,qm)
@@ -312,28 +320,23 @@ def main():
 
         # Start the workers.  
         #   Notes:
+        #   - Keep the main thread open until it is the only one left
         #   - Do not daemonize the threads nor join on the queue
         #   - If the threads experience exceptions, or if they detect
-        #     that the queue is empty, they will die
-        #   - Keep the main thread open until its the only one left
+        #     that the queue is empty, they will die.
         #   - The above prevents the threads dieing due to exceptions w/ the API
-        #     and the queue never emptying.   We'd rather have this process die
-        #     and someone get alerted and investigate
-        for i in range(2):
-
-            # Create a worker and pass it the following information:
-            #   - The queue
-            #   - The Google Key
-            #   - The Pagespeed locale
-            #   - The Report Path
-            w = Worker(queue,google_key,pagespeed_locale,report_path)
+        #     and the queue never emptying.   It is preferable to have this process 
+        #     die and someone get alerted and investigate.
+        for i in range(int(pagespeed_threads)):
+            # Create a worker and pass it the queue
+            w = Worker(queue)
 
             # Start the worker
             w.start()
 
         # If all threads except this one are done, then quit
+        # Check at 1 second intervals
         while threading.active_count() > 1: 
-            print threading.active_count()
             time.sleep(1)
 
 
@@ -350,6 +353,13 @@ def main():
 
 
 # -- GLOBALLY AVAILABLE -- #
+
+# Google API key
+google_key = ''
+# The Pagespeed locale
+pagespeed_locale = ''
+# The path to save reports
+report_path = ''
 
 # Setup an instance of the Quinico logger
 # Logging is thread-safe so all threads will share the same logger

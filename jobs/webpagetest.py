@@ -156,9 +156,19 @@ def query_webpagetest(t_id,domain,u,l):
 
     # We are doing only one run with a repeat view
     # If one view fails, then the whole test will be marked as failed
-    # (Start with a good test status)
+    # We need to figure this out before looking at each test status as
+    # we are inserting data into the DB after analyzing each run
     test_failed = 0
-    
+    try:
+        successful_runs_fv = xml.findall('./data/successful%sRuns' % ('FV'))[0].text
+        successful_runs_rv = xml.findall('./data/successful%sRuns' % ('RV'))[0].text
+
+        if not successful_runs_fv == '1' or not successful_runs_rv == '1':
+            test_failed = 1
+    except Exception as e:
+        test_failed = 1
+
+    # Look through each view for specific data
     for view in [1,2]:
 
         if view == 1:
@@ -176,8 +186,8 @@ def query_webpagetest(t_id,domain,u,l):
         values.append(testId)
         values.append(view)
 
-        # Run through the values we are looking for from WPT (if they are not there, errors are raised.)
-        # In this case, just add a zero
+        # Run through the values we are looking for from WPT
+        # If there is no value, insert a zero
         for output_value in output_values:
             try:
                 values.append(xml.findall('./data/run/%s/results/%s' % (view_num,output_value))[0].text)
@@ -196,12 +206,10 @@ def query_webpagetest(t_id,domain,u,l):
 
             if not successful_runs == '1':
                 view_failed = 1
-                test_failed = 1
 
         except Exception as e:
             logger.warning('Error encountered searching %s runs for %s : %s : %s.' % (view_type,domain,xml_url,e))
             view_failed = 1
-            test_failed = 1
         
         # Add the view and test status
         values.append(view_failed)

@@ -204,6 +204,7 @@ class ConfigForm(forms.Form):
     alert = forms.CharField(required=False)
     pagespeed_locale = LocaleField()
     pagespeed_upload = PathField()
+    pagespeed_threads = forms.IntegerField(min_value=1, max_value=100)
 
 
 class HelpAdminForm(forms.ModelForm):

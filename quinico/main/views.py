@@ -287,6 +287,7 @@ def config(request):
             params['seomoz_secret_key'] = form.cleaned_data['seomoz_secret_key']
             params['pagespeed_upload'] = form.cleaned_data['pagespeed_upload']
             params['pagespeed_locale'] = form.cleaned_data['pagespeed_locale']
+            params['pagespeed_threads'] = form.cleaned_data['pagespeed_threads']
             params['smtp_notify_data_start'] = form.cleaned_data['smtp_notify_data_start']
             params['smtp_notify_seomoz_new'] = form.cleaned_data['smtp_notify_seomoz_new']
             params['wpt_attempts'] = form.cleaned_data['wpt_attempts']

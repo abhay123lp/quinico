@@ -128,9 +128,6 @@ class lib:
 
         self.logger.info('Updating API calls/errors for today for %s with %i additional call/error(s)' % (table,count))
 
-        # First see if we have any existing calls for today
-        current_api_calls = self.count_api_calls(table,error)
-
         # Counting errors
         if error == 1:
             table += '_api_errors'
@@ -138,13 +135,15 @@ class lib:
         else:
             table += '_api_calls'
 
-        # If there are not any, just add them, otherwise update
-        if current_api_calls == 0:
-            sql = 'INSERT INTO ' + table + ' (call_date,count) VALUES (DATE(NOW()),%s)'
-        else:
-            sql = 'UPDATE ' + table + ' SET count=%s WHERE call_date=DATE(NOW())'
+        # Either add a new row for this date or update an existing date
+        sql  = 'INSERT INTO ' + table + ' (call_date,count)'
+        sql += 'VALUES (DATE(NOW()),%s)'
+        sql += 'ON DUPLICATE KEY UPDATE count = count + %s'
 
-        (rowcount,rows) = self.qs.execute(sql,(str(current_api_calls + count)))
+        # Convert the count int to a string for string interpolation
+        count = str(count)
+
+        (rowcount,rows) = self.qs.execute(sql,(count,count))
         if self.qs.status != 0:
             if self.notify_error: 
                 self.qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,self.qs.emessage))

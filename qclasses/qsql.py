@@ -23,6 +23,8 @@
 
 
 import MySQLdb
+import sqlalchemy.pool as pool
+
 
 
 class sql:
@@ -47,8 +49,12 @@ class sql:
             self.logger.info('Connecting to sql server: %s, database: %s' % (host,database))
 
         try:
+            # Create a SQL Alchemy Pool to proxy mysqldb through
+            #mysql_pool = pool.manage(MySQLdb)
+             
             # Connect
             self.db = MySQLdb.connect(host=host,user=username,passwd=password,db=database,charset='utf8',use_unicode=True)
+            #self.db = mysql_pool.connect(host=host,user=username,passwd=password,db=database,charset='utf8',use_unicode=True)
 
             # Commit everything without needing to specify it
             self.db.autocommit(True)
@@ -101,6 +107,16 @@ class sql:
             return (rowcount,rows)
 
 
+    def close_cursor(self):
+        """
+        Close the MySQL cursor
+        """
+
+        # Close the cursor
+        self.cursor.close()
+        self.db.close()
+
+
     def close(self):
         """
         Close MySQL connection
@@ -114,7 +130,7 @@ class sql:
             self.logger.info('Closing MySQL connection')
 
         try:
-            self.cursor.close()  
+            self.cursor.close()
             self.db.close()
         except MySQLdb.Error as e:
            if not self.logger is None:
