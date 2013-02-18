@@ -29,13 +29,18 @@ from django.contrib.auth.models import User
 class Url(models.Model):
     """Urls that will be imported into the dashboard for the user"""
 
-    user = models.ForeignKey(User)
-    type = models.CharField(max_length=10)
     url = models.CharField(max_length=1000)
 
 
+class Url_Subscription(models.Model):
+    """Urls that users are subscribed to"""
+
+    user = models.ForeignKey(User)
+    url = models.ForeignKey(Url)
+
+
 class Subscription(models.Model):
-    """High level subscriptions for the user"""
+    """Category subscriptions for the user (e.g. SEO or Keyword Rank)"""
 
     user = models.ForeignKey(User, unique=True)
     keywords = models.BooleanField()

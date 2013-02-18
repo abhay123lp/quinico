@@ -1,0 +1,56 @@
+{% extends "base/base.json" %}
+{% block content %}
+{% comment %}
+The for loop below is more complicated than necessary but its not possible
+to alias a column in the DJANGO ORM and the template does not know which
+value we are looking for so we have to do it this way
+{% endcomment %}
+
+
+{
+ "data":
+  {
+    "cols":
+     [
+       {"label":"Date","type":"string"},
+       {"label":"Value","type":"number"}
+     ],
+    "rows":[
+
+     {% for row in trends %}
+      {% if forloop.first %}
+       {% for key,value in row.items %}
+        {% if forloop.first %}
+         {"c":[{"v":"{{value|date:"Y-m-d"}}"},
+        {% else %}
+         {"v":{{value}}}]}
+        {% endif %}
+       {% endfor %}
+      {% else %}
+       {% for key,value in row.items %}
+        {% if forloop.first %}
+         ,{"c":[{"v":"{{value|date:"Y-m-d"}}"},
+        {% else %}
+         {"v":{{value}}}]}
+        {% endif %}
+       {% endfor %}
+      {% endif %}
+     {% endfor %}
+  
+]},
+
+ "options":
+   {
+    "title":"SEO: {{url}} | {{metric_name}}",
+    "width":"{{dash_settings.0.width}}",
+    "height":"{{dash_settings.0.height}}",
+    "fontSize":"{{dash_settings.0.font}}",
+    "hAxis":{"textPosition":"out","slantedText":"true"},
+    "series":{"0":{"color":"#1c94c4","visibleInLegend":"false"}},
+    "curveType":"function",
+    "pointSize":"3"
+   }
+
+}
+
+{% endblock %}

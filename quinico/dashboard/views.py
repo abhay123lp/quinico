@@ -29,11 +29,11 @@ from django.template import RequestContext
 from django.http import HttpResponseRedirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-
 from quinico.main.models import Config
 from quinico.dashboard.models import Subscription
 from quinico.dashboard.models import Dash_Settings
 from quinico.dashboard.models import Url
+from quinico.dashboard.models import Url_Subscription
 from quinico.dashboard import preferences
 from quinico.main.models import Config
 
@@ -125,10 +125,19 @@ def admin(request):
                    # If its an empty one, don't do anything
                    if not url == '':
                        # See if this URL already exists.  If not, add it
-                       url_exist = Url.objects.filter(user_id=user_id[0]['id'],type='graph',url=url)
+                       url_exist = Url.objects.filter(url=url)
                        if not url_exist:
                           # Add it
-                          Url(user_id=user_id[0]['id'],type='graph',url=url).save()
+                          Url(url=url).save()
+
+                       # See if the user is already subscribed
+                       url_id = Url.objects.filter(url=url).values('id')[0]['id']
+                       user_subscribed = Url_Subscription.objects.filter(user_id=user_id[0]['id'],url_id=url_id)
+ 
+                       if not user_subscribed:
+                           # Subscribe the user to it
+                           Url_Subscription(user_id=user_id[0]['id'],url_id=url_id).save()
+
 
             # Remove any Urls the user is requesting
             # We need to look through all post parameters and match on user_del_number.  
@@ -136,10 +145,19 @@ def admin(request):
             for key in request.POST:
                 match = re.match('url_del_(\d+)',key)
                 if not match is None:
-                    id =  match.group(1)
-                    # Delete the url
-                    Url.objects.filter(id=id,user_id=user_id[0]['id']).delete()
- 
+                    id = match.group(1)
+
+                    # Get the URL ID in case we are removing it
+                    url_id = Url_Subscription.objects.filter(id=id).values('url_id')[0]['url_id']
+
+                    # Remove the subscription
+                    Url_Subscription.objects.filter(id=id,user_id=user_id[0]['id']).delete()
+
+                    # If nobody else is subscribed, remove the URL
+                    subscribed = Url_Subscription.objects.filter(url_id=url_id)
+                    if not subscribed:
+                        Url.objects.filter(id=url_id).delete()
+
             # Send them back
             return HttpResponseRedirect('/dashboard/admin')
 
@@ -162,7 +180,8 @@ def admin(request):
             dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
             # Obtain the user's custom URL settings
-            urls = Url.objects.filter(user__username=request.user.username)
+            urls = Url_Subscription.objects.filter(user__username=request.user.username).values('id','url_id__url')
+            logger.debug(urls.query)
         
         # Subscribe them to everything and give the defaults
         else:
@@ -275,9 +294,18 @@ def index(request):
     # Add any custom graph URLs the user may have added
     # The user must be authenticated
     if request.user.is_authenticated():
-        custom_urls = Url.objects.filter(user__username=request.user.username).values('url')
+        custom_urls = Url_Subscription.objects.filter(user__username=request.user.username).values('url_id__url')
         for url in custom_urls:
-            url_list[url['url']] = 'image'
+            # Is it a Quinico URL?
+            if re.match(r'http(s)?:\/\/%s' % request.META['SERVER_NAME'],url['url_id__url']):
+                # Yes, now is it a JSON (graph) or HTML type?
+                if re.search('&format=db(2)?$',url['url_id__url']):
+                    url_list[url['url_id__url']] = 'graph'
+                # Ok, its HTML
+                else:
+                    url_list[url['url_id__url']] = 'html'
+            else:
+                url_list[url['url_id__url']] = 'image'
 
     # Determine the refresh rate
     refresh = Config.objects.filter(config_name='dashboard_refresh').values('config_value')[0]['config_value']

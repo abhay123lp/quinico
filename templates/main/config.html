@@ -23,59 +23,10 @@
 <form name="config" method="POST" action="/admin/config">
 {% csrf_token %}
 <table>
- <tr>
-  <th width="200">Parameter</th>
-  <th width="300">Current Value</th>
-  <th>Update</th>
-  <th>New Value</th>
- </tr>
-
-
- {% for config in configs %}
- <tr>
-  <td><span title="{{config.description}}">{{config.friendly_name}}</span></td>
-  {% if config.display == 'password' %}
-    <td>********</td>
-    <td><input type="checkbox" name="update_{{config.config_name}}"</td>
-    <td><input type="password" name="{{config.config_name}}" value=""></td>
-  {% else %}
-   {% if config.display == 'boolean' %}
-    <td>{% if config.config_value == '1' %}True{% else %}False{% endif %}</td>
-    <td><input type="checkbox" name="update_{{config.config_name}}"</td>
-    <td>
-     <select name="{{config.config_name}}">
-      {% if config.config_value == '1' %}
-       <option value="0" selected>False</option>
-       <option value="1">True</option>
-      {% else %}
-       <option value="0">False</option>
-       <option value="1" selected>True</option>
-      {% endif %}
-    </td>
-   {% else %}
-    <td>{{config.config_value}}</td>
-    <td><input type="checkbox" name="update_{{config.config_name}}"</td>
-    <td><input type="text" name="{{config.config_name}}" value=""></td>
-   {% endif %}
-  {% endif %}
- </tr>
- {% endfor %}
- </tr>
- <tr>
-  <td align="left" colspan="5">
-   <input type="submit" value="save">
-  </td>
- </tr>
- <tr>
-  <td align="left" colspan="5">
-   Hover over the parameter names for a description.
-  </td>
- </tr>
-
-
+ 
  {% if form.errors %}
  <tr>
-  <td colspan="5" bgcolor="yellow">
+  <td colspan="4" bgcolor="yellow">
    {% if form.max_keyword_results.errors %}
     Maximum Keyword Results error: {% for error in form.max_keyword_results.errors %}{{error}}{% endfor %}
     <br>
@@ -132,9 +83,62 @@
     Pagespeed Threads error: {% for error in form.pagespeed_threads.errors %}{{error}}{% endfor %}
     <br>
    {% endif %}
+   {% if form.wpt_threads.errors %}
+    Webpagetest Threads error: {% for error in form.wpt_threads.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
   </td>
  </tr>
  {% endif %}
+
+ <tr>
+  <th width="200">Parameter</th>
+  <th width="300">Current Value</th>
+  <th>Update</th>
+  <th>New Value</th>
+ </tr>
+
+
+ {% for config in configs %}
+ <tr>
+  <td><span title="{{config.description}}">{{config.friendly_name}}</span></td>
+  {% if config.display == 'password' %}
+    <td>********</td>
+    <td><input type="checkbox" name="update_{{config.config_name}}"</td>
+    <td><input type="password" name="{{config.config_name}}" value=""></td>
+  {% else %}
+   {% if config.display == 'boolean' %}
+    <td>{% if config.config_value == '1' %}True{% else %}False{% endif %}</td>
+    <td><input type="checkbox" name="update_{{config.config_name}}"</td>
+    <td>
+     <select name="{{config.config_name}}">
+      {% if config.config_value == '1' %}
+       <option value="0" selected>False</option>
+       <option value="1">True</option>
+      {% else %}
+       <option value="0">False</option>
+       <option value="1" selected>True</option>
+      {% endif %}
+    </td>
+   {% else %}
+    <td>{{config.config_value}}</td>
+    <td><input type="checkbox" name="update_{{config.config_name}}"</td>
+    <td><input type="text" name="{{config.config_name}}" value=""></td>
+   {% endif %}
+  {% endif %}
+ </tr>
+ {% endfor %}
+ </tr>
+ <tr>
+  <td align="left" colspan="5">
+   <input type="submit" value="save">
+  </td>
+ </tr>
+ <tr>
+  <td align="left" colspan="5">
+   Hover over the parameter names for a description.
+  </td>
+ </tr>
 </table>
 </form>
 

@@ -67,7 +67,7 @@ $(document).ready(function() {
  <tr>
   <td valign="top" style="text-align:left;">{{row.formattedName}}</td>
   <td valign="top" style="text-align:left;">{{row.score}}</td>
-  <td valign="top" style="text-align:left;">{{row.impact}}</td>
+  <td valign="top" bgcolor="{{row.color}}" style="text-align:left;">{{row.impact}}</td>
   <td valign="top" style="text-align:left;" width="450"> 
   {% if row.urls %}
    <img src="/html/images/plus.gif" id="img_{{row.name}}" onclick="hide_show_img('div_{{row.name}}','img_{{row.name}}'); return false">

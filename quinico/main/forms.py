@@ -195,6 +195,7 @@ class ConfigForm(forms.Form):
     wpt_attempts = forms.IntegerField(required=False)
     wpt_key = forms.CharField(required=False)
     wpt_wait = forms.IntegerField(required=False)
+    wpt_threads = forms.IntegerField(required=False, min_value=1, max_value=100)
     dashboard_refresh = forms.IntegerField(required=False)
     dashboard_slots = DashboardSlotsField(required=False)
     dashboard_width = forms.IntegerField(required=False)
@@ -204,7 +205,7 @@ class ConfigForm(forms.Form):
     alert = forms.CharField(required=False)
     pagespeed_locale = LocaleField()
     pagespeed_upload = PathField()
-    pagespeed_threads = forms.IntegerField(min_value=1, max_value=100)
+    pagespeed_threads = forms.IntegerField(required=False, min_value=1, max_value=100)
 
 
 class HelpAdminForm(forms.ModelForm):

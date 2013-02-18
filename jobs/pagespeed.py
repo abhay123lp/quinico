@@ -40,6 +40,42 @@ from qclasses import qsql
 from qclasses import qlib
 
 
+# -- GLOBALLY AVAILABLE -- #
+
+# Google API key
+google_key = ''
+# The Pagespeed locale
+pagespeed_locale = ''
+# The path to save reports
+report_path = ''
+
+# Grab the Quinico webapp settings
+os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
+
+# Setup an instance of the Quinico logger
+# Logging is thread-safe so all threads will share the same logger
+logger = logging.getLogger('quinico')
+
+# Parse Arguments
+parser = OptionParser(description='Google Pagespeed query \
+and data loading script', version='%prog 1.0')
+parser.add_option('-m','--message',
+                  action='store_true',
+                  dest='message',
+                  default=False,
+                  help='Send a test email message using the Quinico SMTP settings \
+                        configured in local_settings.py and then exit')
+parser.add_option('-t','--test',
+                  action='store_true',
+                  dest='test',
+                  default=False,
+                  help='Enable testing mode to prevent modification \
+                        of any database data when this script is run.  \
+                        No data will be added or deleted from the database \
+                        except for API calls/errors.')
+(options, args) = parser.parse_args()
+
+
 class Worker(threading.Thread):
     """Worker thread for talking to external API 
     and acquiring/committing data
@@ -74,13 +110,28 @@ class Worker(threading.Thread):
 
                 # Let the queue know I am done
                 self.queue.task_done()
+
             except Queue.Empty:
+                # Queue is empty, close down this thread.
                 logger.info('Queue is empty, stopping thread %s' % t_name)
+
+                # Disconnect from the DB server
+                qs.close()
+
+                # Stop the thread
                 break
+
             except Exception as e:
                 # Most likely there was a problem with the Pagespeed
                 # API.  Close down this thread.
                 logger.error('Exception encountered with thread %s: %s' % (t_name,e))
+                if settings.SMTP_NOTIFY_ERROR:
+                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
+
+                # Disconnect from the DB server
+                qs.close()
+
+                # Stop the thread
                 break
 
 
@@ -138,7 +189,7 @@ def query_pagespeed(qs,qm,ql,t_id,domain,u,strategy):
     logger.debug(json.dumps(response))
     raw_json = json.loads(response)
 
-    ## Add the high level scores that we save for every test ##
+    # Add the high level scores that we save for every test
     # We are looking for the following items, in this order:
     items = [
         'numberHosts',
@@ -154,7 +205,7 @@ def query_pagespeed(qs,qm,ql,t_id,domain,u,strategy):
         'otherResponseBytes'
         ]
 
-    # Keep the results here
+    # Store the results
     results = []
 
     # Add the first few items
@@ -209,9 +260,6 @@ def create_resources():
        - a qsql instance
     """
        
-    # Grab the Quinico webapp settings
-    os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
-
     # Obtain database parameters from DJango
     host = settings.DATABASES['default']['HOST']
     user = settings.DATABASES['default']['USER']
@@ -248,9 +296,8 @@ def main():
     if options.message:
         qm.send('Pagespeed Test','Test message from the Quinico Pagespeed data collection job')
 
-        # Disconnect from the DB server
+        # Disconnect from the DB server and exit
         qs.close()
-
         exit(0)
 
     # Check if another instance is already running
@@ -314,7 +361,7 @@ def main():
         # Create a queue for the tests
         queue = Queue.Queue()
 
-        # Check all tests and add to the queue 
+        # Add all tests to the queue 
         for row in tests:
             queue.put(row)
 
@@ -349,40 +396,6 @@ def main():
     # Remove the PID file
     if (ql.remove_pid('%s/jobs/pid/pagespeed.pid' % settings.APP_DIR)):
         ql.terminate()
-
-
-
-# -- GLOBALLY AVAILABLE -- #
-
-# Google API key
-google_key = ''
-# The Pagespeed locale
-pagespeed_locale = ''
-# The path to save reports
-report_path = ''
-
-# Setup an instance of the Quinico logger
-# Logging is thread-safe so all threads will share the same logger
-logger = logging.getLogger('quinico')
-
-# Parse Arguments
-parser = OptionParser(description='Google Pagespeed query \
-and data loading script', version='%prog 1.0')
-parser.add_option('-m','--message',
-                  action='store_true',
-                  dest='message',
-                  default=False,
-                  help='Send a test email message using the Quinico SMTP settings \
-                        configured in local_settings.py and then exit')
-parser.add_option('-t','--test',
-                  action='store_true',
-                  dest='test',
-                  default=False,
-                  help='Enable testing mode to prevent modification \
-                        of any database data when this script is run.  \
-                        No data will be added or deleted from the database \
-                        except for API calls/errors.')
-(options, args) = parser.parse_args()
 
 
 # This program can only run is executed directly

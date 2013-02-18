@@ -293,6 +293,7 @@ def config(request):
             params['wpt_attempts'] = form.cleaned_data['wpt_attempts']
             params['wpt_key'] = form.cleaned_data['wpt_key']
             params['wpt_wait'] = form.cleaned_data['wpt_wait']
+            params['wpt_threads'] = form.cleaned_data['wpt_threads']
             params['dashboard_refresh'] = form.cleaned_data['dashboard_refresh']
             params['dashboard_slots'] = form.cleaned_data['dashboard_slots']
             params['dashboard_width'] = form.cleaned_data['dashboard_width']

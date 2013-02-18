@@ -18,7 +18,6 @@
 
 {% endcomment %}
 
-
 {% block content %}
 
 <b><i>DASHBOARD ADMIN CONSOLE</i></b>
@@ -182,7 +181,7 @@
 
      {% for url in urls %}
      <tr>
-      <td><textarea id="url_txt_{{url.id}}" name="url_txt_{{url.id}}" class="textarea_url" readonly>{{url.url}}</textarea></td>
+      <td><textarea id="url_txt_{{url.id}}" name="url_txt_{{url.id}}" class="textarea_url" readonly>{{url.url_id__url}}</textarea></td>
       <td><input type="checkbox" name="url_del_{{url.id}}"/></td>
      </tr>
      {% endfor %}

@@ -31,6 +31,9 @@ import json
 import datetime
 import pytz
 import quinico
+import Queue
+import threading
+import time
 import xml.etree.ElementTree as ET
 from optparse import OptionParser
 from django.conf import settings
@@ -39,7 +42,102 @@ from qclasses import qsql
 from qclasses import qlib
 
 
-def obtain_tests():
+# -- GLOBALLY AVAILABLE -- #
+
+# Max wait between status checks
+wpt_wait = ''
+# Max attempts per test
+wpt_attempts = ''
+# Downloaded report path
+report_path = ''
+# API key
+wpt_key = ''
+
+# Grab the Quinico webapp settings
+os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
+
+# Setup an instance of the Quinico logger
+logger = logging.getLogger('quinico')
+
+# Parse Arguments
+parser = OptionParser(description='Web Page Test query \
+and data loading script', version='%prog 1.0')
+parser.add_option('-m','--message',
+                  action='store_true',
+                  dest='message',
+                  default=False,
+                  help='Send a test email message using the Quinico SMTP settings \
+                        configured in local_settings.py and then exit')
+parser.add_option('-t','--test',
+                  action='store_true',
+                  dest='test',
+                  default=False,
+                  help='Enable testing mode to prevent modification \
+                        of any database data when this script is run.  \
+                        No data will be added or deleted from the database \
+                        except for API calls/errors.')
+(options, args) = parser.parse_args()
+
+
+class Worker(threading.Thread):
+    """Worker thread for talking to external API 
+    and acquiring/committing data
+
+    To avoid contention, each thread will have its own ql, qs and
+    qemail instance
+    """
+
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        t_name = threading.current_thread().name
+        logger.info('Starting thread: %s' % t_name)
+
+        # Create qm, qs and ql instances
+        (qm,qs,ql) = create_resources()
+
+        while True:
+            # Pop the next job off the queue and don't block if empty
+            try:
+                row = self.queue.get(False)
+                t_id = row[0]
+                t_domain = row[1]
+                t_url = row[2]
+                t_location = row[3]
+        
+                logger.info('Found a test: id:%s, domain:%s, url:%s, location:%s' % (t_id,t_domain,t_url,t_location))
+                query_webpagetest(qs,qm,ql,t_id,t_domain,t_url,t_location)
+
+                # Let the queue know I am done
+                self.queue.task_done()
+
+            except Queue.Empty:
+                # Queue is empty, close down this thread.
+                logger.info('Queue is empty, stopping thread %s' % t_name)
+
+                # Disconnect from the DB server
+                qs.close()
+
+                # Stop the thread
+                break
+
+            except Exception as e:
+                # Most likely there was a problem with the Webpagetest
+                # API.  Close down this thread.
+                logger.error('Exception encountered with thread %s: %s' % (t_name,e))
+                if settings.SMTP_NOTIFY_ERROR:
+                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
+
+                # Disconnect from the DB server
+                qs.close()
+
+                # Stop the thread
+                break
+
+
+def obtain_tests(qs,qm):
     """
     Obtain a list of tests
     """
@@ -62,9 +160,9 @@ def obtain_tests():
     return rows
 
 
-def query_webpagetest(t_id,domain,u,l):
+def query_webpagetest(qs,qm,ql,t_id,domain,u,l):
     """
-    Query the Web Page Test API
+    Query the Webpagetest API
     """
 
     logger.info('Checking %s for url %s from location %s' % (domain,u,l))
@@ -120,7 +218,7 @@ def query_webpagetest(t_id,domain,u,l):
            logger.info('Counter is at %s with a maximum of %s periods.  Sleeping %s seconds.' % (counter,wpt_attempts,wpt_wait))
            ql.pause(int(wpt_wait))
         
-        test_status_code = check_status(status_url)
+        test_status_code = check_status(ql,status_url)
         counter += 1
 
         # Could not obtain a status so quit checking
@@ -228,7 +326,7 @@ def query_webpagetest(t_id,domain,u,l):
                 qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
 
-def check_status(url):
+def check_status(ql,url):
     """
     Check test status
     """
@@ -250,141 +348,165 @@ def check_status(url):
     return test_status_code
 
 
-#
-# BEGIN MAIN PROGRAM EXECUTION
-#
+def create_resources():
+    """Create and return the following resources
+       - a qlib instance
+       - a qemail instance
+       - a qsql instance
+    """
+
+    # Obtain database parameters from DJango
+    host = settings.DATABASES['default']['HOST']
+    user = settings.DATABASES['default']['USER']
+    password = settings.DATABASES['default']['PASSWORD']
+    name = settings.DATABASES['default']['NAME']
+
+    # Create a qemail instance
+    qm = qemail.notify(settings.SMTP_HOST,
+                      settings.SMTP_SENDER,
+                      settings.SMTP_RECIPIENT,
+                      logger
+                     )
+
+    # Create a qsql instance
+    qs = qsql.sql(host,user,password,name,logger)
+
+    # Create a qlib instance
+    ql = qlib.lib(qs,qm,settings.SMTP_NOTIFY_ERROR,logger)
+
+    return (qm,qs,ql)
 
 
-# Parse Arguments
-parser = OptionParser(description='Web Page Test query \
-and data loading script', version='%prog 1.0')
-parser.add_option('-m','--message',
-                  action='store_true',
-                  dest='message',
-                  default=False,
-                  help='Send a test email message using the Quinico SMTP settings \
-                        configured in local_settings.py and then exit')
-parser.add_option('-t','--test',
-                  action='store_true',
-                  dest='test',
-                  default=False,
-                  help='Enable testing mode to prevent modification \
-                        of any database data when this script is run.  \
-                        No data will be added or deleted from the database \
-                        except for API calls/errors.')
-(options, args) = parser.parse_args()
+def main():
+    """Main Program Execution"""
 
-# Grab the Quinico webapp settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
+    # Create qm, qs and ql instances so we can do some work
+    (qm,qs,ql) = create_resources()
 
-# Setup an instance of the Quinico logger
-logger = logging.getLogger('quinico')
+    # If we could not connect to MySQL, quit and notify someone
+    if qs.status != 0:
+        ql.terminate()
 
-# Obtain database parameters from DJango
-host = settings.DATABASES['default']['HOST']
-user = settings.DATABASES['default']['USER']
-password = settings.DATABASES['default']['PASSWORD']
-name = settings.DATABASES['default']['NAME']
+    # Send a test message, if requested to do so and then quit
+    if options.message:
+        qm.send('Webpagetest Test','Test message from the Quinico Webpagetest data collection job')
 
-# Create a qemail instance
-qm = qemail.notify(settings.SMTP_HOST,
-                  settings.SMTP_SENDER,
-                  settings.SMTP_RECIPIENT,
-                  logger
-                 )
+        # Disconnect from the DB server and exit
+        qs.close()
+        exit(0)
 
-# Send a test message, if requested to do so and then quit
-if options.message:
-    qm.send('Webpagetest Test','Test message from the Quinico Webpagetest data collection job')
+    # Check if another instance is already running
+    if ql.check_pid('%s/jobs/pid/webpagetest.pid' % settings.APP_DIR):
+        ql.terminate()
+
+    # Set a PID
+    if (ql.set_pid('%s/jobs/pid/webpagetest.pid' % settings.APP_DIR)):
+        ql.terminate()
+
+    # Let someone know we are starting data collection
+    logger.info('Started Webpagetest data collection job')
+    smtp_notify_data_start = int(ql.return_config('smtp_notify_data_start'))
+    if smtp_notify_data_start:
+        qm.send('Webpagetest Job Starting','Starting Quinico Webpagetest data collection job')
+
+    # Obtain configuration parameters
+    # If we cannot obtain any of these, we have to quit
+
+    # Web Page Test key
+    global wpt_key
+    wpt_key = ql.return_config('wpt_key')
+    if wpt_key is None:
+        logger.error('wpt_key is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('wpt_key = %s' % wpt_key)
+
+    # Downloaded Report Path
+    global report_path
+    report_path = ql.return_config('report_path')
+    if report_path is None:
+        logger.error('Report path location is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Report path location = %s' % report_path)
+
+    # Max attempts per test
+    global wpt_attempts
+    wpt_attempts = ql.return_config('wpt_attempts')
+    if wpt_attempts is None:
+        logger.error('wpt_attempts is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('wpt_attempts = %s' % wpt_attempts)
+
+    # Max wait between status checks
+    global wpt_wait
+    wpt_wait = ql.return_config('wpt_wait')
+    if wpt_wait is None:
+        logger.error('wpt_wait is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('wpt_wait = %s' % wpt_wait)
+
+    wpt_threads = ql.return_config('wpt_threads')
+    if wpt_threads is None:
+        logger.error('Webpagetest threads is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Webpagetest threads = %s' % wpt_threads)
+
+    # Check all domains and urls
+    tests = obtain_tests(qs,qm)
+    if not tests:
+        logger.error('No webpagetests defined')
+        ql.terminate()
+    else:
+        # Create a queue for the tests
+        queue = Queue.Queue()
+
+        # Add all tests to the queue
+        for row in tests:
+            queue.put(row)
+
+        # Start the workers.  
+        #   Notes:
+        #   - Keep the main thread open until it is the only one left
+        #   - Do not daemonize the threads nor join on the queue
+        #   - If the threads experience exceptions, or if they detect
+        #     that the queue is empty, they will die.
+        #   - The above prevents the threads dieing due to exceptions w/ the API
+        #     and the queue never emptying.   It is preferable to have this process 
+        #     die and someone get alerted and investigate.
+        for i in range(int(wpt_threads)):
+            # Create a worker and pass it the queue
+            w = Worker(queue)
+
+            # Start the worker
+            w.start()
+
+        # If all threads except this one are done, then quit
+        # Check at 1 second intervals
+        while threading.active_count() > 1:
+            time.sleep(1)
+
+
+    # All done
+    logger.info('All done with webpagetest tests')
+
+    # Disconnect from the DB server
+    qs.close()
+
+    # Remove the PID file
+    if (ql.remove_pid('%s/jobs/pid/webpagetest.pid' % settings.APP_DIR)):
+        ql.terminate()
+
+
+# This program can only run is executed directly
+if __name__ == "__main__":
+
+    # Run main program
+    main()
+
+    # Quit progam
     exit(0)
 
-# Create a qsql instance
-qs = qsql.sql(host,user,password,name,logger)
-
-# Create a qlib instance
-ql = qlib.lib(qs,qm,settings.SMTP_NOTIFY_ERROR,logger)
-
-# If we could not connect to MySQL, quit and notify someone
-if qs.status != 0:
-    ql.terminate()
-
-# Check if another instance is already running
-if ql.check_pid('%s/jobs/pid/webpagetest.pid' % settings.APP_DIR):
-    ql.terminate()
-
-# Set a PID
-if (ql.set_pid('%s/jobs/pid/webpagetest.pid' % settings.APP_DIR)):
-    ql.terminate()
-
-# Let someone know we are starting data collection
-logger.info('Started Webpagetest data collection job')
-smtp_notify_data_start = int(ql.return_config('smtp_notify_data_start'))
-
-if smtp_notify_data_start:
-    qm.send('Webpagetest Job Starting','Starting Quinico Webpagetest data collection job')
-
-# Obtain configuration parameters
-# If we cannot obtain any of these, we have to quit
-
-# Web Page Test key
-wpt_key = ql.return_config('wpt_key')
-if wpt_key is None:
-    logger.error('wpt_key is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('wpt_key = %s' % wpt_key)
-
-# Downloaded Report Path
-report_path = ql.return_config('report_path')
-if report_path is None:
-    logger.error('Report path location is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('Report path location = %s' % report_path)
-
-# Max attempts per test
-wpt_attempts = ql.return_config('wpt_attempts')
-if wpt_attempts is None:
-    logger.error('wpt_attempts is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('wpt_attempts = %s' % wpt_attempts)
-
-# Max wait between status checks
-wpt_wait = ql.return_config('wpt_wait')
-if wpt_wait is None:
-    logger.error('wpt_wait is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.info('wpt_wait = %s' % wpt_wait)
-
-
-# Check all domains and urls
-# We'll perform the tests serially so as not to overload the API
-tests = obtain_tests()
-if not tests:
-    logger.error('No webpagetests defined')
-    terminate()
-else:
-    for row in tests:
-        t_id = row[0]
-        t_domain = row[1]
-        t_url = row[2]
-        t_location = row[3]
-        
-        logger.info('Found a test: id:%s, domain:%s, url:%s, location:%s' % (t_id,t_domain,t_url,t_location))
-        query_webpagetest(t_id,t_domain,t_url,t_location)
-
-
-# All done
-logger.info('All done with webpagetest tests')
-
-# Disconnect from the DB server
-qs.close()
-
-# Remove the PID file
-if (ql.remove_pid('%s/jobs/pid/webpagetest.pid' % settings.APP_DIR)):
-    ql.terminate()
-
-# Quit progam
-exit(0)

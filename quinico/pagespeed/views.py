@@ -102,6 +102,7 @@ def report(request):
         #       formattedName: 'Avoid CSS @import',
         #       score: 100,
         #       impact: 0.1,
+        #       color: 'red',
         #       urls: [
         #              {
         #               header: 'The following external stylesheets were included in http://www.foo.bar',
@@ -123,6 +124,13 @@ def report(request):
             data_tmp['formattedName'] = json_data['formattedResults']['ruleResults'][result]['localizedRuleName']
             data_tmp['score'] = json_data['formattedResults']['ruleResults'][result]['ruleScore']
             data_tmp['impact'] = json_data['formattedResults']['ruleResults'][result]['ruleImpact']
+ 
+            if data_tmp['impact'] >= 10:
+                data_tmp['color'] = '#FF0000'
+            elif data_tmp['impact'] < 10 and data_tmp['impact'] >= 2:
+                data_tmp['color'] = '#FF9900'
+            else:
+                data_tmp['color'] = '#6699FF'
 
             if 'urlBlocks' in json_data['formattedResults']['ruleResults'][result]:
                 
@@ -232,6 +240,11 @@ def trends(request):
                 # Move back 30 days
                 then = datetime.timedelta(days=30)
                 date_from = now - then
+                date_from = date_from.strftime("%Y-%m-%d")
+
+            # The dates were already set, convert them to strings
+            else:
+                date_to = date_to.strftime("%Y-%m-%d")
                 date_from = date_from.strftime("%Y-%m-%d")
 
             # Add time information to the dates and the timezone (use the server's timezone)
@@ -411,17 +424,7 @@ def breakdown(request):
 
 	    # If the date is missing, set it b/c this is probably
 	    # an API or DB request (just give the most recent)
-            if date:
-
-                # Add hours, minutes, seconds to make it the beginning of the day
-                date += ' 00:00:00'
-                # Create a datetime object and format properly
-                date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
-                # Add our timezone
-                date = pytz.timezone(settings.TIME_ZONE).localize(date)
-
-            # No date, so just give the last run date as the date, formatted properly
-            else:
+            if not date:
 		last_run = Score.objects.filter(test_id__domain__domain=domain,
                                                 test_id__url__url=u_unenc,
                                                 strategy=strategy
@@ -430,15 +433,12 @@ def breakdown(request):
 		if last_run[0]['date']:
 		    date = last_run[0]['date']
 
-                    # Obtain as yyyy-mm-dd so we can make it the beginning of the day
-                    date = date.strftime('%Y-%m-%d')
-                    # Add hours, minutes, seconds to make it the beginning of the day
-                    date += ' 00:00:00'
-                    # Create a datetime object and format properly
-                    date = datetime.datetime.strptime(date, '%Y-%m-%d %H:%M:%S')
-                    # Add our timezone
-                    date = pytz.timezone(settings.TIME_ZONE).localize(date)
-                    
+                    # Convert from UTC to our timezone
+                    date = date.astimezone(pytz.timezone(settings.TIME_ZONE))
+
+                    # Format the date
+                    date = datetime.datetime.strptime(date.strftime('%Y-%m-%d'),'%Y-%m-%d')
+
                 # Looks like the pagespeed job has never been run
 		else:
                     message = 'The report returned no data.  It appears the Pagespeed data job has never been run'
@@ -475,7 +475,7 @@ def breakdown(request):
                                           test_id__url__url=u_unenc,
                                           date__range=[date,d_to],
                                           strategy=strategy,
-                                         ).extra({'date':'date(date)'}
+                                         ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
                                          ).values('date').annotate(
 					          Avg('numberResources'),
 					          Avg('numberStaticResources'),
@@ -659,6 +659,11 @@ def history(request):
                 # Move back 30 days
                 then = datetime.timedelta(days=30)
                 date_from = now - then
+                date_from = date_from.strftime("%Y-%m-%d")
+
+            # The dates were already set, convert them to strings
+            else:
+                date_to = date_to.strftime("%Y-%m-%d")
                 date_from = date_from.strftime("%Y-%m-%d")
 
 	    # Unquote the url to UTF-8 and then decode
