@@ -426,7 +426,7 @@ def query_webmaster_api_ce(qm,ql,url,errors):
        if re.match(r'403',str(e.code)):
            logger.error('403 error detected - attempting to re-auth to Google ClientLogin Service')
            ql.pause(30)
-           auth_webmaster() 
+           auth_webmaster(ql) 
            return errors,url
 
        # If the error is a 500, then wait a bit and then try again w/ the same URL
@@ -574,13 +574,13 @@ def main():
         ql.remove_data('webmaster_top_search_queries',check_date_tq)
 
     # Set the Google Auth Key
-    auth_webmaster()
+    auth_webmaster(ql)
     if auth_key is None:
         logger.error('Could not obtain Google auth_key')
         ql.terminate()
 
     # Check all domains - we'll perform the tests serially so as not to overload the API
-    domains = obtain_domains()
+    domains = obtain_domains(qs,qm)
 
     if not domains:
         logger.error('No domains defined')
