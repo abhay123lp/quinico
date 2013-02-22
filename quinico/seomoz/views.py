@@ -193,7 +193,6 @@ def trends(request):
     )
 
 
-
 def dashboard(request):
     """SEO Metrics Dashboard Index Page
     Create a dashboard of SEO metrics (including competitors)

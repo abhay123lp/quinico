@@ -27,78 +27,18 @@ import re
 from django import forms
 
 
-class DateField(forms.Field):
-    """A date field
-
-       Requirements:
-          - Must be in SQL format (yyyy-mm-dd)
-
-    """
-
-    def validate(self, value):
-        if value and not re.match(r'^\d{4}-\d{2}-\d{2}$', value):
-            raise forms.ValidationError('Improperly formatted date:%s' % (value))
-
-
 class FormatField(forms.Field):
     """A format field
 
        Requirements:
+          - Not required to be present
           - Only certain values are accepted (csv, db, xml, json)
 
     """
 
     def validate(self, value):
-        if value and not re.match(r'^(csv|db|xml|json)$', value):
+        if value and not re.match(r'^(csv|db|db1|db2|json|json1|json2)$', value):
             raise forms.ValidationError('Improperly formatted format:%s' % (value))
-
-
-class DomainField(forms.Field):
-    """A domain field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only alpha-numeric and '\-.'
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '':
-            raise forms.ValidationError('No domain selected')
-        if not re.match(r'^[0-9a-zA-Z/\-\.]+$', value):
-            raise forms.ValidationError('Improperly formatted domain:%s' % (value))
-
-
-class KeywordField(forms.Field):
-    """A keyword field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only alpha-numeric and \-%\s'
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '':
-            raise forms.ValidationError('No keyword selected')
-        if not re.match(r'^[0-9a-zA-Z/\-%\s\']+$', value):
-            raise forms.ValidationError('Improperly formatted keyword:%s' % (value))
-
-
-class IdField(forms.Field):
-    """An ID field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only digits
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '': 
-            raise forms.ValidationError('No id selected')
-        if not re.match(r'^\d+$', value):
-            raise forms.ValidationError('Improperly formatted id:%s' % (value))
 
 
 ### FORMS ###
@@ -107,32 +47,32 @@ class IdField(forms.Field):
 class QueriesForm(forms.Form):
     """Form for querying Google search query trends"""
 
-    date_from = DateField()
-    date_to = DateField()
-    domain = DomainField()
-    keyword = KeywordField()
+    date_from =  forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    date_to =  forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    domain = forms.CharField()
+    keyword = forms.CharField()
     format = FormatField()
 
 class CrawlErrorTrendForm(forms.Form):
     """Form for querying Google crawl error trends"""
 
-    date_from = DateField()
-    date_to = DateField()
-    domain = DomainField()
-    error_id = IdField()
+    date_from = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    domain = forms.CharField()
+    error_id = forms.IntegerField()
     format = FormatField()
 
 class TotalCrawlErrorTrendForm(forms.Form):
     """Form for querying Total Google crawl error trends"""
 
-    date_from = DateField()
-    date_to = DateField()
-    domain = DomainField()
+    date_from = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    domain = forms.CharField()
     format = FormatField()
 
 
 class CrawlErrorSummaryForm(forms.Form):
     """Form for querying crawl errors for a single day"""
 
-    date = DateField()
-    domain = DomainField()
+    date = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    domain = forms.CharField()

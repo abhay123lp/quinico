@@ -31,12 +31,13 @@ class FormatField(forms.Field):
     """A format field
 
        Requirements:
+          - Not required to be present
           - Only certain values are accepted (csv, db, json)
 
     """
 
     def validate(self, value):
-        if value and not re.match(r'^(csv|db|json)$', value):
+        if value and not re.match(r'^(csv|db|db1|db2|json|json1|json2)$', value):
             raise forms.ValidationError('Improperly formatted format:%s' % (value))
 
 

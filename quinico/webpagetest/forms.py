@@ -27,62 +27,18 @@ import re
 from django import forms
 
 
-class DateField(forms.Field):
-    """A date field
-
-       Requirements:
-          - Must be in SQL format (yyyy-mm-dd)
-
-    """
-
-    def validate(self, value):
-        if value and not re.match(r'^\d{4}-\d{2}-\d{2}$', value):
-            raise forms.ValidationError('Improperly formatted date:%s' % (value))
-
-
 class FormatField(forms.Field):
     """A format field
 
        Requirements:
+          - Not required to be present
           - Only certain values are accepted (csv, db, json)
 
     """
 
     def validate(self, value):
-        if value and not re.match(r'^(csv|db|db1|db2|json)$', value):
+        if value and not re.match(r'^(csv|db|db1|db2|json|json1|json2)$', value):
             raise forms.ValidationError('Improperly formatted format:%s' % (value))
-
-
-class MetricField(forms.Field):
-    """A metric field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only alpha-numeric
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '':
-            raise forms.ValidationError('No metric selected')
-        if not re.match(r'^[A-Za-z_]+$', value):
-            raise forms.ValidationError('Improperly formatted metric:%s' % (value))
-
-
-class IdField(forms.Field):
-    """An ID field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only digits
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '':
-            raise forms.ValidationError('No id selected')
-        if not re.match(r'^\d+$', value):
-            raise forms.ValidationError('Improperly formatted id:%s' % (value))
 
 
 ### FORMS ###
@@ -91,25 +47,25 @@ class IdField(forms.Field):
 class WebpagetestTrendForm(forms.Form):
     """Form for querying Webpagetest Trends"""
 
-    date_from = DateField()
-    date_to = DateField()
+    date_from = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
     format = FormatField()
-    metric = MetricField()
-    test_id = IdField()
+    metric = forms.CharField()
+    test_id = forms.IntegerField()
     include_failed = forms.BooleanField(required=False)
 
 
 class WebpagetestHistoryForm(forms.Form):
     """Form for querying Webpagetest history"""
 
-    date_from = DateField()
-    date_to = DateField()
-    test_id = IdField()
+    date_from = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    test_id = forms.IntegerField()
     format = FormatField()
 
 
 class WebpagetestReportForm(forms.Form):
     """Form for querying the entire Webpagetest report"""
 
-    id = IdField()
+    id = forms.IntegerField()
 

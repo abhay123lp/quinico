@@ -207,7 +207,7 @@ table.tiny_outside_border td {
    border-style:none;
    padding:3px 7px 2px 7px;
    text-align:left;
-   color:black;
+   color:#3f3f3f;
 }
 
 /* Tiny table with no border */
@@ -222,14 +222,37 @@ table.tiny_no_border th {
    padding-bottom:4px;
    background-color:#83B0EC;
    text-align:center;
-   color:black;
+   color:#3f3f3f;
 }
 table.tiny_no_border td {
    font-size:0.8em;
    border-style:none;
-   padding:3px 7px 2px 7px;
+   padding:5px 5px 5px 5px;
    text-align:center;
-   color:black;
+   color:#3f3f3f;
+}
+
+
+/* Tiny table with no border left justified */
+table.tiny_no_border_l {
+   font-family:Tahoma, Arial, Helvetica, sans-serif;
+   border-collapse:collapse;
+}
+table.tiny_no_border_l th {
+   font-size:0.8em;
+   border-style:none;
+   padding-top:5px;
+   padding-bottom:4px;
+   background-color:#83B0EC;
+   text-align:left;
+   color:#3f3f3f;
+}
+table.tiny_no_border_l td {
+   font-size:0.8em;
+   border-style:none;
+   padding:5px 5px 5px 5px;
+   text-align:left;
+   color:#3f3f3f;
 }
 
 
@@ -246,14 +269,14 @@ table.tiny_l th {
    padding-bottom:4px;
    background-color:#83B0EC;
    text-align:left;
-   color:black;
+   color:#3f3f3f;
 }
 table.tiny_l td {
    font-size:0.7em;
    border-style:none;
-   padding:3px 7px 2px 7px;
+   padding:5px 5px 5px 5px;
    text-align:left;
-   color:black;
+   color:#3f3f3f;
 }
 
 

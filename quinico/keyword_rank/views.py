@@ -133,7 +133,7 @@ def trends(request):
 
             # Construct the dashboard, download and monitoring links
 
-            # Add percent encoding to the keywords
+            # Add percent encoding to the keyword
             keyword_enc = urllib.quote_plus(keyword.encode('utf-8'))
             base_url = 'http://%s/keyword_rank/trends?domain' % request.META['HTTP_HOST']
             db_link = '%s=%s&keyword=%s&format=db' % (base_url,domain,keyword_enc)
@@ -451,8 +451,8 @@ def dashboard(request):
 
 	    # Construct the dashboard, download and monitoring links
             base_url = 'http://%s/keyword_rank/dashboard?domain' % (request.META['HTTP_HOST'])
+	    db_link = '%s=%s&format=db' % (base_url,domain)
 	    db_link1 = '%s=%s&format=db1' % (base_url,domain)
-	    db_link2 = '%s=%s&format=db2' % (base_url,domain)
 	    json_link1 = '%s=%s&format=json1' % (base_url,domain)
 	    json_link2 = '%s=%s&format=json2' % (base_url,domain)
 	    csv_link = '%s=%s&format=csv' % (base_url,domain)
@@ -476,9 +476,35 @@ def dashboard(request):
 
 		# Dashboard request
 		# There are two dashboards here:
-		# db1 - (Keyword Position Changes)
+		# db - First Page Rankings
 		# and
-		# db2 - First Page Rankings
+		# db1 - Keyword Position Changes
+		elif format == 'db':
+		    # If the user is authenticated and has a preference for size, set it
+		    dash_settings = None
+		    if request.user.is_authenticated():
+			# Obtain the user's dashboard settings
+			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+
+		    if not dash_settings:
+			# Give the default
+                        dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+
+		    return render_to_response(
+		     'keyword_rank/dashboard-db.html',
+		      {
+			'title':'Quinico | Keyword Dashboard',
+			'domain':domain,
+			'country':country,
+			'first_page':first_page,
+			'dash_settings':dash_settings
+		      },
+		      mimetype='application/json',
+		      context_instance=RequestContext(request)
+		    )
+
 		elif format == 'db1': 
 		    # If the user is authenticated and has a preference for size, set it
 		    dash_settings = None
@@ -504,32 +530,6 @@ def dashboard(request):
 		      context_instance=RequestContext(request)
 		    )
 
-		elif format == 'db2':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
-
-		    if not dash_settings:
-			# Give the default
-                        dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
-
-		    return render_to_response(
-		     'keyword_rank/dashboard-db2.html',
-		      {
-			'title':'Quinico | Keyword Dashboard',
-			'domain':domain,
-			'country':country,
-			'first_page':first_page,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
-
 		# CSV download (there is no template for this)
 		elif format == 'csv':
 		    response = HttpResponse(mimetype='text/csv')
@@ -537,7 +537,13 @@ def dashboard(request):
 		    writer = csv.writer(response)
 		    writer.writerow(headings)
 		    for rank in ranks:
-			writer.writerow([rank,ranks[rank][0],ranks[rank][1],ranks[rank][2],ranks[rank][3],ranks[rank][4],ranks[rank][5]])
+			writer.writerow([rank.encode('utf-8'),
+                                         ranks[rank][0],
+                                         ranks[rank][1],
+                                         ranks[rank][2],
+                                         ranks[rank][3],
+                                         ranks[rank][4],
+                                         ranks[rank][5]])
 		    return response
 
 	    # Just a standard HTML response is being requested
@@ -553,8 +559,8 @@ def dashboard(request):
 		    'changes':changes,
 		    'keyword_count':keyword_count,
 		    'country':country,
+		    'db_link':db_link,
 		    'db_link1':db_link1,
-		    'db_link2':db_link2,
 		    'json_link1':json_link1,
 		    'json_link2':json_link2,
 		    'csv_link':csv_link

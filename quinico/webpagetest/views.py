@@ -130,6 +130,11 @@ def trends(request):
                 date_from = now - then
                 date_from = date_from.strftime("%Y-%m-%d")
 
+            # The dates were already set, convert them to strings
+            else:
+                date_to = date_to.strftime("%Y-%m-%d")
+                date_from = date_from.strftime("%Y-%m-%d")
+
             # Add time information to the dates and the timezone (use the server's timezone)
             date_from = date_from
             date_from += ' 00:00:00'
@@ -304,6 +309,11 @@ def history(request):
                 # Move back 30 days
                 then = datetime.timedelta(days=30)
                 date_from = now - then
+                date_from = date_from.strftime("%Y-%m-%d")
+
+            # The dates were already set, convert them to strings
+            else:
+                date_to = date_to.strftime("%Y-%m-%d")
                 date_from = date_from.strftime("%Y-%m-%d")
 
 	    # Obtain the domain, url and location for the chart display

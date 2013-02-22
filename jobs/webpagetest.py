@@ -46,10 +46,13 @@ from qclasses import qlib
 
 # Max wait between status checks
 wpt_wait = ''
+
 # Max attempts per test
 wpt_attempts = ''
+
 # Downloaded report path
 report_path = ''
+
 # API key
 wpt_key = ''
 
@@ -77,6 +80,8 @@ parser.add_option('-t','--test',
                         No data will be added or deleted from the database \
                         except for API calls/errors.')
 (options, args) = parser.parse_args()
+
+# -- END GLOBALLY AVAILABLE -- #
 
 
 class Worker(threading.Thread):
@@ -124,8 +129,9 @@ class Worker(threading.Thread):
                 break
 
             except Exception as e:
-                # Most likely there was a problem with the Webpagetest
-                # API.  Close down this thread.
+                # Most likely there was a problem with the Webpagetest API
+                # This generally should not happen as the function definitions that
+                # that perform the work have their own exception handling
                 logger.error('Exception encountered with thread %s: %s' % (t_name,e))
                 if settings.SMTP_NOTIFY_ERROR:
                     qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
@@ -491,7 +497,7 @@ def main():
 
 
     # All done
-    logger.info('All done with webpagetest tests')
+    logger.info('All done with webpagetest data processing')
 
     # Disconnect from the DB server
     qs.close()
@@ -507,6 +513,6 @@ if __name__ == "__main__":
     # Run main program
     main()
 
-    # Quit progam
+    # Quit program
     exit(0)
 

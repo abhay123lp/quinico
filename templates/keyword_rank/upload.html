@@ -45,9 +45,10 @@
       <td></td>
       <td><input type="submit" value="Upload"/></td>
      </tr>
-
-     <tr>
+     {% if upload_form.errors %}
       <td colspan="2">{{upload_form.file.errors}}</td>
+     {% endif %}
+     <tr>
      </tr>
 </table>
 </form>

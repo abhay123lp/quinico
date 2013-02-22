@@ -56,12 +56,6 @@ class Crawl_Error_Type(models.Model):
     type = models.CharField(max_length=50, unique=True)
 
 
-class Message_Type(models.Model):
-    """Message Types"""
-
-    type = models.CharField(max_length=250, unique=True)
-
-
 class Crawl_Error(models.Model):
     """Crawl Errors"""
 
@@ -79,11 +73,4 @@ class Top_Search_Queries(models.Model):
     keyword = models.ForeignKey(Keyword)
     impressions = models.CharField(max_length=11)
     clicks = models.CharField(max_length=11)
-
-
-class Message(models.Model):
-    """Messages"""
-
-    date = models.DateField(null=False,blank=False)
-    type = models.ForeignKey(Message_Type)
 

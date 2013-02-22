@@ -298,12 +298,30 @@ def index(request):
         for url in custom_urls:
             # Is it a Quinico URL?
             if re.match(r'http(s)?:\/\/%s' % request.META['SERVER_NAME'],url['url_id__url']):
-                # Yes, now is it a JSON (graph) or HTML type?
-                if re.search('&format=db(2)?$',url['url_id__url']):
+
+                # Yes, its a Quinico URL, now which format?
+                # db formats are as follows:
+                #   - db  = graph (JSON)
+                #   - db1 = html  (HTML)
+                #   - db2 = pie   (JSON)
+
+                # Graph
+                if re.search('&format=db$',url['url_id__url']):
                     url_list[url['url_id__url']] = 'graph'
-                # Ok, its HTML
-                else:
+
+                # HTML
+                elif re.search('&format=db1$',url['url_id__url']):
                     url_list[url['url_id__url']] = 'html'
+
+                # Pie
+                elif re.search('&format=db2$',url['url_id__url']):
+                    url_list[url['url_id__url']] = 'pie'
+
+                # Its an internal Quinico URL but the formatting is wrong, ignore it
+                else:
+                    continue
+
+            # It's not a Quinico URL so must be an external image
             else:
                 url_list[url['url_id__url']] = 'image'
 

@@ -44,8 +44,10 @@ from qclasses import qlib
 
 # Google API key
 google_key = ''
+
 # The Pagespeed locale
 pagespeed_locale = ''
+
 # The path to save reports
 report_path = ''
 
@@ -74,6 +76,8 @@ parser.add_option('-t','--test',
                         No data will be added or deleted from the database \
                         except for API calls/errors.')
 (options, args) = parser.parse_args()
+
+# -- END GLOBALLY AVAILABLE -- #
 
 
 class Worker(threading.Thread):
@@ -122,8 +126,9 @@ class Worker(threading.Thread):
                 break
 
             except Exception as e:
-                # Most likely there was a problem with the Pagespeed
-                # API.  Close down this thread.
+                # Most likely there was a problem with the Pagespeed API
+                # This generally should not happen as the function definitions that
+                # that perform the work have their own exception handling
                 logger.error('Exception encountered with thread %s: %s' % (t_name,e))
                 if settings.SMTP_NOTIFY_ERROR:
                     qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
@@ -388,7 +393,7 @@ def main():
 
 
     # All done
-    logger.info('All done with pagespeed tests')
+    logger.info('All done with pagespeed data processing')
 
     # Disconnect from the DB server
     qs.close()
@@ -404,6 +409,6 @@ if __name__ == "__main__":
     # Run main program
     main()
 
-    # Quit progam
+    # Quit program
     exit(0)
 

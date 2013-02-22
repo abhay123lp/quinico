@@ -43,7 +43,7 @@ class Help(models.Model):
     """Help Documents"""
 
     help_name = models.CharField(max_length=100, unique=True)
-    help_value = models.CharField(max_length=1000)
+    help_value = models.CharField(max_length=1500)
 
     # Represent the objects as unicode
     def __unicode__(self):

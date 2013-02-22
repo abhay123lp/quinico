@@ -35,23 +35,11 @@ from quinico.keyword_rank.models import Test
 ### VALIDATORS ###
 
 
-class DateField(forms.Field):
-    """A date field
-
-       Requirements:
-          - Must be in SQL format (yyyy-mm-dd)
-
-    """
-
-    def validate(self, value):
-        if value and not re.match(r'^\d{4}-\d{2}-\d{2}$', value):
-            raise forms.ValidationError('Improperly formatted date:%s' % (value))
-
-
 class FormatField(forms.Field):
     """A format field
 
        Requirements:
+          - Not required to be present
           - Only certain values are accepted (csv, db, json, json1, json2)
 
     """
@@ -59,38 +47,6 @@ class FormatField(forms.Field):
     def validate(self, value):
         if value and not re.match(r'^(csv|db|db1|db2|json|json1|json2)$', value):
             raise forms.ValidationError('Improperly formatted format:%s' % (value))
-
-
-class KeywordField(forms.Field):
-    """A keyword field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only alpha-numeric and \-%\s'
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '':
-            raise forms.ValidationError('No keyword selected')
-        if not re.match(r'^[0-9a-zA-Z/\-%\s\']+$', value):
-            raise forms.ValidationError('Improperly formatted keyword:%s' % (value))
-
-
-class DomainField(forms.Field):
-    """A domain field
-
-    Requirements:
-       - Must not be empty
-       - Must contain only alpha-numeric and '\-.'
-
-    """
-
-    def validate(self, value):
-        if value is None or value == '':
-            raise forms.ValidationError('No domain selected')
-        if not re.match(r'^[0-9a-zA-Z/\-\.]+$', value):
-            raise forms.ValidationError('Improperly formatted domain:%s' % (value))
 
 
 class FileField(forms.FileField):
@@ -114,10 +70,9 @@ class FileField(forms.FileField):
 class KeywordTrendForm(forms.Form):
     """Form for querying SEO Trends"""
 
-    date_from = DateField()
-    date_to = DateField()
-    domain = DomainField()
-    #keyword = KeywordField()
+    date_from = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
+    domain = forms.CharField()
     keyword = forms.CharField()
     format = FormatField()
 
@@ -125,14 +80,14 @@ class KeywordTrendForm(forms.Form):
 class KeywordDashboardForm(forms.Form):
     """Form for querying the SEO Dashboard"""
 
-    domain = DomainField()
+    domain = forms.CharField()
     format = FormatField()
 
 
 class UploadForm(forms.Form):
     """Form for uploading keywords in bulk"""
 
-    domain = DomainField()
+    domain = forms.CharField()
     file = FileField()
 
     def save(self):

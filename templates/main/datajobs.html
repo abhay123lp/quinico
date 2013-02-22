@@ -20,8 +20,18 @@
 
 {% block content %}
 <br>
+<table border="0">
+ <tr>
+  <td>
+   <form><input type=button value="Refresh" onClick="window.location.reload()"></form> 
+  </td>
+  <td>
+   <form name="datajobs" method="POST" action="/admin/datajobs">
+   <input type="submit" value="save">
+  </td>
+ </tr>
+</table>
 <br>
-<form name="datajobs" method="POST" action="/admin/datajobs">
 {% csrf_token %}
 <table>
  <tr>
@@ -41,10 +51,10 @@
  {% endfor %}
  </tr>
  <tr>
-  <td colspan="2" align="left"><b>Time Zone:</b>{{TIME_ZONE}}</td>
-  <td align="right" colspan="3">
-   <input type="submit" value="save">
-  </td>
+  <td><b>Current Server Time:</b></td>
+  <td>{% now "Y-m-d H:i:s" %}</td>
+  <td>{{TIME_ZONE}}</td>
+  <td align="right" colspan="3"></td>
  </tr>
  {% if form.errors %}
  <tr>

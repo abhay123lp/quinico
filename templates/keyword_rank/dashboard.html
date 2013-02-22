@@ -148,7 +148,7 @@ $(document).ready(function() {
 <tbody>
  {% for keyword,dates in ranks.items %}
  <tr>
-  <td>{{keyword}}</td>
+  <td><a href="/keyword_rank/trends?domain={{domain}}&keyword={{keyword}}">{{keyword}}</a></td>
   {% for date in dates %}
   <td>{{date}}</td>
   {% endfor %}

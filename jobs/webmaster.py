@@ -32,6 +32,10 @@ import urllib
 import urllib2
 import json
 import quinico
+import datetime
+import Queue
+import threading
+import time
 from xml.dom import minidom
 from optparse import OptionParser
 from django.conf import settings
@@ -40,7 +44,176 @@ from qclasses import qsql
 from qclasses import qlib
 
 
-def obtain_domains():
+# -- GLOBALLY AVAILABLE -- #
+
+# Google API key
+google_key = ''
+
+# Google Webmaster Username
+google_wm_username = ''
+
+# Google Webmaster Password
+google_wm_password = ''
+
+# Google Webmaster Auth Key
+auth_key = ''
+
+# Grab the Quinico webapp settings
+os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
+
+# Setup an instance of the Quinico logger
+# Logging is thread-safe so all threads will share the same logger
+logger = logging.getLogger('quinico')
+
+# Parse Arguments
+parser = OptionParser(description='Google Webmaster query \
+and data loading script', version='%prog 1.0')
+parser.add_option('-m','--message',
+                  action='store_true',
+                  dest='message',
+                  default=False,
+                  help='Send a test email message using the Quinico SMTP settings \
+                        configured in local_settings.py and then exit')
+parser.add_option('-t','--test',
+                  action='store_true',
+                  dest='test',
+                  default=False,
+                  help='Enable testing mode to prevent modification \
+                        of any database data when this script is run.  \
+                        No data will be added or deleted from the database \
+                        except for API calls/errors.')
+(options, args) = parser.parse_args()
+
+# -- END GLOBALLY AVAILABLE -- #
+
+
+class Worker(threading.Thread):
+    """Worker thread for talking to external API
+    and acquiring/committing data
+
+    To avoid contention, each thread will have its own ql, qs and
+    qemail instance
+    """
+
+    def __init__(self, queue):
+        threading.Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        t_name = threading.current_thread().name
+        logger.info('Starting thread: %s' % t_name)
+
+        # Create qm, qs and ql instances
+        (qm,qs,ql) = create_resources()
+
+        while True:
+            # Pop the next job off the queue and don't block if empty
+            try:
+                row = self.queue.get(False)
+                domain = row[0]
+
+                # Google expects the domain to be preceeded with 'http://' and have a trailing '/'
+                g_domain = 'http://%s/' % domain
+                logger.debug('Google formatted domain is %s' % g_domain)
+
+                # Check for keywords that we track in the webmaster search queries
+                # If we don't have keywords for this domain, then don't bother
+                keywords = obtain_keywords(qs,qm,domain) 
+
+                if not keywords:
+                    logger.debug('No keywords are defined for this domain - will not check Google search queries')
+                else:
+                    # Check for top search queries
+                    query_webmaster_tq(qs,qm,ql,domain,keywords,check_date_tq)
+
+                # Check for crawl errors
+                logger.debug('Checking %s for crawl errors' % domain)
+        
+                # This will default to 100 results per query (no way to increase this) 
+                base_url = 'https://www.google.com/webmasters/tools/feeds/%s/crawlissues/'
+                url = base_url % urllib.quote_plus(g_domain)
+
+                # Dictionary to hold all errors
+                errors = {}
+
+                # Assume there is only one page of errors, if any
+                next_url = None
+
+                # Process individual errors
+                errors,next_url = query_webmaster_api_ce(qm,ql,url,errors)
+
+                # Keep processing pages of errors until there are not any
+                process = True
+
+                while process == True:
+                    # If there is another page of results, request it
+                    if next_url is None:
+                        # No more entries, stop the loop
+                        process = False
+                    else:
+                        # Make sure we have an auth_key (maybe it had to be reset)
+                        if auth_key is None: 
+                            # No auth key so we have to quit
+                            ql.terminate()
+                        else:
+                            errors,next_url = query_webmaster_api_ce(qm,ql,next_url,errors)
+
+                # Add the data
+                for error in errors:
+
+                    logger.debug('%s had a count of %s for %s' % (domain,errors[error],error))
+
+                    # Make sure the error type exists in the DB
+                    if not options.test:
+                        add_error(qs,qm,error)
+
+                    sql = """
+                            INSERT INTO webmaster_crawl_error (date,domain_id,type_id,count)
+                            VALUES (DATE(NOW()),
+                            (SELECT id from webmaster_domain where domain=%s),
+                            (SELECT id from webmaster_crawl_error_type where type=%s),
+                            %s)"""
+
+                    if not options.test:
+                        qs.execute(sql,(domain,error,errors[error]))
+                        if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+                            qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
+
+                # Let the queue know I am done
+                self.queue.task_done()
+
+            except Queue.Empty:
+                # Queue is empty, close down this thread.
+                logger.info('Queue is empty, stopping thread %s' % t_name)
+
+                # Disconnect from the DB server
+                qs.close()
+
+                # Stop the thread
+                break
+
+            except Exception as e:
+                # Most likely there was a problem with the Pagespeed API
+                # This generally should not happen as the function definitions that
+                # that perform the work have their own exception handling
+                logger.error('Exception encountered with thread %s: %s' % (t_name,e))
+                if settings.SMTP_NOTIFY_ERROR:
+                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
+
+                # Disconnect from the DB server
+                qs.close()
+
+                # Stop the thread
+                break
+
+
+
+
+
+
+
+
+def obtain_domains(qs,qm):
     """
     Obtain a list of domains to check
     """
@@ -61,7 +234,7 @@ def obtain_domains():
     return rows
 
 
-def obtain_keywords(domain):
+def obtain_keywords(qs,qm,domain):
     """
     Obtain a list of keywords, given a domain
     """
@@ -84,7 +257,7 @@ def obtain_keywords(domain):
     return rows
 
 
-def add_tq(d_tq,domain,query,impressions,clicks):
+def add_tq(qs,qm,d_tq,domain,query,impressions,clicks):
     """
     Add top query
     """
@@ -106,25 +279,7 @@ def add_tq(d_tq,domain,query,impressions,clicks):
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
 
-def add_message(message):
-    """
-    Add a message type
-    """
-
-    logger.debug('Adding message type to database: %s' % message)
-
-    sql = """
-           INSERT INTO webmaster_message_type (type)
-           SELECT %s
-           FROM dual
-           WHERE not exists (SELECT * from webmaster_message_type WHERE type=%s)"""
-
-    qs.execute(sql,(message,message))
-    if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-        qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
-
-
-def add_error(error):
+def add_error(qs,qm,error):
     """
     Add an error type
     """
@@ -143,7 +298,7 @@ def add_error(error):
 
 
 
-def auth_webmaster():
+def auth_webmaster(ql):
     """
     Query the Google login service and obtain an auth token
     """
@@ -164,14 +319,16 @@ def auth_webmaster():
     # Find the auth string
     match = re.search('Auth=(.*)\n',response)
 
+    global auth_key
+
     if match is None:
-        return None
+        logger.error('Could not determine the auth key')
+        auth_key = None
     else:
-        authKey = match.group(1)
-        return authKey
+        auth_key = match.group(1)
 
 
-def query_webmaster_tq(domain,key,keywords,d_tq):
+def query_webmaster_tq(qs,qm,ql,domain,keywords,d_tq):
     """
     Query the Google Webmaster for the top search queries
     """
@@ -181,7 +338,7 @@ def query_webmaster_tq(domain,key,keywords,d_tq):
     url = 'https://www.google.com/webmasters/tools/downloads-list?hl=en&siteUrl=http%3A%2F%2F' + domain + '%2F'
 
     headers = {}
-    headers['Authorization'] = 'GoogleLogin auth=%s' % key
+    headers['Authorization'] = 'GoogleLogin auth=%s' % auth_key
     headers['GData-Version'] = 2
 
     # Make the HTTP request
@@ -224,7 +381,7 @@ def query_webmaster_tq(domain,key,keywords,d_tq):
                         impressions = re.sub('[,<]','',impressions)
                         clicks = re.sub('[,<]','',clicks)
                         if not options.test:
-                            add_tq(d_tq,domain,keyword[0],impressions,clicks)
+                            add_tq(qs,qm,d_tq,domain,keyword[0],impressions,clicks)
 
             except ValueError, ve:
                 # Log it and count the error
@@ -239,46 +396,7 @@ def query_webmaster_tq(domain,key,keywords,d_tq):
                 logger.debug('Empty row detected in Google webmaster CSV for domain: %s' % domain)
 
 
-def query_webmaster_api_me(key,check_date):
-    """
-    Query the Google Webmaster API for Messages
-    """
-
-    messages = []
-
-    url = 'https://www.google.com/webmasters/tools/feeds/messages/'
-    ATOM_NS = 'http://www.w3.org/2005/Atom'
-
-    headers = {}
-    headers['Authorization'] = 'GoogleLogin auth=%s' % key
-    headers['GData-Version'] = 2
-
-    # Make the HTTP request
-    response = ql.http_request2('webmaster',url,headers,None,1)
-
-    # If there was an error, bail
-    if not response:
-        return
-
-    xml = minidom.parseString(response)
-
-    for entry in xml.getElementsByTagNameNS(ATOM_NS, u'entry'):
-        # Check when this message was posted
-        date_added = entry.getElementsByTagName('wt:date')[0].firstChild.data
-        logger.debug('Entry date in UTC is %s' % date_added)
-        date_added_formatted = ql.convert_date(settings.TIME_ZONE,date_added)
-        logger.debug('Formatted entry date in %s is %s' % (settings.TIME_ZONE,date_added_formatted))
-
-        if date_added_formatted == check_date:
-            logger.debug('Date matches, message will be counted')
-            messages.append(entry.getElementsByTagName('wt:subject')[0].getAttribute('subject'))
-        else:
-            logger.debug('Date does not match, message will be skipped')
-
-    return messages
-
-
-def query_webmaster_api_ce(url,key,errors):
+def query_webmaster_api_ce(qm,ql,url,errors):
     """
     Query the Google Webmaster API for Crawl Errors
     """
@@ -286,7 +404,7 @@ def query_webmaster_api_ce(url,key,errors):
     logger.debug('Processing next url: %s' % (url))
 
     r = urllib2.Request(url)
-    r.add_header('Authorization','GoogleLogin auth=%s' % key)
+    r.add_header('Authorization','GoogleLogin auth=%s' % auth_key)
     r.add_header('GData-Version','2')
 
     ATOM_NS = 'http://www.w3.org/2005/Atom'
@@ -308,18 +426,18 @@ def query_webmaster_api_ce(url,key,errors):
        if re.match(r'403',str(e.code)):
            logger.error('403 error detected - attempting to re-auth to Google ClientLogin Service')
            ql.pause(30)
-           key = auth_webmaster() 
-           return errors,key,url
+           auth_webmaster() 
+           return errors,url
 
        # If the error is a 500, then wait a bit and then try again w/ the same URL
        if re.match(r'5(.*)',str(e.code)):
            logger.error('5xx error detected - will wait a bit and try again with the same url')
            ql.pause(30)
-           return errors,key,url
+           return errors,url
 
        # Anything else, just return b/c we don't know how to handle this
        logger.error('Unknown error detected - stopping further processing on this domain')
-       return errors,key,None
+       return errors,None
 
     response = request.read()
     request.close()
@@ -345,243 +463,174 @@ def query_webmaster_api_ce(url,key,errors):
             errors[entry.getElementsByTagName('wt:detail')[0].firstChild.data] += 1
 
     logger.debug('Errors are now: %s' % errors)
-    return errors,key,next_url
+    return errors,next_url
 
 
+def create_resources():
+    """Create and return the following resources
+       - a qlib instance
+       - a qemail instance
+       - a qsql instance
+    """
 
-#
-# BEGIN MAIN PROGRAM EXECUTION
-#
+    # Obtain database parameters from DJango
+    host = settings.DATABASES['default']['HOST']
+    user = settings.DATABASES['default']['USER']
+    password = settings.DATABASES['default']['PASSWORD']
+    name = settings.DATABASES['default']['NAME']
+
+    # Create a qemail instance
+    qm = qemail.notify(settings.SMTP_HOST,
+                      settings.SMTP_SENDER,
+                      settings.SMTP_RECIPIENT,
+                      logger
+                     )
+
+    # Create a qsql instance
+    qs = qsql.sql(host,user,password,name,logger)
+
+    # Create a qlib instance
+    ql = qlib.lib(qs,qm,settings.SMTP_NOTIFY_ERROR,logger)
+
+    return (qm,qs,ql)
 
 
-# Parse Arguments
-parser = OptionParser(description='Google Webmaster query \
-and data loading script', version='%prog 1.0')
-parser.add_option('-m','--message',
-                  action='store_true',
-                  dest='message',
-                  default=False,
-                  help='Send a test email message using the Quinico SMTP settings \
-                        configured in local_settings.py and then exit')
-parser.add_option('-t','--test',
-                  action='store_true',
-                  dest='test',
-                  default=False,
-                  help='Enable testing mode to prevent modification \
-                        of any database data when this script is run.  \
-                        No data will be added or deleted from the database \
-                        except for API calls/errors.')
-(options, args) = parser.parse_args()
+def main():
+    """ Main Program Execution"""
 
-# Grab the Quinico webapp settings
-os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
+    # Create qm, qs and ql instances so we can do some work
+    (qm,qs,ql) = create_resources()
 
-# Setup an instance of the Quinico logger
-logger = logging.getLogger('quinico')
+    # If we could not connect to MySQL, quit and notify someone
+    if qs.status != 0:
+        ql.terminate()
 
-# Obtain database parameters from DJango
-host = settings.DATABASES['default']['HOST']
-user = settings.DATABASES['default']['USER']
-password = settings.DATABASES['default']['PASSWORD']
-name = settings.DATABASES['default']['NAME']
+    # Send a test message, if requested to do so and then quit
+    if options.message:
+        qm.send('Webmaster Test','Test message from the Quinico Webmaster data collection job')
+        exit(0)
 
-# Create a qemail instance
-qm = qemail.notify(settings.SMTP_HOST,
-                  settings.SMTP_SENDER,
-                  settings.SMTP_RECIPIENT,
-                  logger
-                 )
+    # Check if another instance is already running
+    if ql.check_pid('%s/jobs/pid/webmaster.pid' % settings.APP_DIR):
+        ql.terminate()
 
-# Send a test message, if requested to do so and then quit
-if options.message:
-    qm.send('Webmaster Test','Test message from the Quinico Webmaster data collection job')
+    # Set a PID
+    if (ql.set_pid('%s/jobs/pid/webmaster.pid' % settings.APP_DIR)):
+        ql.terminate()
+
+    # Let someone know we are starting data collection
+    logger.info('Started Webmaster data collection job')
+    smtp_notify_data_start = int(ql.return_config('smtp_notify_data_start'))
+    if smtp_notify_data_start:
+        qm.send('Webmaster Job Starting','Starting Quinico Webmaster data collection job')
+
+    # Obtain configuration parameters
+    # If we cannot obtain any of these, we have to quit
+
+    # Google API key
+    global google_key
+    google_key = ql.return_config('google_key')
+    if google_key is None:
+        logger.error('Google Key is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.debug('Google Key = %s' % google_key)
+
+    # Google Webmaster Username
+    global google_wm_username
+    google_wm_username = ql.return_config('google_wm_username')
+    if google_wm_username is None:
+        logger.error('Google Webmaster username is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.debug('Google Webmaster username = %s' % google_wm_username)
+
+    # Google Webmaster Password
+    global google_wm_password
+    google_wm_password = ql.return_config('google_wm_password')
+    if google_wm_password is None:
+        logger.error('Google Webmaster password is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.debug('Google Webmaster password = ********')
+
+    # Webmaster Threads
+    webmaster_threads = ql.return_config('webmaster_threads')
+    if webmaster_threads is None:
+        logger.error('Google Webmaster threads is not defined, perhaps someone deleted it')
+        ql.terminate()
+    else:
+       logger.info('Google Webmaster threads = %s' % webmaster_threads)
+
+
+    # Top Queries Data (We'll check the data from two days ago, each day)
+    check_date_tq = ql.get_date(2)
+    logger.debug('Date to check Google top query data entries against: %s' % check_date_tq)
+
+    # Remove any webmaster data for our check_dates as this new data
+    # should override them
+    if not options.test:
+        ql.remove_data('webmaster_crawl_error')
+        ql.remove_data('webmaster_top_search_queries',check_date_tq)
+
+    # Set the Google Auth Key
+    auth_webmaster()
+    if auth_key is None:
+        logger.error('Could not obtain Google auth_key')
+        ql.terminate()
+
+    # Check all domains - we'll perform the tests serially so as not to overload the API
+    domains = obtain_domains()
+
+    if not domains:
+        logger.error('No domains defined')
+        ql.terminate()
+    else:
+        # Create a queue for the tests
+        queue = Queue.Queue()
+
+        for row in domains:
+            queue.put(row)
+
+        # Start the workers.
+        #   Notes:
+        #   - Keep the main thread open until it is the only one left
+        #   - Do not daemonize the threads nor join on the queue
+        #   - If the threads experience exceptions, or if they detect
+        #     that the queue is empty, they will die.
+        #   - The above prevents the threads dieing due to exceptions w/ the API
+        #     and the queue never emptying.   It is preferable to have this process
+        #     die and someone get alerted and investigate.
+
+        for i in range(int(webmaster_threads)):
+            # Create a worker and pass it the queue
+            w = Worker(queue)
+
+            # Start the worker
+            w.start()
+
+        # If all threads except this one are done, then quit
+        # Check at 1 second intervals
+        while threading.active_count() > 1:
+            time.sleep(1)
+
+    # All done
+    logger.info('All done with webmaster data processing')
+
+    # Disconnect from the DB server
+    qs.close()
+
+    # Remove the PID file
+    if (ql.remove_pid('%s/jobs/pid/webmaster.pid' % settings.APP_DIR)):
+        ql.terminate()
+
+
+# This program can only run is executed directly
+if __name__ == "__main__":
+
+    # Run main program
+    main()
+
+    # Quit program
     exit(0)
 
-# Create a qsql instance
-qs = qsql.sql(host,user,password,name,logger)
-
-# Create a qlib instance
-ql = qlib.lib(qs,qm,settings.SMTP_NOTIFY_ERROR,logger)
-
-# If we could not connect to MySQL, quit and notify someone
-if qs.status != 0:
-    ql.terminate()
-
-# Check if another instance is already running
-if ql.check_pid('%s/jobs/pid/webmaster.pid' % settings.APP_DIR):
-    ql.terminate()
-
-# Set a PID
-if (ql.set_pid('%s/jobs/pid/webmaster.pid' % settings.APP_DIR)):
-    ql.terminate()
-
-# Let someone know we are starting data collection
-logger.info('Started Webmaster data collection job')
-smtp_notify_data_start = int(ql.return_config('smtp_notify_data_start'))
-if smtp_notify_data_start:
-    qm.send('Webmaster Job Starting','Starting Quinico Webmaster data collection job')
-
-# Obtain configuration parameters
-# If we cannot obtain any of these, we have to quit
-
-# Google Application key
-google_key = ql.return_config('google_key')
-if google_key is None:
-    logger.error('Google Key is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.debug('Google Key = %s' % google_key)
-
-# Google Webmaster Username
-google_wm_username = ql.return_config('google_wm_username')
-if google_wm_username is None:
-    logger.error('Google Webmaster username is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.debug('Google Webmaster username = %s' % google_wm_username)
-
-# Google Webmaster Password
-google_wm_password = ql.return_config('google_wm_password')
-if google_wm_password is None:
-    logger.error('Google Webmaster password is not defined, perhaps someone deleted it')
-    ql.terminate()
-else:
-   logger.debug('Google Webmaster password = ********')
-
-# Today's date
-# We will count everything in the index each day and add it to the Quinico DB as today
-# (except for top search queries)
-check_date = ql.get_date(0)
-logger.debug('Date to check Google crawl data entries against: %s' % check_date)
-
-# Top Queries Data (We'll check the data from two days ago, each day)
-check_date_tq = ql.get_date(2)
-logger.debug('Date to check Google top query data entries against: %s' % check_date_tq)
-
-
-# Remove any webmaster data for our check_dates as this new data
-# should override them
-if not options.test:
-    logger.debug('Removing data from database for previous runs on this day')
-    ql.remove_data('webmaster_crawl_error',check_date)
-    ql.remove_data('webmaster_message',check_date)
-    ql.remove_data('webmaster_top_search_queries',check_date_tq)
-
-
-# Obtain the Google Auth Key
-authKey = auth_webmaster()
-if authKey is None:
-    logger.error('Could not obtain Google authKey')
-    ql.terminate()
-
-
-# Check for messages (this is not domain specific)
-# messages = query_webmaster_api_me(authKey,check_date)
-messages = None
-if messages:
-    for message in messages:
-        # Make sure the message type exists in the DB
-        if not options.test:
-            add_message(message)
-
-        sql = """
-            INSERT INTO webmaster_message (date,type_id)
-            VALUES (
-            %s,
-            (SELECT id from webmaster_message_type where type=%s))
-        """
-
-        if not options.test:
-            qs.execute(sql,(check_date,message))
-            if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-                qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
-
-
-# Check all domains - we'll perform the tests serially so as not to overload the API
-domains = obtain_domains()
-
-if not domains:
-    logger.error('No domains defined')
-    ql.terminate()
-else:
-    for row in domains:
-        domain = row[0]
-
-        # Google expects the domain to be preceeded with 'http://' and have a trailing '/'
-        g_domain = 'http://%s/' % domain
-        logger.debug('Google formatted domain is %s' % g_domain)
-
-        # Check for keywords that we track in the webmaster search queries
-        # If we don't have keywords for this domain, then don't bother
-        keywords = obtain_keywords(domain) 
-        if not keywords:
-            logger.debug('No keywords are defined for this domain - will not check Google search queries')
-        else:
-            # Check for top search queries
-            query_webmaster_tq(domain,authKey,keywords,check_date_tq)
-
-        # Check for crawl errors
-        logger.debug('Checking %s for crawl errors' % domain)
-        
-        # This will default to 100 results per query (no way to increase this) 
-        base_url = 'https://www.google.com/webmasters/tools/feeds/%s/crawlissues/'
-        url = base_url % urllib.quote_plus(g_domain)
-
-        # Dictionary to hold all errors
-        errors = {}
-
-        # Assume there is only one page of errors, if any
-        next_url = None
-
-        # Process individual errors
-        errors,authKey,next_url = query_webmaster_api_ce(url,authKey,errors)
-
-        # Keep processing pages of errors until there are not any
-        process = True
-
-        while process == True:
-            # If there is another page of results, request it
-            if not next_url is None:
-                # If we had to reset the authKey, make sure it is not None
-                if not authKey is None: 
-                    errors,authKey,next_url = query_webmaster_api_ce(next_url,authKey,errors)
-            else:
-                # No more entries, stop the loop
-                process = False
-
-        # Add the data
-        for error in errors:
-
-            logger.debug('%s had a count of %s for %s' % (domain,errors[error],error))
-
-            # Make sure the error type exists in the DB
-            if not options.test:
-                add_error(error)
-
-            sql = """
-                    INSERT INTO webmaster_crawl_error (date,domain_id,type_id,count)
-                    VALUES (
-                    %s,
-                    (SELECT id from webmaster_domain where domain=%s),
-                    (SELECT id from webmaster_crawl_error_type where type=%s),
-                    %s)
-                  """
-
-            if not options.test:
-                qs.execute(sql,(check_date,domain,error,errors[error]))
-                if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-                    qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
-
-
-# All done
-logger.warning('Finished processing Webmaster data')
-
-# Disconnect from the DB server
-qs.close()
-
-# Remove the PID file
-if (ql.remove_pid('%s/jobs/pid/webmaster.pid' % settings.APP_DIR)):
-    ql.terminate()
-
-# Quit progam
-exit(0)

@@ -27,6 +27,7 @@ urlpatterns = patterns('',
     # Standard Django admin
     url(r'^admin/', include(admin.site.urls)),
 
+    # Quinico specific URLs
     url(r'^$',                       'quinico.main.views.index'),
     url(r'^keyword_rank/dashboard$', 'quinico.keyword_rank.views.dashboard'),
     url(r'^keyword_rank/trends$',    'quinico.keyword_rank.views.trends'),
