@@ -55,6 +55,6 @@ class Data_Job(models.Model):
 
     job_name = models.CharField(max_length=25, unique=True)
     job_status = models.BooleanField(default=False)
-    job_hour = models.CharField(max_length=25,blank=True)
+    job_hour = models.CharField(max_length=50,blank=True)
     job_minute = models.CharField(max_length=25,blank=True)
 
