@@ -1,1 +1,1 @@
-APP_VERSION = 'trunk-r13'
+APP_VERSION = '$__version__$'

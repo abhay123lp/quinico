@@ -5,7 +5,7 @@ import os
 os.environ['LANG'] = 'en_US.UTF-8'
 
 # Never, ever deploy a site to production with DEBUG = True
-DEBUG = True
+DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -160,14 +160,14 @@ LOGGING = {
     'handlers': {
         'logfile': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': '/opt/quinico/log/quinico.log',
+            'filename': '$__app_dir__$/log/quinico.log',
             'formatter': 'verbose'
         },
     },
     'loggers': {
         'quinico': {
             'handlers': ['logfile'],
-            'level': 'DEBUG',
+            'level': 'WARNING',
             'propagate': False
         },
     }
@@ -177,8 +177,8 @@ LOGGING = {
 LOGIN_URL = '/accounts/login'
 
 # Quinico version
-execfile('/opt/quinico/quinico/version.py')
+execfile('$__app_dir__$/quinico/version.py')
 
 # Load custom settings - must point to your local_settings.py file and
 # may not be a relative path.
-execfile('/opt/quinico-local/local_settings.py')
+execfile('$__local_dir__$/local_settings.py')
