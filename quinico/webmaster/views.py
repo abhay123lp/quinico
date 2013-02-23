@@ -79,18 +79,15 @@ def queries(request):
                 date_from = now - then
                 date_from = date_from.strftime("%Y-%m-%d")
 
-	    # Unquote to UTF-8 and then decode
-	    k_unenc = urllib.unquote(keyword.encode('utf-8')).decode('utf-8')
-
 	    # Obtain the top search queries for this keyword and domain
 	    data = Top_Search_Queries.objects.filter(domain__domain=domain,
-                                                     keyword__keyword=k_unenc,
+                                                     keyword__keyword=keyword,
  						     date__range=[date_from,date_to]
      					            ).values('date','impressions','clicks').order_by('date')
 
 	    # Construct the dashboard, download and monitoring links
             # Quote special characters
-            keyword_enc = urllib.quote(keyword)
+            keyword_enc = urllib.quote_plus(keyword.encode('utf-8'))
  
             base_url = 'http://%s/webmaster/queries?domain' % request.META['HTTP_HOST']
 	    db_link = '%s=%s&keyword=%s&format=db' % (base_url,domain,keyword_enc)
@@ -126,7 +123,7 @@ def queries(request):
 		      {
 			'title':'Quinico | Google Top Search Queries',
 			'domain':domain,
-			'keyword_name':k_unenc,
+			'keyword_name':keyword,
 			'data':data,
 			'dash_settings':dash_settings
 		      },
@@ -151,7 +148,7 @@ def queries(request):
 		  {
 		    'title':'Quinico | Google Top Search Queries',
 		    'domain_name':domain,
-		    'keyword_name':k_unenc,
+		    'keyword_name':keyword,
 		    'data':data,
 		    'db_link':db_link,
 		    'json_link':json_link,

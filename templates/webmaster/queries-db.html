@@ -27,16 +27,16 @@
     "cols":
      [
        {"label":"Date","type":"string"},
-       {"label":"First View","type":"number"},
-       {"label":"Repeat View","type":"number"}
+       {"label":"Impressions","type":"number"},
+       {"label":"Clicks","type":"number"}
      ],
     "rows":[
 
      {% for row in data %}
        {% if forloop.first %}
-         {"c":[{"v":"{{row.date|date:"Y-m-d"}}"},{"v":{{row.view1}}},{"v":{{row.view2}}}]}
+         {"c":[{"v":"{{row.date|date:"Y-m-d"}}"},{"v":{{row.impressions}}},{"v":{{row.clicks}}}]}
        {% else %}
-         ,{"c":[{"v":"{{row.date|date:"Y-m-d"}}"},{"v":{{row.view1}}},{"v":{{row.view2}}}]}
+         ,{"c":[{"v":"{{row.date|date:"Y-m-d"}}"},{"v":{{row.impressions}}},{"v":{{row.clicks}}}]}
        {% endif %}
      {% endfor %}
   
