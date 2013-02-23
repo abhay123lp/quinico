@@ -282,9 +282,9 @@ def install():
     django_admin=raw_input('8: Enter the path to the DJango admin static files\n#>').strip()
     apache_uid=raw_input('9: Enter the uid of the apache user\n#>').strip()
     wsgi_dir=raw_input('10: Enter the path to the Apache mod_wsgi.so module\n#>').strip()
-    smtp_host=raw_input('10: Enter the smtp server fully qualified hostname or IP address\n#>').strip()
-    smtp_sender=raw_input('11: Enter the sender email address\n#>').strip()
-    smtp_recipient=raw_input('12: Enter the recipient email address\n#>').strip()
+    smtp_host=raw_input('11: Enter the smtp server fully qualified hostname or IP address\n#>').strip()
+    smtp_sender=raw_input('12: Enter the sender email address\n#>').strip()
+    smtp_recipient=raw_input('13: Enter the recipient email address\n#>').strip()
 
     print """You have entered the following options:\n
             - Quinico Source        : %s

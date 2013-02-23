@@ -32,6 +32,7 @@ import json
 import Queue
 import threading
 import time
+import traceback
 from optparse import OptionParser
 from django.conf import settings
 from qclasses import qemail
@@ -114,8 +115,11 @@ class Worker(threading.Thread):
                     logger.warning('No keywords defined for %s' % domain)
                 else:
                     for keyword in keywords:
-                        logger.info('Found a keyword: %s, now processing rankings' % (keyword[0]))
-                        (rank,url,top_ten) = obtain_ranking(ql,domain,gl,googlehost,keyword[0])
+
+                        keyword = keyword[0].decode('utf-8')
+
+                        logger.info('Found a keyword: %s, now processing rankings' % (keyword))
+                        (rank,url,top_ten) = obtain_ranking(ql,domain,gl,googlehost,keyword)
                         logger.info('Rank: %s, URL: %s' % (str(rank),url))
 
                         # Produce a utf-8 byte string
@@ -127,7 +131,7 @@ class Worker(threading.Thread):
 
                         # Add the rank
                         if not options.test:
-                            add_rank(qs,qm,domain,keyword[0],rank,url)
+                            add_rank(qs,qm,domain,keyword,rank,url)
 
                         logger.info('Adding the top ten urls for the keyword')
                         top_rank = 1
@@ -142,7 +146,7 @@ class Worker(threading.Thread):
     
                             # Add the position
                             if not options.test:
-                                add_top_ten(qs,qm,domain,keyword[0],top_url,top_rank)
+                                add_top_ten(qs,qm,domain,keyword,top_url,top_rank)
     
                             top_rank += 1
     
@@ -165,7 +169,7 @@ class Worker(threading.Thread):
                 # that perform the work have their own exception handling
                 logger.error('Exception encountered with thread %s: %s' % (t_name,e))
                 if settings.SMTP_NOTIFY_ERROR:
-                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
+                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,traceback.format_exc()))
 
                 # Disconnect from the DB server
                 qs.close()
