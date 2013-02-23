@@ -23,8 +23,6 @@
 
 
 import MySQLdb
-import sqlalchemy.pool as pool
-
 
 
 class sql:

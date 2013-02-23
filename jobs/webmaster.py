@@ -58,6 +58,9 @@ google_wm_password = ''
 # Google Webmaster Auth Key
 auth_key = ''
 
+# Top Queries Date
+check_date_tq = ''
+
 # Grab the Quinico webapp settings
 os.environ['DJANGO_SETTINGS_MODULE'] = 'quinico.settings'
 
@@ -124,7 +127,7 @@ class Worker(threading.Thread):
                     logger.debug('No keywords are defined for this domain - will not check Google search queries')
                 else:
                     # Check for top search queries
-                    query_webmaster_tq(qs,qm,ql,domain,keywords,check_date_tq)
+                    query_webmaster_tq(qs,qm,ql,domain,keywords)
 
                 # Check for crawl errors
                 logger.debug('Checking %s for crawl errors' % domain)
@@ -257,7 +260,7 @@ def obtain_keywords(qs,qm,domain):
     return rows
 
 
-def add_tq(qs,qm,d_tq,domain,query,impressions,clicks):
+def add_tq(qs,qm,domain,query,impressions,clicks):
     """
     Add top query
     """
@@ -274,7 +277,7 @@ def add_tq(qs,qm,d_tq,domain,query,impressions,clicks):
                 %s
              )"""
 
-    qs.execute(sql,(d_tq,domain,query,impressions,clicks))
+    qs.execute(sql,(check_date_tq,domain,query,impressions,clicks))
     if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
@@ -328,7 +331,7 @@ def auth_webmaster(ql):
         auth_key = match.group(1)
 
 
-def query_webmaster_tq(qs,qm,ql,domain,keywords,d_tq):
+def query_webmaster_tq(qs,qm,ql,domain,keywords):
     """
     Query the Google Webmaster for the top search queries
     """
@@ -381,7 +384,7 @@ def query_webmaster_tq(qs,qm,ql,domain,keywords,d_tq):
                         impressions = re.sub('[,<]','',impressions)
                         clicks = re.sub('[,<]','',clicks)
                         if not options.test:
-                            add_tq(qs,qm,d_tq,domain,keyword[0],impressions,clicks)
+                            add_tq(qs,qm,domain,keyword[0],impressions,clicks)
 
             except ValueError, ve:
                 # Log it and count the error
@@ -563,7 +566,8 @@ def main():
        logger.info('Google Webmaster threads = %s' % webmaster_threads)
 
 
-    # Top Queries Data (We'll check the data from two days ago, each day)
+    # Top Queries Date (We'll check the data from two days ago, each day)
+    global check_date_tq
     check_date_tq = ql.get_date(2)
     logger.debug('Date to check Google top query data entries against: %s' % check_date_tq)
 
