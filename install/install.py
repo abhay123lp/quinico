@@ -247,7 +247,7 @@ def split_directories(quinico_src):
 
 
 def copy_local(src_local,dst_local):
-    """Copy the generic Quinico local.tmp so that it can be customized"""
+    """Copy the generic Quinico local.tmpl so that it can be customized"""
 
     # If the quinico-local directory already exists, remove it
     print 'Checking for existing quinico-local directory at %s' % dst_local
@@ -258,7 +258,7 @@ def copy_local(src_local,dst_local):
         except Exception as e:
             terminate(e)
 
-    # Copy the local.tmp directory to the new quinico-local directory
+    # Copy the local.tmpl directory to the new quinico-local directory
     print 'Copying %s to %s' % (src_local,dst_local)
     try:
         shutil.copytree(src_local,dst_local)
@@ -329,10 +329,10 @@ def install():
     create_pid(app_dir,apache_uid)
 
     # Source and Destination local directories
-    src_local = app_dir + '/local.tmp'
+    src_local = app_dir + '/local.tmpl'
     dst_local = local_dir + '/quinico-local'
 
-    # Copy the local.tmp directory out of the source directory so it can be customized
+    # Copy the local.tmpl directory out of the source directory so it can be customized
     copy_local(src_local,dst_local)
 
     # Customize the new local_setting.py file
