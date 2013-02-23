@@ -89,8 +89,8 @@ def customize_settings(app_dir,dst_local):
     print 'Customizing %s/quinico/settings.py' % app_dir
 
     try:
-        # Open the settings.py file
-        s_sp = open('%s/quinico/settings.py' % app_dir).read()
+        # Open the settings.py template file
+        s_sp = open('%s/quinico/settings.py.tmpl' % app_dir).read()
 
         # Add the path to the Quinico local dir
         s_sp = s_sp.replace('$__local_dir__$',dst_local)
