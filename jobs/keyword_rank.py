@@ -163,11 +163,11 @@ class Worker(threading.Thread):
                 # Stop the thread
                 break
 
-            except Exception as e:
+            except Exception:
                 # Most likely there was a problem with the Search API.  
                 # This generally should not happen as the function definitions that
                 # that perform the work have their own exception handling
-                logger.error('Exception encountered with thread %s: %s' % (t_name,e))
+                logger.error('Exception encountered with thread %s: %s' % (t_name,traceback.format_exc()))
                 if settings.SMTP_NOTIFY_ERROR:
                     qm.send('Error','Exception encountered with thread %s: %s' % (t_name,traceback.format_exc()))
 

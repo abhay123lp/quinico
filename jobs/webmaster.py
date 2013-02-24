@@ -36,6 +36,7 @@ import datetime
 import Queue
 import threading
 import time
+import traceback
 from xml.dom import minidom
 from optparse import OptionParser
 from django.conf import settings
@@ -195,13 +196,13 @@ class Worker(threading.Thread):
                 # Stop the thread
                 break
 
-            except Exception as e:
+            except Exception:
                 # Most likely there was a problem with the Pagespeed API
                 # This generally should not happen as the function definitions that
                 # that perform the work have their own exception handling
-                logger.error('Exception encountered with thread %s: %s' % (t_name,e))
+                logger.error('Exception encountered with thread %s: %s' % (t_name,traceback.format_exc()))
                 if settings.SMTP_NOTIFY_ERROR:
-                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,e))
+                    qm.send('Error','Exception encountered with thread %s: %s' % (t_name,traceback.format_exc()))
 
                 # Disconnect from the DB server
                 qs.close()
@@ -396,7 +397,7 @@ def query_webmaster_tq(qs,qm,ql,domain,keywords):
                 logger.error('Error encountered parsing Google Webmaster CSV: %s' % ie)
                 ql.add_api_calls('webmaster',1,1)
         else:
-                logger.debug('Empty row detected in Google webmaster CSV for domain: %s' % domain)
+            logger.debug('Empty row detected in Google webmaster CSV for domain: %s' % domain)
 
 
 def query_webmaster_api_ce(qm,ql,url,errors):
