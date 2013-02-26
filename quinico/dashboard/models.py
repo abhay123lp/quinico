@@ -43,7 +43,7 @@ class Subscription(models.Model):
     """Category subscriptions for the user (e.g. SEO or Keyword Rank)"""
 
     user = models.ForeignKey(User, unique=True)
-    keywords = models.BooleanField()
+    keyword_rank = models.BooleanField()
     pagespeed = models.BooleanField()
     webpagetest = models.BooleanField()
     seo = models.BooleanField()

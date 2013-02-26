@@ -301,6 +301,11 @@ def config(request):
             params['dashboard_font'] = form.cleaned_data['dashboard_font']
             params['dashboard_frequency'] = form.cleaned_data['dashboard_frequency']
             params['alert'] = form.cleaned_data['alert']
+            params['disable_pagespeed_reports'] = form.cleaned_data['disable_pagespeed_reports']
+            params['disable_keyword_rank_reports'] = form.cleaned_data['disable_keyword_rank_reports']
+            params['disable_webmaster_reports'] = form.cleaned_data['disable_webmaster_reports']
+            params['disable_seomoz_reports'] = form.cleaned_data['disable_seomoz_reports']
+            params['disable_webpagetest_reports'] = form.cleaned_data['disable_webpagetest_reports']
 
             # Update the data
             for param in params:

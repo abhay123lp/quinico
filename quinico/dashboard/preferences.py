@@ -20,12 +20,13 @@
 """
 
 
+import urllib
 from quinico.keyword_rank.models import Test as Keyword
 from quinico.pagespeed.models import Test
 from quinico.webpagetest.models import Test as WPT_test
 from quinico.seomoz.models import Url
 from quinico.webmaster.models import Domain as Webmaster_Domain
-import urllib
+from quinico.main.models import Config
 
 
 class prefs:
@@ -36,7 +37,7 @@ class prefs:
         self.logger = logger
 
 
-    def keywords(self,url_list,host):
+    def keyword_rank(self,url_list,host):
         """Populate keyword graphs"""
 
         self.logger.debug('Setting up %s default graphs' % 'keyword')
@@ -52,19 +53,19 @@ class prefs:
             url_list[url] = 'graph'
 
         # Keyword Summary URLs.  There are two types
-        # Example 1: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db1 (html)
-        # Example 2: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db2 (json)
+        # Example 1: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db  (json)
+        # Example 2: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db1 (html)
         # Select all domains that have keywords
         keyword_summary_base_url = 'http://%s/keyword_rank/dashboard?domain=%s&format=db%s'
         keyword_domain_list = Keyword.objects.values('domain__domain').distinct()
         for row in keyword_domain_list:
             # First the html one
-            url_html = keyword_summary_base_url % (host,row['domain__domain'],1)
-            url_list[url_html] = 'html'
+            url_html = keyword_summary_base_url % (host,row['domain__domain'],'')
+            url_list[url_html] = 'graph'
 
             # Now the json one
-            url_json = keyword_summary_base_url % (host,row['domain__domain'],2)
-            url_list[url_json] = 'graph'
+            url_json = keyword_summary_base_url % (host,row['domain__domain'],1)
+            url_list[url_json] = 'html'
 
         return url_list
 
@@ -145,10 +146,13 @@ class prefs:
         return url_list
 
 
-    def seo(self,url_list,host,type):
+    def seo(self,url_list,host):
         """Populate seo graphs"""
 
         self.logger.debug('Setting up %s default graphs' % 'seo')
+
+        # Determine if this is a free or paid account
+        type = Config.objects.filter(config_name='seomoz_account_type').values('config_value')[0]['config_value']
 
         # SEO Trend Urls
         # Example: http://www.domain.com/seomoz/trends?url=www.domain.com&metric=ueid&format=db

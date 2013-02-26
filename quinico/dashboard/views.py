@@ -62,7 +62,7 @@ def admin(request):
             sub_exists = Subscription.objects.filter(user__username=request.user.username)
             if not sub_exists:
                 Subscription(user_id=user_id[0]['id'],
-                             keywords=False,
+                             keyword_rank=False,
                              pagespeed=False,
                              webpagetest=False,
                              seo=False,
@@ -70,13 +70,13 @@ def admin(request):
                             ).save()
 
             # Set the user's top level preferences (start w/ everything false)
-            categories = {'keywords':False,'pagespeed':False,'webpagetest':False,'seo':False,'webmaster':False}
+            categories = {'keyword_rank':False,'pagespeed':False,'webpagetest':False,'seo':False,'webmaster':False}
             for category in categories:
                 if category in request.POST and request.POST[category] == 'on':
                     categories[category] = True
 
             Subscription.objects.filter(user_id=user_id[0]['id']).update(
-                                                                         keywords=categories['keywords'],
+                                                                         keyword_rank=categories['keyword_rank'],
                                                                          pagespeed=categories['pagespeed'],
                                                                          webpagetest=categories['webpagetest'],
                                                                          seo=categories['seo'],
@@ -185,7 +185,7 @@ def admin(request):
         
         # Subscribe them to everything and give the defaults
         else:
-            subscription = [{'keywords':1,'pagespeed':1,'webpagetest':1,'seo':1,'webmaster':1}]
+            subscription = [{'keyword_rank':1,'pagespeed':1,'webpagetest':1,'seo':1,'webmaster':1}]
             dash_settings = [{'slots':Config.objects.filter(config_name='dashboard_slots').values('config_value')[0]['config_value'],
                               'frequency':Config.objects.filter(config_name='dashboard_frequency').values('config_value')[0]['config_value'],
                               'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
@@ -210,6 +210,9 @@ def admin(request):
 def index(request):
     """Index Page"""
 
+    # If an admin has turned any of the top level reports off, then even if the
+    # user is subscribed to them, they will not appear
+
     # Create a list of URLS and also a reference for which URLs are tables (html) and which
     # are google charts (json) - this will be done in javascript
     # urls = ['url']['type']
@@ -219,7 +222,7 @@ def index(request):
     subs = None
     if request.user.is_authenticated():
         anonymous = False
-        subs = Subscription.objects.filter(user__username=request.user.username).values('keywords',
+        subs = Subscription.objects.filter(user__username=request.user.username).values('keyword_rank',
                                                                                         'pagespeed',
                                                                                         'webpagetest',
                                                                                         'seo',
@@ -231,54 +234,32 @@ def index(request):
     # Instantiate the preferences url_list builder
     prefs = preferences.prefs(logger)
 
-    # Create the keyword url list
-    # If the user is anonymous or subscribed to keywords, populate the urls
-    if subs:
-        if subs[0]['keywords'] == True:
-            url_list = prefs.keywords(url_list,request.META['HTTP_HOST'])
-    elif anonymous == True:
-        url_list = prefs.keywords(url_list,request.META['HTTP_HOST'])
+    # Report preferences we'll look for
+    report_prefs = ['keyword_rank','pagespeed','webpagetest','seomoz','webmaster']
 
+    for report in report_prefs:
 
-    # Create the Pagespeed url list
-    # Initially, just looking at score and number of hosts
-    # If the user is anonymous or subscribed to pagespeed, populate the urls
-    if subs:
-        if subs[0]['pagespeed'] == True:
-            url_list = prefs.pagespeed(url_list,request.META['HTTP_HOST'])
-    elif anonymous == True:
-        url_list = prefs.pagespeed(url_list,request.META['HTTP_HOST'])
+        logger.debug('setting dashboard prefs for %s' % report)
 
+        # Create the url list
+        disable_report = int(Config.objects.filter(config_name='disable_%s_reports' % report).values('config_value')[0]['config_value'])
 
-    # Create the Webpagetest url list
-    # Initially, just looking at loadTime
-    # If the user is anonymous or subscribed to webpagetest, populate the urls
-    if subs:
-        if subs[0]['webpagetest'] == True:
-            url_list = prefs.webpagetest(url_list,request.META['HTTP_HOST'])
-    elif anonymous == True:
-        url_list = prefs.webpagetest(url_list,request.META['HTTP_HOST'])
-
-
-    # Create the SEO url list
-    # We need to determine if this is a paid or free SEOMoz account
-    type = Config.objects.filter(config_name='seomoz_account_type').values('config_value')[0]['config_value']
-
-    # If the user is anonymous or subscribed to seo, populate the urls
-    if subs:
-        if subs[0]['seo'] == True:
-            url_list = prefs.seo(url_list,request.META['HTTP_HOST'],type)
-    elif anonymous == True:
-        url_list = prefs.seo(url_list,request.META['HTTP_HOST'],type)
-
-
-    # Create the Webmaster url list
-    # If the user is anonymous or subscribed to webmaster, populate the urls
-    if subs:
-        if subs[0]['webmaster'] == True:
-            url_list = prefs.webmaster(url_list,request.META['HTTP_HOST'])
-    elif anonymous == True:
-        url_list = prefs.webmaster(url_list,request.META['HTTP_HOST'])
+        # If the admin has disabled these reports, they won't be shown
+        if disable_report:
+            logger.debug('%s reports are disabled and will not be shown in the dashboard' % report)
+            # They are disabled, so no reports will be shown
+            pass
+        # They are not disabled, see if the user subscribed to them 
+        elif subs:
+            if subs[0][report] == True:
+                logger.debug('User is subscribed to %s reports and will receive them in the dashboard' % report)
+                method = getattr(prefs,report)
+                url_list = method(url_list,request.META['HTTP_HOST'])
+        # They are not disabled, if the user is anonymous, give them the reports
+        elif anonymous == True:
+            logger.debug('User is anonymous and will receive %s reports in the dashboard' % report)
+            method = getattr(prefs,report)
+            url_list = method(url_list,request.META['HTTP_HOST'])
 
 
     # Obtain the user's dashboard preferences

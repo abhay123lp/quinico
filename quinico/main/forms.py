@@ -206,6 +206,11 @@ class ConfigForm(forms.Form):
     pagespeed_locale = LocaleField()
     pagespeed_upload = PathField()
     pagespeed_threads = forms.IntegerField(required=False, min_value=1, max_value=100)
+    disable_pagespeed_reports = forms.IntegerField(required=False)
+    disable_keyword_rank_reports = forms.IntegerField(required=False)
+    disable_webmaster_reports = forms.IntegerField(required=False)
+    disable_webpagetest_reports = forms.IntegerField(required=False)
+    disable_seomoz_reports = forms.IntegerField(required=False)
 
 
 class HelpAdminForm(forms.ModelForm):
