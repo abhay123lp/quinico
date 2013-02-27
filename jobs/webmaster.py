@@ -422,9 +422,9 @@ def query_webmaster_api_ce(qm,ql,url,errors):
        # Count the error
        ql.add_api_calls('webmaster',1,1)
 
-       logger.error('error encountered requesting url: %s' % e)
+       logger.error('error encountered requesting url %s : %s' % (url,e))
        if settings.SMTP_NOTIFY_ERROR:
-           qm.send('Error','error encountered requesting url: %s' % e)
+           qm.send('Error','error encountered requesting url %s : %s' % (url,e))
 
        # If the error is a 403, then re-auth, the auth token may have expired.  Try again w/ the same URL
        if re.match(r'403',str(e.code)):
