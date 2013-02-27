@@ -102,12 +102,12 @@
       <td colspan="2" height="10"></td>
      </tr>
      <tr>
-      <td>Keywords</td>
+      <td>Keyword Rank</td>
       <td>
-        {% if subscription.0.keywords %}
-         <input type="checkbox" checked="yes" name="keywords"/>
+        {% if subscription.0.keyword_rank %}
+         <input type="checkbox" checked="yes" name="keyword_rank"/>
         {% else %}
-         <input type="checkbox" name="keywords"/>
+         <input type="checkbox" name="keyword_rank"/>
         {% endif %}
       </td>
      </tr>
@@ -132,12 +132,12 @@
       </td>
      </tr>
      <tr>
-      <td>SEO</td>
+      <td>SEOMoz</td>
       <td>
-        {% if subscription.0.seo %}
-         <input type="checkbox" checked="yes" name="seo"/>
+        {% if subscription.0.seomoz %}
+         <input type="checkbox" checked="yes" name="seomoz"/>
         {% else %}
-         <input type="checkbox" name="seo"/>
+         <input type="checkbox" name="seomoz"/>
         {% endif %}
       </td>
      </tr>

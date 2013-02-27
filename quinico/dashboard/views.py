@@ -65,12 +65,12 @@ def admin(request):
                              keyword_rank=False,
                              pagespeed=False,
                              webpagetest=False,
-                             seo=False,
+                             seomoz=False,
                              webmaster=False
                             ).save()
 
             # Set the user's top level preferences (start w/ everything false)
-            categories = {'keyword_rank':False,'pagespeed':False,'webpagetest':False,'seo':False,'webmaster':False}
+            categories = {'keyword_rank':False,'pagespeed':False,'webpagetest':False,'seomoz':False,'webmaster':False}
             for category in categories:
                 if category in request.POST and request.POST[category] == 'on':
                     categories[category] = True
@@ -79,7 +79,7 @@ def admin(request):
                                                                          keyword_rank=categories['keyword_rank'],
                                                                          pagespeed=categories['pagespeed'],
                                                                          webpagetest=categories['webpagetest'],
-                                                                         seo=categories['seo'],
+                                                                         seomoz=categories['seomoz'],
                                                                          webmaster=categories['webmaster']
                                                                         )
 
@@ -185,7 +185,7 @@ def admin(request):
         
         # Subscribe them to everything and give the defaults
         else:
-            subscription = [{'keyword_rank':1,'pagespeed':1,'webpagetest':1,'seo':1,'webmaster':1}]
+            subscription = [{'keyword_rank':1,'pagespeed':1,'webpagetest':1,'seomoz':1,'webmaster':1}]
             dash_settings = [{'slots':Config.objects.filter(config_name='dashboard_slots').values('config_value')[0]['config_value'],
                               'frequency':Config.objects.filter(config_name='dashboard_frequency').values('config_value')[0]['config_value'],
                               'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
@@ -225,7 +225,7 @@ def index(request):
         subs = Subscription.objects.filter(user__username=request.user.username).values('keyword_rank',
                                                                                         'pagespeed',
                                                                                         'webpagetest',
-                                                                                        'seo',
+                                                                                        'seomoz',
                                                                                         'webmaster')
         logger.debug('user %s subscriptions: %s' % (request.user.username,subs))
     else:

@@ -120,61 +120,8 @@
         </table>
        </div>
 
-       <h3 align="left"><a href="#">Search Engine Optimization (SEO)</a></h3>
-       <div>
-        <table class="standard_l">
-         <tr>
-          <th>Report</th>
-          <th>Description</th>
-          <th width="90">Formats Available</th>
-         </tr>
-         <tr>
-          <td><a href="/seomoz/dashboard"><b>SEO Dashboard</b></a></td>
-          <td>Current SEO metrics about a given URL, compared with any competitors (if configured).</td>
-          <td>
-           <img height="25" width="25" src="/html/images/csv.jpg">
-          </td>
-         </tr>
-         <tr>
-          <td><a href="/seomoz/trends"><b>SEO Trend Tracking</b></a></td>
-          <td>A Historical analysis of a single SEO metric (e.g. total links to a url), graphed over a user designated period of time.</td>
-          <td>
-           <img height="25" width="25" src="/html/images/csv.jpg">
-           <img height="25" width="25" src="/html/images/json-logo.jpg">
-           <img height="25" width="25" src="/html/images/db.png">
-          </td>
-         </tr>
-         <tr>
-          <td><a href="/keyword_rank/trends"><b>Keyword Rank Trend Tracking</b></a></td>
-          <td>A historical analysis of a single keyword's rank, graphed over a user designated period of time.</td>
-          <td>
-           <img height="25" width="25" src="/html/images/csv.jpg">
-           <img height="25" width="25" src="/html/images/json-logo.jpg">
-           <img height="25" width="25" src="/html/images/db.png">
-          </td>
-         </tr>
-         <tr>
-          <td><a href="/keyword_rank/dashboard"><b>Keyword Rank Dashboard</b></a></td>
-          <td>Keyword ranks of all keywords for a specified domain, including increase/decrease from previous days and number of keywords ranking on the first page of results.</td>
-          <td>
-           <img height="25" width="25" src="/html/images/csv.jpg">
-           <img height="25" width="25" src="/html/images/json-logo.jpg">
-           <img height="25" width="25" src="/html/images/db.png">
-          </td>
-         </tr>
-         <tr>
-          <td><a href="/webmaster/queries"><b>Google Top Search Queries</b></a></td>
-          <td>Search query trends for top search terms, graphed over a user designated period of time.</td>
-          <td>
-           <img height="25" width="25" src="/html/images/csv.jpg">
-           <img height="25" width="25" src="/html/images/json-logo.jpg">
-           <img height="25" width="25" src="/html/images/db.png">
-          </td>
-         </tr>
-        </table>
-       </div>
-
-       <h3 align="left"><a href="#">Site Errors</a></h3>
+       {% if not reports.disable_webmaster == 1 %}
+       <h3 align="left"><a href="#">Google Webmaster</a></h3>
        <div>
         <table class="standard_l">
          <tr>
@@ -205,9 +152,78 @@
           <td>Summary information of all crawl errors encountered for a given url, on a given date.</td>
           <td></td>
          </tr>
+         <tr>
+          <td><a href="/webmaster/queries"><b>Google Top Search Queries</b></a></td>
+          <td>Search query trends for top search terms, graphed over a user designated period of time.</td>
+          <td>
+           <img height="25" width="25" src="/html/images/csv.jpg">
+           <img height="25" width="25" src="/html/images/json-logo.jpg">
+           <img height="25" width="25" src="/html/images/db.png">
+          </td>
+         </tr>
+        </table>
+       </div>
+       {% endif %}
+
+       {% if not reports.disable_keyword_rank == 1 %}
+       <h3 align="left"><a href="#">Keyword Rank</a></h3>
+       <div>
+        <table class="standard_l">
+         <tr>
+          <th>Report</th>
+          <th>Description</th>
+          <th width="90">Formats Available</th>
+         </tr>
+         <tr>
+          <td><a href="/keyword_rank/dashboard"><b>Keyword Rank Dashboard</b></a></td>
+          <td>Keyword ranks of all keywords for a specified domain, including increase/decrease from previous days and number of keywords ranking on the first page of results.</td>
+          <td>
+           <img height="25" width="25" src="/html/images/csv.jpg">
+           <img height="25" width="25" src="/html/images/json-logo.jpg">
+           <img height="25" width="25" src="/html/images/db.png">
+          </td>
+         </tr>
+         <tr>
+          <td><a href="/keyword_rank/trends"><b>Keyword Rank Trend Tracking</b></a></td>
+          <td>A historical analysis of a single keyword's rank, graphed over a user designated period of time.</td>
+          <td>
+           <img height="25" width="25" src="/html/images/csv.jpg">
+           <img height="25" width="25" src="/html/images/json-logo.jpg">
+           <img height="25" width="25" src="/html/images/db.png">
+          </td>
+         </tr>
+        </table>
+       </div>
+       {% endif %}
+ 
+       <h3 align="left"><a href="#">Search Engine Optimization</a></h3>
+       <div>
+        <table class="standard_l">
+         <tr>
+          <th>Report</th>
+          <th>Description</th>
+          <th width="90">Formats Available</th>
+         </tr>
+         <tr>
+          <td><a href="/seomoz/dashboard"><b>SEO Dashboard</b></a></td>
+          <td>Current SEO metrics about a given URL, compared with any competitors (if configured).</td>
+          <td>
+           <img height="25" width="25" src="/html/images/csv.jpg">
+          </td>
+         </tr>
+         <tr>
+          <td><a href="/seomoz/trends"><b>SEO Trend Tracking</b></a></td>
+          <td>A Historical analysis of a single SEO metric (e.g. total links to a url), graphed over a user designated period of time.</td>
+          <td>
+           <img height="25" width="25" src="/html/images/csv.jpg">
+           <img height="25" width="25" src="/html/images/json-logo.jpg">
+           <img height="25" width="25" src="/html/images/db.png">
+          </td>
+         </tr>
         </table>
        </div>
 
+       {% if not reports.disable_pagespeed == 1 %}
        <h3 align="left"><a href="#">Web Page Optimization</a></h3>
        <div>
         <table class="standard_l">
@@ -242,7 +258,9 @@
          </tr>
         </table>
        </div>
+       {% endif %}
 
+       {% if not reports.disable_webpagetest == 1 %}
        <h3 align="left"><a href="#">Web Page Performance</a></h3>
        <div>
         <table class="standard_l">
@@ -268,6 +286,7 @@
          </tr>
         </table>
        </div>
+       {% endif %}
 
       </div>
      </td>

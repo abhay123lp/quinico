@@ -54,6 +54,7 @@ def index(request):
 
     # Obtain the dates to check for errors
     now = datetime.datetime.today()
+
     # Move back 5 days
     then = datetime.timedelta(days=5)
     then = now - then
@@ -86,12 +87,21 @@ def index(request):
     # See if there is an alert
     alert = Config.objects.filter(config_name='alert').values('config_value')[0]['config_value']
 
+    # See if we are disabling any reports (just load all configs)
+    reports = {}
+    reports['disable_pagespeed'] = int(Config.objects.filter(config_name='disable_pagespeed_reports').values('config_value')[0]['config_value'])
+    reports['disable_keyword_rank'] = int(Config.objects.filter(config_name='disable_keyword_rank_reports').values('config_value')[0]['config_value'])
+    reports['disable_webpagetest'] = int(Config.objects.filter(config_name='disable_webpagetest_reports').values('config_value')[0]['config_value'])
+    reports['disable_seomoz'] = int(Config.objects.filter(config_name='disable_seomoz_reports').values('config_value')[0]['config_value'])
+    reports['disable_webmaster'] = int(Config.objects.filter(config_name='disable_webmaster_reports').values('config_value')[0]['config_value'])
+
     # Print the page
     return render_to_response(
        'main/index.html',
        {
           'title':'Quinico | Home',
           'lights':lights,
+          'reports':reports,
           'alert':alert
        },
        context_instance=RequestContext(request)
@@ -316,7 +326,7 @@ def config(request):
             # Redirect back
             return HttpResponseRedirect('/admin/config')
 
-    # Not a POST so create a blank form
+    # Not a POST so create a blank form and return all the existing configs
     else:
         form = ConfigForm()
 

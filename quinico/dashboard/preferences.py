@@ -80,7 +80,7 @@ class prefs:
         # Trend: http://www.domain.com/pagespeed/trends?domain=www.domain.com&url=%252F&strategy=desktop&metric=score&format=db
         # Breakdown: http://www.domain.com/pagespeed/breakdown?domain=www.domain.com&url=%252F&strategy=desktop&format=db
         ps_trend_base_url = 'http://%s/pagespeed/trends?domain=%s&%s&strategy=%s&metric=%s&format=db'
-        ps_breakdown_base_url = 'http://%s/pagespeed/breakdown?domain=%s&%s&strategy=%s&format=db'
+        ps_breakdown_base_url = 'http://%s/pagespeed/breakdown?domain=%s&%s&strategy=%s&format=db2'
         ps_list = Test.objects.values('domain__domain','url__url')
 
         # The metrics we'll display
@@ -146,8 +146,8 @@ class prefs:
         return url_list
 
 
-    def seo(self,url_list,host):
-        """Populate seo graphs"""
+    def seomoz(self,url_list,host):
+        """Populate seomoz graphs"""
 
         self.logger.debug('Setting up %s default graphs' % 'seo')
 

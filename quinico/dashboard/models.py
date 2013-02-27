@@ -46,7 +46,7 @@ class Subscription(models.Model):
     keyword_rank = models.BooleanField()
     pagespeed = models.BooleanField()
     webpagetest = models.BooleanField()
-    seo = models.BooleanField()
+    seomoz = models.BooleanField()
     webmaster = models.BooleanField()
 
 
