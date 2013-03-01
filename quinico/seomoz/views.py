@@ -79,7 +79,7 @@ def trends(request):
 
             # Obtain metrics for this url
             trends = Metrics.objects.filter(url__url=url,
-                                            date__range=[date_from,date_to]).values('date',metric)
+                                            date__range=[date_from,date_to]).values('date',metric).order_by('date')
 
             # Obtain the human friendly name of the metric and if it should be represented in
             # the Google chart with decimals
