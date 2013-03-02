@@ -286,7 +286,7 @@ def install():
     smtp_sender=raw_input('12: Enter the sender email address\n#>').strip()
     smtp_recipient=raw_input('13: Enter the recipient email address\n#>').strip()
 
-    print """You have entered the following options:\n
+    install_text = """You have entered the following options:
             - Quinico Source        : %s
             - Local Directory       : %s
             - Apache Conf Directory : %s
@@ -304,6 +304,7 @@ def install():
          """ % (quinico_src,local_dir,web_conf,db_user,db_host,db_port,django_admin,
                 apache_uid,wsgi_dir,smtp_host,smtp_sender,smtp_recipient)
 
+    print install_text
     proceed=raw_input('Proceed with installation (y/n)\n#>').strip()
 
     if proceed == 'y':
@@ -312,6 +313,10 @@ def install():
         print 'Exiting installation without modifying anything.'
         exit(0)
 
+    # Write out the install file for debugging issues later
+    install_file = open('install.txt','w')
+    install_file.write(install_text)
+    install_file.close() 
 
     # Determine the quinico source directory and path
     app_dir,quinico_src_dir = split_directories(quinico_src)
@@ -361,13 +366,14 @@ def upgrade():
     local_dir=raw_input('2: Please enter the existing local directory location\n#>').strip()
     apache_uid=raw_input('3: Please enter the uid of the apache user\n#>').strip()
 
-    print """You have entered the following options:\n
+    upgrade_text = """You have entered the following options:\n
             - Quinico Source        : %s
             - Local Directory       : %s
             - Apache UID            : %s
 
          """ % (quinico_src,local_dir,apache_uid)
 
+    print upgrade_text
     proceed=raw_input('Proceed with upgrade (y/n)\n#>').strip()
 
     if proceed == 'y':
@@ -375,6 +381,11 @@ def upgrade():
     else:
         print 'Exiting upgrade without modifying anything.'
         exit(0)
+
+    # Write out the upgrade file for debugging issues later
+    upgrade_file = open('upgrade.txt','w')
+    upgrade_file.write(upgrade_text)
+    upgrade_file.close()
 
     # Determine the quinico source directory and path
     app_dir,quinico_src_dir = split_directories(quinico_src)

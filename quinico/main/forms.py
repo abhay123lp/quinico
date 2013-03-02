@@ -121,14 +121,15 @@ class DashboardSlotsField(forms.Field):
 
        Requirements:
           - Must be two integers separated by an x
+          - Currently the dashboard only supports 2x2 and 3x3
 
     """
 
     def validate(self, value):
         if value is None or value == '':
             pass
-        elif not re.match(r'^\d+x\d+$', value):
-            raise forms.ValidationError('Not a valid entry: %s' % value)
+        elif not re.match(r'^2x2|3x3$', value):
+            raise forms.ValidationError('Not a valid entry: %s.  Must be 2x2 or 3x3' % value)
 
 
 class LocaleField(forms.Field):

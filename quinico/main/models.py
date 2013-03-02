@@ -26,12 +26,16 @@ from django.db import models
 
 
 class Config(models.Model):
-    """Configuration Parameters"""
+    """Configuration Parameters
+    
+    The config_value and description need to be sufficiently large to accommodate
+    enough help text to be useful
+    """
 
     config_name = models.CharField(max_length=50, unique=True)
     friendly_name = models.CharField(max_length=50, unique=True)
-    config_value = models.CharField(max_length=500,blank=True)
-    description = models.CharField(max_length=200,blank=True)
+    config_value = models.CharField(max_length=800,blank=True)
+    description = models.CharField(max_length=500,blank=True)
     display = models.CharField(max_length=8,blank=False)
 
     # Represent the object as unicode
