@@ -204,13 +204,13 @@ class ConfigForm(forms.Form):
     dashboard_frequency = forms.IntegerField(required=False)
     alert = forms.CharField(required=False)
     pagespeed_locale = LocaleField()
-    pagespeed_upload = PathField()
     pagespeed_threads = forms.IntegerField(required=False, min_value=1, max_value=100)
     disable_pagespeed_reports = forms.IntegerField(required=False)
     disable_keyword_rank_reports = forms.IntegerField(required=False)
     disable_webmaster_reports = forms.IntegerField(required=False)
     disable_webpagetest_reports = forms.IntegerField(required=False)
     disable_seomoz_reports = forms.IntegerField(required=False)
+    report_path = PathField()
 
 
 class HelpAdminForm(forms.ModelForm):

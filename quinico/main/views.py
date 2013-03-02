@@ -295,7 +295,6 @@ def config(request):
             params['seomoz_access_id'] = form.cleaned_data['seomoz_access_id']
             params['seomoz_account_type'] = form.cleaned_data['seomoz_account_type']
             params['seomoz_secret_key'] = form.cleaned_data['seomoz_secret_key']
-            params['pagespeed_upload'] = form.cleaned_data['pagespeed_upload']
             params['pagespeed_locale'] = form.cleaned_data['pagespeed_locale']
             params['pagespeed_threads'] = form.cleaned_data['pagespeed_threads']
             params['smtp_notify_data_start'] = form.cleaned_data['smtp_notify_data_start']
@@ -316,6 +315,7 @@ def config(request):
             params['disable_webmaster_reports'] = form.cleaned_data['disable_webmaster_reports']
             params['disable_seomoz_reports'] = form.cleaned_data['disable_seomoz_reports']
             params['disable_webpagetest_reports'] = form.cleaned_data['disable_webpagetest_reports']
+            params['report_path'] = form.cleaned_data['report_path']
 
             # Update the data
             for param in params:

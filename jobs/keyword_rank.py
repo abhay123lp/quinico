@@ -116,7 +116,7 @@ class Worker(threading.Thread):
                 else:
                     for keyword in keywords:
 
-                        keyword = keyword[0].decode('utf-8')
+                        keyword = keyword[0]
 
                         logger.info('Found a keyword: %s, now processing rankings' % (keyword))
                         (rank,url,top_ten) = obtain_ranking(ql,domain,gl,googlehost,keyword)

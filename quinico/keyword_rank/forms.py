@@ -103,6 +103,7 @@ class UploadForm(forms.Form):
         for record in records:
 
             #k_enc = record[0].decode('windows-1252').encode('utf-8')
+            #k_enc = record[0].decode('utf-8').encode('utf-8')
             k_enc = record[0]
 
             k = Keyword.objects.filter(keyword=k_enc)

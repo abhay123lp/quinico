@@ -71,10 +71,6 @@
     Dashboard Frequency error: {% for error in form.dashboard_frequency.errors %}{{error}}{% endfor %}
     <br>
    {% endif %}
-   {% if form.pagespeed_upload.errors %}
-    Pagespeed Upload error: {% for error in form.pagespeed_upload.errors %}{{error}}{% endfor %}
-    <br>
-   {% endif %}
    {% if form.pagespeed_locale.errors %}
     Pagespeed Locale error: {% for error in form.pagespeed_locale.errors %}{{error}}{% endfor %}
     <br>
@@ -85,6 +81,10 @@
    {% endif %}
    {% if form.wpt_threads.errors %}
     Webpagetest Threads error: {% for error in form.wpt_threads.errors %}{{error}}{% endfor %}
+    <br>
+   {% endif %}
+   {% if form.report_path.errors %}
+    Report Path error: {% for error in form.report_path.errors %}{{error}}{% endfor %}
     <br>
    {% endif %}
   </td>
