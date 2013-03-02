@@ -49,7 +49,7 @@ class prefs:
 
         for row in keyword_list:
             # Create the URL
-            url = keyword_trend_base_url % (host,row['domain__domain'],urllib.urlencode({'keyword':row['keyword__keyword']}))
+            url = keyword_trend_base_url % (host,row['domain__domain'],urllib.urlencode({'keyword':row['keyword__keyword'].encode('utf-8')}))
             url_list[url] = 'graph'
 
         # Keyword Summary URLs.  There are two types
