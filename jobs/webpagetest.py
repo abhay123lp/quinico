@@ -426,7 +426,7 @@ def main():
         logger.error('wpt_key is not defined, perhaps someone deleted it')
         ql.terminate()
     else:
-       logger.info('wpt_key = %s' % wpt_key)
+       logger.info('wpt_key = *****')
 
     # Downloaded Report Path
     global report_path

@@ -380,7 +380,7 @@ def query_webmaster_tq(qs,qm,ql,domain,keywords):
 
                 # We need to check each row against our keywords
                 for keyword in keywords:
-                    if query == keyword[0].decode('utf-8').encode('utf-8'):
+                    if query == keyword[0].encode('utf-8'):
                         # Get rid of commas in values
                         impressions = re.sub('[,<]','',impressions)
                         clicks = re.sub('[,<]','',clicks)
@@ -556,7 +556,7 @@ def main():
         logger.error('Google Webmaster password is not defined, perhaps someone deleted it')
         ql.terminate()
     else:
-       logger.debug('Google Webmaster password = ********')
+       logger.debug('Google Webmaster password = *****')
 
     # Webmaster Threads
     webmaster_threads = ql.return_config('webmaster_threads')

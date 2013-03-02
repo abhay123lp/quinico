@@ -493,17 +493,10 @@ def summary(request):
             domain = form.cleaned_data['domain']
             date = form.cleaned_data['date']
 
-            # If the date is missing, set it b/c this is probably
-            # an API or DB request
-            if not date:
-                now = datetime.datetime.today()
-                date_to = now.strftime("%Y-%m-%d")
-
             # Create forward/backward links for navigation
-            ref = datetime.datetime.strptime(date,'%Y-%m-%d')
-            date_back = (ref - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+            date_back = (date - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
             back_link = '/webmaster/summary?domain=%s&date=%s' % (domain,date_back)
-            date_forward = (ref + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+            date_forward = (date + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
             forward_link = '/webmaster/summary?domain=%s&date=%s' % (domain,date_forward)
             
 	    # Obtain the errors and counts for this domain

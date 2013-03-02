@@ -298,7 +298,7 @@ if secret_key is None:
     logger.error('SEOMoz Secret Key is not defined, perhaps someone deleted it')
     ql.terminate()
 else:
-   logger.info('SEOmoz Secret Key = %s' % secret_key)
+   logger.info('SEOmoz Secret Key = *****')
 
 # Check when SEOMoz last updated data.  If its newer than our
 # newest data, then perform the update, otherwise quit

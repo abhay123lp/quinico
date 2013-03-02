@@ -437,7 +437,7 @@ def main():
         logger.error('Google Key is not defined, perhaps someone deleted it')
         ql.terminate()
     else:
-       logger.info('Google Key = %s' % google_key)
+       logger.info('Google Key = *****')
 
     # Google Search Engine ID
     global google_se_id
