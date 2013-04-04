@@ -33,9 +33,9 @@
    <td style="text-align:left;">Keywords:<b>{{keyword_count}}</b></td>
   </tr>
   <tr>
-   <td style="text-align:left;">Search Country:<b>{{country.0.gl}}</b></td>
+   <td style="text-align:left;">Search Country:<b>{{gl}}</b></td>
    <td width="10"></td>
-   <td style="text-align:left;">Google Domain:<b>{{country.0.googlehost}}</b></td>
+   <td style="text-align:left;">Google Domain:<b>{{googlehost}}</b></td>
   </tr>
  </table>
 
@@ -148,10 +148,63 @@ $(document).ready(function() {
 <tbody>
  {% for keyword,dates in ranks.items %}
  <tr>
-  <td><a href="/keyword_rank/trends?domain={{domain}}&keyword={{keyword}}">{{keyword}}</a></td>
+  <td><a href="/keyword_rank/trends?domain={{domain}}&keyword={{keyword}}&gl={{gl}}&googlehost={{googlehost}}">{{keyword}}</a></td>
+  
+  {# First the dates #}
   {% for date in dates %}
   <td>{{date}}</td>
   {% endfor %}
+ 
+  {# Now the small chart #}
+  <td>
+   {% for sc_keyword,data in small_charts.items %}
+    {% if sc_keyword == keyword %}
+     
+      {# match, so draw the chart #}
+      <script type="text/javascript">
+        google.load("visualization","1",{packages:["corechart"]});
+        google.setOnLoadCallback(drawChart);
+        function drawChart() {
+          var data = new google.visualization.DataTable();
+          data.addColumn('string','Date');
+          data.addColumn('number','Value');
+          data.addRows([
+
+          {% for item in data %}
+            {% if forloop.first %}
+              ['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
+            {% else %}
+             ,['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
+            {% endif %}
+          {% endfor %}
+
+          ]);
+
+          var options = {
+            'width':120,
+            'height':100,
+            'fontSize':10,
+            'backgroundColor':{'fill':'#EEEEEE'},
+            'hAxis':{textPosition:'none', gridlines:{count:0}},
+            'vAxis':{textPosition:'none', gridlines:{count:0}, minValue:'0', maxValue:'20'},
+            'axisTitlesPosition':'none',
+            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
+            'curveType':'function',
+            'enableInteractivity':true,
+            'pointSize':1
+          };
+
+          var chart = new google.visualization.LineChart(document.getElementById('chart_div_{{keyword}}'));
+          var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
+          formatter.format(data,1); 
+          chart.draw(data,options);
+        }
+      </script>
+      <div id="chart_div_{{keyword}}" style="width:125px; height:100px;"></div>
+
+    {% endif %}
+   {% endfor %}
+  </td>
  </tr>
 {% endfor %}
 </tbody>

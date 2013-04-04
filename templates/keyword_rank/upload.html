@@ -26,16 +26,36 @@
 
 <table>
      <tr>
+
       <td>Domain:</td>
       <td>
        <select class="standard" name="domain" id="domain">
-       {% for domain in domains %}
-           <option value="{{domain}}">{{domain}}</option>
+       {% for item in domain_list %}
+           <option value="{{item.domain}}">{{item.domain}}</option>
        {% endfor %}
        </select>
       </td>
      </tr>
 
+     <td>Gl:</td>
+      <td>
+       <select class="standard" name="gl" id="gl">
+       {% for item in gl_list %}
+           <option value="{{item.gl}}">{{item.gl}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
+
+     <td>Googlehost:</td>
+      <td>
+       <select class="standard" name="googlehost" id="googlehost">
+       {% for item in googlehost_list %}
+           <option value="{{item.googlehost}}">{{item.googlehost}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
      <tr>
       <td>File</td>
       <td>{{upload_form.file}}</td>

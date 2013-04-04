@@ -68,19 +68,23 @@ class FileField(forms.FileField):
 
 
 class KeywordTrendForm(forms.Form):
-    """Form for querying SEO Trends"""
+    """Form for querying Keyword Trends"""
 
     date_from = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
     date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
     domain = forms.CharField()
     keyword = forms.CharField()
     format = FormatField()
+    gl = forms.CharField()
+    googlehost = forms.CharField()
 
 
 class KeywordDashboardForm(forms.Form):
-    """Form for querying the SEO Dashboard"""
+    """Form for querying the Keyword Dashboard"""
 
     domain = forms.CharField()
+    gl = forms.CharField()
+    googlehost = forms.CharField()
     format = FormatField()
 
 
@@ -88,10 +92,14 @@ class UploadForm(forms.Form):
     """Form for uploading keywords in bulk"""
 
     domain = forms.CharField()
+    gl = forms.CharField()
+    googlehost = forms.CharField()
     file = FileField()
 
     def save(self):
         domain = self.cleaned_data['domain']
+        gl = self.cleaned_data['gl']
+        googlehost = self.cleaned_data['googlehost']
         records = csv.reader(self.cleaned_data['file'])
 
         # Make sure the domain exists
@@ -99,22 +107,35 @@ class UploadForm(forms.Form):
 
         if not d:
             raise forms.ValidationError('Domain does not exist: %s.  You must add it before uploading keywords' % value)
+            
+        # See if this domain, gl and googlehost exist, if not add them
+        d_g_g = Domain.objects.filter(
+                                      domain=domain,
+                                      gl=gl,
+                                      googlehost=googlehost
+                                     )
+        if not d_g_g:
+            print 'not there'
+            Domain(domain=domain,gl=gl,googlehost=googlehost).save()
 
+        # Parse through the records and add all of the tests
         for record in records:
 
-            #k_enc = record[0].decode('windows-1252').encode('utf-8')
-            #k_enc = record[0].decode('utf-8').encode('utf-8')
-            k_enc = record[0]
-
-            k = Keyword.objects.filter(keyword=k_enc)
+            k = Keyword.objects.filter(keyword=record[0])
             if not k:
                 # Not there, so add it
-                Keyword(keyword=k_enc).save()
+                Keyword(keyword=record[0]).save()
 
-            # See if the keyword is assigned to this domain, if not, add it
-            k_d = Test.objects.filter(domain__domain=domain,keyword__keyword=k_enc)
+            # See if the keyword is assigned to this domain, gl and googlehost if not, add it
+            k_d = Test.objects.filter(
+                                      domain__domain=domain,
+                                      keyword__keyword=record[0],
+                                      domain__gl=gl,
+                                      domain__googlehost=googlehost
+                                     )
             if not k_d:
+                print 'adding keyword'
                 # Not sure how to do a subquery in Django so will need 3 queries
-                d_id = Domain.objects.filter(domain=domain).values('id')
-                k_id = Keyword.objects.filter(keyword=k_enc).values('id')
-                Test(domain_id=d_id[0]['id'],keyword_id=k_id[0]['id']).save()
+                d_id = Domain.objects.filter(domain=domain,gl=gl,googlehost=googlehost).values('id')[0]['id']
+                k_id = Keyword.objects.filter(keyword=record[0]).values('id')[0]['id']
+                Test(domain_id=d_id,keyword_id=k_id).save()

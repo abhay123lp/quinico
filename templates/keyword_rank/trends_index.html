@@ -82,6 +82,28 @@
      </tr>
 
      <tr>
+      <td>Gl</td>
+      <td>
+       <select class="standard" name="gl" id="gl">
+       {% for item in gl_list %}
+           <option value="{{item.gl}}">{{item.gl}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
+
+     <tr>
+      <td>Googlehost</td>
+      <td>
+       <select class="standard" name="googlehost" id="googlehost">
+       {% for item in googlehost_list %}
+           <option value="{{item.googlehost}}">{{item.googlehost}}</option>
+       {% endfor %}
+       </select>
+      </td>
+     </tr>
+
+     <tr>
        <td>
         Date from
        </td>
@@ -124,6 +146,12 @@
         {% endif %}
         {% if form.format.errors %}
          <br>{% for error in form.format.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.gl.errors %}
+         <br>{% for error in form.gl.errors %}{{error}}{% endfor %}
+        {% endif %}
+        {% if form.googlehost.errors %}
+         <br>{% for error in form.googlehost.errors %}{{error}}{% endfor %}
         {% endif %}
        </p>
       </td>

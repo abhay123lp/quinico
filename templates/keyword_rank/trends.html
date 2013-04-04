@@ -29,9 +29,9 @@
 
  <table class="tiny_no_border">
   <tr>
-   <td>Geolocation:<b>{{country.0.gl}}</b></td>
+   <td>Geolocation:<b>{{gl}}</b></td>
    <td width="10"></td>
-   <td>Google Domain:<b>{{country.0.googlehost}}</b></td>
+   <td>Google Domain:<b>{{googlehost}}</b></td>
    <td width="10"></td>
   </tr>
  </table>
@@ -63,7 +63,7 @@
         var options = {
             'title':'{{domain_name}} | {{keyword_name|escapejs}}',
             'titleTextStyle':{fontSize:'14'},
- 	    'width':750,
+ 	          'width':750,
             'height':375,
             'fontSize':10,
             'hAxis':{textPosition:'out'},

@@ -109,7 +109,7 @@ class Worker(threading.Thread):
                 gl = row[1]
                 googlehost = row[2]
                 logger.info('Found a domain: %s with gl: %s and googlehost: %s - now looking for keywords' % (domain,gl,googlehost))
-                keywords = obtain_keywords(qs,qm,domain)
+                keywords = obtain_keywords(qs,qm,domain,gl,googlehost)
 
                 if not keywords:
                     logger.warning('No keywords defined for %s' % domain)
@@ -131,7 +131,7 @@ class Worker(threading.Thread):
 
                         # Add the rank
                         if not options.test:
-                            add_rank(qs,qm,domain,keyword,rank,url)
+                            add_rank(qs,qm,domain,gl,googlehost,keyword,rank,url)
 
                         logger.info('Adding the top ten urls for the keyword')
                         top_rank = 1
@@ -146,7 +146,7 @@ class Worker(threading.Thread):
     
                             # Add the position
                             if not options.test:
-                                add_top_ten(qs,qm,domain,keyword,top_url,top_rank)
+                                add_top_ten(qs,qm,domain,gl,googlehost,keyword,top_url,top_rank)
     
                             top_rank += 1
     
@@ -178,7 +178,7 @@ class Worker(threading.Thread):
                 break
 
 
-def add_top_ten(qs,qm,domain,keyword,url,rank):
+def add_top_ten(qs,qm,domain,gl,googlehost,keyword,url,rank):
     """
     Add a top_ten URL rank
     """
@@ -188,12 +188,12 @@ def add_top_ten(qs,qm,domain,keyword,url,rank):
     sql = """
            INSERT INTO keyword_rank_top_ten (date,domain_id,keyword_id,url_id,rank)
            VALUES (DATE(NOW()),
-           (SELECT id from keyword_rank_domain where domain=%s),
+           (SELECT id from keyword_rank_domain where domain=%s AND gl=%s AND googlehost=%s),
            (SELECT id from keyword_rank_keyword where keyword=%s),
            (SELECT id from keyword_rank_url where url=%s),
            %s)"""
 
-    qs.execute(sql,(domain,keyword,url,rank))
+    qs.execute(sql,(domain,gl,googlehost,keyword,url,rank))
     if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
@@ -216,22 +216,22 @@ def add_url(qs,qm,url):
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
 
-def add_rank(qs,qm,domain,keyword,rank,url):
+def add_rank(qs,qm,domain,gl,googlehost,keyword,rank,url):
     """
     Add a keyword rank
     """
 
-    logger.info('Saving Rank: domain:%s, keyword:%s, rank:%s, url:%s' % (domain,keyword,rank,url))
+    logger.info('Saving Rank: domain:%s, gl:%s, googlehost:%s, keyword:%s, rank:%s, url:%s' % (domain,gl,googlehost,keyword,rank,url))
 
     sql = """
            INSERT INTO keyword_rank_rank (date,domain_id,keyword_id,url_id,rank) 
            VALUES (DATE(NOW()),
-           (SELECT id from keyword_rank_domain where domain=%s),
+           (SELECT id from keyword_rank_domain where domain=%s AND gl=%s AND googlehost=%s),
            (SELECT id from keyword_rank_keyword where keyword=%s),
            (SELECT id from keyword_rank_url where url=%s),
            %s)"""
 
-    qs.execute(sql,(domain,keyword,url,rank))
+    qs.execute(sql,(domain,gl,googlehost,keyword,url,rank))
     if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
@@ -256,7 +256,7 @@ def obtain_domains(qs,qm):
     return rows
 
 
-def obtain_keywords(qs,qm,domain):
+def obtain_keywords(qs,qm,domain,gl,googlehost):
     """
     Obtain a list of keywords, given a domain
     """
@@ -269,9 +269,11 @@ def obtain_keywords(qs,qm,domain):
            FROM keyword_rank_test
            INNER JOIN keyword_rank_domain on keyword_rank_test.domain_id=keyword_rank_domain.id
            INNER JOIN keyword_rank_keyword on keyword_rank_test.keyword_id=keyword_rank_keyword.id
-           WHERE domain=%s"""
+           WHERE domain=%s
+           AND gl=%s
+           AND googlehost=%s"""
 
-    (rowcount,rows) = qs.execute(sql,(domain))
+    (rowcount,rows) = qs.execute(sql,(domain,gl,googlehost))
     if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 

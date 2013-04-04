@@ -21,7 +21,8 @@
 
 
 import urllib
-from quinico.keyword_rank.models import Test as Keyword
+from quinico.keyword_rank.models import Test as Keyword_Test
+from quinico.keyword_rank.models import Domain as Keyword_Domain
 from quinico.pagespeed.models import Test
 from quinico.webpagetest.models import Test as WPT_test
 from quinico.seomoz.models import Url
@@ -43,28 +44,34 @@ class prefs:
         self.logger.debug('Setting up %s default graphs' % 'keyword')
 
         # Keyword Trend URLs
-        # Example: http://www.domain.com/keyword_rank/trends?domain=www.domain.com&keyword=baby%2520names&format=db
-        keyword_trend_base_url = 'http://%s/keyword_rank/trends?format=db&domain=%s&%s'
-        keyword_list = Keyword.objects.values('domain__domain','keyword__keyword')
+        # Example: http://www.domain.com/keyword_rank/trends?domain=www.domain.com&keyword=baby%2520names&format=db&gl=com&googlehost=google.com
+        keyword_trend_base_url = 'http://%s/keyword_rank/trends?format=db&domain=%s&gl=%s&googlehost=%s&%s'
+        keyword_list = Keyword_Test.objects.values('domain__domain','domain__gl','domain__googlehost','keyword__keyword')
 
         for row in keyword_list:
             # Create the URL
-            url = keyword_trend_base_url % (host,row['domain__domain'],urllib.urlencode({'keyword':row['keyword__keyword'].encode('utf-8')}))
+            url = keyword_trend_base_url % (
+                                            host,
+                                            row['domain__domain'],
+                                            row['domain__gl'],
+                                            row['domain__googlehost'],
+                                            urllib.urlencode({'keyword':row['keyword__keyword'].encode('utf-8')})
+                                           )
             url_list[url] = 'graph'
 
         # Keyword Summary URLs.  There are two types
-        # Example 1: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db  (json)
-        # Example 2: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db1 (html)
+        # Example 1: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db&gl=com&googlehost=google.com  (json)
+        # Example 2: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db1&gl=com&googlehost=google.com (html)
         # Select all domains that have keywords
-        keyword_summary_base_url = 'http://%s/keyword_rank/dashboard?domain=%s&format=db%s'
-        keyword_domain_list = Keyword.objects.values('domain__domain').distinct()
+        keyword_summary_base_url = 'http://%s/keyword_rank/dashboard?domain=%s&format=db%s&gl=%s&googlehost=%s'
+        keyword_domain_list = Keyword_Domain.objects.values('domain','gl','googlehost')
         for row in keyword_domain_list:
             # First the html one
-            url_html = keyword_summary_base_url % (host,row['domain__domain'],'')
+            url_html = keyword_summary_base_url % (host,row['domain'],'',row['gl'],row['googlehost'])
             url_list[url_html] = 'graph'
 
             # Now the json one
-            url_json = keyword_summary_base_url % (host,row['domain__domain'],1)
+            url_json = keyword_summary_base_url % (host,row['domain'],1,row['gl'],row['googlehost'])
             url_list[url_json] = 'html'
 
         return url_list

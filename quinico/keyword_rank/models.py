@@ -28,13 +28,16 @@ from django.utils.encoding import force_unicode
 class Domain(models.Model):
     """Domains that will be tested"""
 
-    domain = models.CharField(max_length=200, unique=True)
+    domain = models.CharField(max_length=200)
     gl = models.CharField(max_length=25)
     googlehost = models.CharField(max_length=25)
 
+    class Meta:
+        unique_together = ['domain','gl','googlehost']
+
     # Represent the object as unicode
     def __unicode__(self):
-        return u'%s' % (self.domain)
+        return u'%s | %s | %s' % (self.domain,self.gl,self.googlehost)
 
 
 class Keyword(models.Model):
