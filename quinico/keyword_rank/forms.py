@@ -115,15 +115,14 @@ class UploadForm(forms.Form):
                                       googlehost=googlehost
                                      )
         if not d_g_g:
-            print 'not there'
             Domain(domain=domain,gl=gl,googlehost=googlehost).save()
 
-        # Parse through the records and add all of the tests
+        # Parse through the keyword records one at a time and add all of the tests
         for record in records:
 
             k = Keyword.objects.filter(keyword=record[0])
             if not k:
-                # Not there, so add it
+                # Keyword is not there, so add it
                 Keyword(keyword=record[0]).save()
 
             # See if the keyword is assigned to this domain, gl and googlehost if not, add it
@@ -134,8 +133,6 @@ class UploadForm(forms.Form):
                                       domain__googlehost=googlehost
                                      )
             if not k_d:
-                print 'adding keyword'
-                # Not sure how to do a subquery in Django so will need 3 queries
                 d_id = Domain.objects.filter(domain=domain,gl=gl,googlehost=googlehost).values('id')[0]['id']
                 k_id = Keyword.objects.filter(keyword=record[0]).values('id')[0]['id']
                 Test(domain_id=d_id,keyword_id=k_id).save()
