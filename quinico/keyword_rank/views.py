@@ -610,6 +610,10 @@ def dashboard(request):
 
         # Just a standard HTML response is being requested
         else: 
+
+            # Obtain the maxValue for the history charts
+            maxValue = Config.objects.filter(config_name='max_keyword_results').values('config_value')[0]['config_value']
+
             return render_to_response(
                 'keyword_rank/dashboard.html',
                 {
@@ -623,6 +627,7 @@ def dashboard(request):
                     'gl':gl,
                     'googlehost':googlehost,
                     'small_charts':small_charts,
+                    'maxValue':maxValue,
                     'db_link':db_link,
                     'db_link1':db_link1,
                     'json_link1':json_link1,

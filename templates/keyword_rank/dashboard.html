@@ -181,12 +181,13 @@ $(document).ready(function() {
           ]);
 
           var options = {
-            'width':120,
+            'width':150,
             'height':100,
             'fontSize':10,
+            'lineWidth':1.5,
             'backgroundColor':{'fill':'#EEEEEE'},
             'hAxis':{textPosition:'none', gridlines:{count:0}},
-            'vAxis':{textPosition:'none', gridlines:{count:0}, minValue:'0', maxValue:'20'},
+            'vAxis':{textPosition:'none', gridlines:{count:0}, minValue:'0', maxValue:'{{maxValue}}'},
             'axisTitlesPosition':'none',
             'series':{0:{color:'#1c94c4', visibleInLegend: false}},
             'curveType':'function',
@@ -200,7 +201,7 @@ $(document).ready(function() {
           chart.draw(data,options);
         }
       </script>
-      <div id="chart_div_{{keyword}}" style="width:125px; height:100px;"></div>
+      <div id="chart_div_{{keyword}}" style="width:150px; height:100px;"></div>
 
     {% endif %}
    {% endfor %}
