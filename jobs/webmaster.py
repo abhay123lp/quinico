@@ -680,8 +680,6 @@ def main():
     # Check the Google messages queue first, as that part is easy and quick
     # All other Google data queries will be threaded so they can progress faster
     query_webmaster_api_messages(qs,ql,qm)
-    exit(0)   
-
 
     # Check all domains - we'll perform the tests serially so as not to overload the API
     domains = obtain_domains(qs,qm)
