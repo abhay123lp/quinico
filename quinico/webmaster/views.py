@@ -27,18 +27,29 @@ import csv
 from django.utils import simplejson
 from django.conf import settings
 from django.http import HttpResponse
+from django.http import HttpResponseRedirect
+from django.contrib.auth.models import User
+from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render_to_response
 from django.template import RequestContext
-from django.db.models import Sum
+from django.db.models import Sum, Count
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from quinico.main.models import Config
 from quinico.webmaster.models import Domain
 from quinico.webmaster.models import Crawl_Error
 from quinico.webmaster.models import Crawl_Error_Type
 from quinico.webmaster.models import Top_Search_Queries
+from quinico.webmaster.models import Messages
+from quinico.webmaster.models import Message_Status
+from quinico.webmaster.models import Message_Update
 from quinico.webmaster.forms import QueriesForm
 from quinico.webmaster.forms import CrawlErrorTrendForm
 from quinico.webmaster.forms import TotalCrawlErrorTrendForm
 from quinico.webmaster.forms import CrawlErrorSummaryForm
+from quinico.webmaster.forms import MessageUpdateForm
+from quinico.webmaster.forms import MessageDetailForm
+from quinico.webmaster.forms import MessageForm
 from quinico.dashboard.models import Dash_Settings
 
 
@@ -554,3 +565,158 @@ def summary(request):
        context_instance=RequestContext(request)
     )
 
+
+def messages(request):
+	"""Webmaster Messages
+	Display and manage Google webmaster messages
+
+	"""
+
+	form = MessageForm(request.GET)
+
+	# Check the params
+	if form.is_valid():
+
+		page = form.cleaned_data['page']
+		filter = form.cleaned_data['filter']
+
+		# Obtain the possible statuses for filtering
+		statuses = Message_Status.objects.values('id','status').order_by('status')
+
+		# We'll show these in pages but first select them all
+		# If there is no filter or filter is empty, select everything, otherwise filter
+		if filter:
+			message_list = Messages.objects.filter(status_id=filter).values('id','date','date_discovered','subject','status__status').annotate(num_updates=Count('message_update')).order_by('-date_discovered')
+		else:
+			message_list = Messages.objects.values('id','date','date_discovered','subject','status__status').annotate(num_updates=Count('message_update')).order_by('-date_discovered')
+
+		paginator = Paginator(message_list, 20) # Show 20 messages per page
+		    
+		try:
+			msgs = paginator.page(page)
+		except PageNotAnInteger:
+			# If page is not an integer, or is not given deliver first page.
+			msgs = paginator.page(1)
+		except EmptyPage:
+			# If page is out of range (e.g. 9999), deliver last page of results.
+			msgs = paginator.page(paginator.num_pages)
+
+	    # Print the page
+		return render_to_response(
+	       'webmaster/messages.html',
+	       {
+	          'title':'Webmaster Messages',
+	          'statuses':statuses,
+	          'msgs':msgs,
+	          'filter':filter
+	       },
+	       context_instance=RequestContext(request)
+	    )
+
+	# Invalid form
+	else:
+		logger.error('Invalid Form: %s.  Error: %s' % ('MessageForm',form.errors))
+		return HttpResponseRedirect('/webmaster/messages')
+
+
+@login_required
+@staff_member_required
+def message_update(request):
+	"""Webmaster Messages Detail
+	Update Google Webmaster Message Detail
+	
+	"""
+
+	# We only accept POSTs to this view
+	if request.method == 'POST':
+		# Check the form elements
+		form = MessageUpdateForm(request.POST)
+
+		if form.is_valid():
+			# Obtain the cleaned data
+			id = form.cleaned_data['id']
+			update = form.cleaned_data['update']
+			status = form.cleaned_data['status']
+
+			# Get the user's ID
+			user_id = User.objects.filter(username=request.user.username).values('id')[0]['id']
+			
+			# Add the update
+			Message_Update(message_id=id,user_id=user_id,update=update).save()
+			
+			# Update the message status
+			Messages.objects.filter(id=id).update(status=status)
+
+			# Send them to the message detail page with the updated data
+			return HttpResponseRedirect('/webmaster/message_detail?id=%s' % id)
+
+		# Invalid form submit, give them the detail view again, but with form errors
+		else:
+			logger.error('Invalid Form: %s.  Error: %s' % ('MessageUpdateForm',form.errors))
+
+			# Obtain detail about this message (we'll need the message ID)
+			if not 'id' in request.POST:
+				# Need to redirect then
+				return HttpResponseRedirect('/webmaster/messages')
+			else:
+				id = request.POST['id']
+
+			detail = Messages.objects.filter(id=id).values('body','status__status')
+			statuses = Message_Status.objects.values('id','status').order_by('status')
+			updates = Message_Update.objects.filter(message_id=id).values('date','user_id__first_name','user_id__last_name','update')
+
+			# Print the page
+			return render_to_response(
+		       'webmaster/message_detail.html',
+		       {
+		          'title':'Quinico | Webmaster Message Detail',
+		          'form':form,
+		          'id':id,
+		          'detail':detail,
+		          'statuses':statuses,
+		          'updates':updates
+		       },
+		       context_instance=RequestContext(request)
+		    )			
+	
+	# Not a POST so redirect back to messages
+	else:
+		logger.error('Received a GET to /webmaster/message_update')
+		return HttpResponseRedirect('/webmaster/messages')
+
+	
+def message_detail(request):
+	"""Webmaster Messages Detail
+	Display Google Webmaster Message Detail
+	
+	"""
+
+	form = MessageDetailForm(request.GET)
+    
+	# Check the params
+	if form.is_valid():
+		# Obtain the cleaned data
+		id = form.cleaned_data['id']
+    
+	# Invalid params
+	else:
+		logger.error('Invalid Form: %s' % 'MessageDetailForm')
+		return HttpResponseRedirect('/webmaster/messages')
+    	
+	detail = Messages.objects.filter(id=id).values('body','status__status')
+	statuses = Message_Status.objects.values('id','status').order_by('status')
+	updates = Message_Update.objects.filter(message_id=id).values('date','user_id__first_name','user_id__last_name','update')
+
+	# Print the page
+	return render_to_response(
+       'webmaster/message_detail.html',
+       {
+          'title':'Quinico | Webmaster Message Detail',
+          'id':id,
+          'detail':detail,
+          'statuses':statuses,
+          'updates':updates
+       },
+       context_instance=RequestContext(request)
+    )
+    

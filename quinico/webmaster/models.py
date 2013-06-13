@@ -23,6 +23,7 @@
 
 
 from django.db import models
+from django.contrib.auth.models import User
 from quinico.keyword_rank.models import Keyword
 
 
@@ -74,3 +75,31 @@ class Top_Search_Queries(models.Model):
     impressions = models.CharField(max_length=11)
     clicks = models.CharField(max_length=11)
 
+
+class Message_Status(models.Model):
+    """Webmaster Message Status"""
+
+    status = models.CharField(max_length=11)
+
+    # Represent the object as unicode
+    def __unicode__(self):
+        return self.status
+
+class Messages(models.Model):
+    """Webmaster Messages"""
+
+    date = models.DateTimeField(null=False,blank=False)
+    date_discovered = models.DateTimeField(null=False,blank=False)
+    subject = models.CharField(max_length=500)
+    body = models.CharField(max_length=8000)
+    status = models.ForeignKey(Message_Status,null=True)
+
+
+class Message_Update(models.Model):
+    """Webmaster Message Updates"""
+
+    date = models.DateTimeField(null=False,blank=False,auto_now=True)
+    message = models.ForeignKey(Messages)
+    user = models.ForeignKey(User)
+    update = models.CharField(max_length=2000)
+    

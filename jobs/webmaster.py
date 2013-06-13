@@ -37,6 +37,7 @@ import Queue
 import threading
 import time
 import traceback
+import requests
 from xml.dom import minidom
 from optparse import OptionParser
 from django.conf import settings
@@ -211,12 +212,6 @@ class Worker(threading.Thread):
                 break
 
 
-
-
-
-
-
-
 def obtain_domains(qs,qm):
     """
     Obtain a list of domains to check
@@ -331,6 +326,103 @@ def auth_webmaster(ql):
     else:
         auth_key = match.group(1)
 
+
+def query_webmaster_api_messages(qs,ql,qm):
+    """
+    Query the Google Webmaster for any messages
+    These queries are not domain specific as Google does not store
+    them that way
+    """
+
+    url = 'https://www.google.com/webmasters/tools/feeds/messages/'
+
+    r = urllib2.Request(url)
+    r.add_header('Authorization','GoogleLogin auth=%s' % auth_key)
+    r.add_header('GData-Version','2')
+
+    ATOM_NS = 'http://www.w3.org/2005/Atom'
+
+    # Count the API Call
+    ql.add_api_calls('webmaster',1)
+
+    try:
+        request = urllib2.urlopen(r)
+    except urllib2.URLError, e:
+        # Count the error
+        ql.add_api_calls('webmaster',1,1)
+        if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+            logger.error('Error acquiring Google Webmaster messages\nERROR:\n%s' % e)
+            qm.send('Error','Error acquiring Google Webmaster messages\nERROR:\n%s' % e)
+        
+        # Cannot continue
+        return
+
+    response = request.read()
+    request.close()
+
+    # Obtain the XML from the response
+    xml = minidom.parseString(response)
+    
+    # Parse each message and add it to the queue, if it is unread
+    for entry in xml.getElementsByTagNameNS(ATOM_NS, u'entry'):
+            
+        id = entry.getElementsByTagNameNS(ATOM_NS, u'id')[0].firstChild.data
+        subject = entry.getElementsByTagName('wt:subject')[0].getAttribute('subject')
+        body = entry.getElementsByTagName('wt:body')[0].getAttribute('body')
+        date_discovered = entry.getElementsByTagName('wt:date')[0].firstChild.data
+        read = entry.getElementsByTagName('wt:read')[0].firstChild.data
+
+        logger.debug('Found a message (status:%s): %s' % (read,id))
+
+        # If the message has not been read, add it to the Quinico DB and then mark it as read
+        # in webmaster
+        if read != 'true':
+
+            # Convert the date to our server timezone and format
+            date_now = ql.convert_datetime_now(settings.TIME_ZONE)
+            date_discovered = ql.convert_datetime('Etc/UTC',date_discovered)
+
+            # Add the message
+            logger.debug('Adding webmaster message to database')
+
+            sql = """
+                  INSERT INTO webmaster_messages (date,date_discovered,subject,body)
+                  VALUES (%s,%s,%s,%s)"""
+
+            qs.execute(sql,(date_now,date_discovered,subject,body))
+            # If there was an error adding to our database, then don't mark as read
+            # we'll try to get it next time
+            if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+                qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
+            else:
+                # Mark as read
+                read_url = 'https://www.google.com/webmasters/tools/feeds/messages/%s' % urllib.quote_plus(id)
+                payload = """<?xml version="1.0" encoding="UTF-8"?>
+                            
+                            <atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:wt="http://schemas.google.com/webmasters/tools/2007">
+                                <atom:id>%s</atom:id>
+                                <atom:category scheme='http://schemas.google.com/g/2005#kind'
+                                    term='http://schemas.google.com/webmasters/tools/2007#message'>
+                                </atom:category>
+                                <wt:read>true</wt:read>
+                            </atom:entry>"""
+
+                r_read = requests.put(read_url, 
+                                      headers={
+                                             'Content-Type': ' application/atom+xml',
+                                             'Authorization': 'GoogleLogin auth=%s' % auth_key,
+                                             'GData-Version': '2'
+                                              },
+                                      data=payload % id,
+                                    )
+
+                logger.debug('Message read put status code: %s' % r_read.status_code)
+                logger.debug('Message read put response text: %s' % r_read.content)
+
+        else:
+            # Already read
+            logger.debug('This message has already been read')
+                
 
 def query_webmaster_tq(qs,qm,ql,domain,keywords):
     """
@@ -583,6 +675,13 @@ def main():
     if auth_key is None:
         logger.error('Could not obtain Google auth_key')
         ql.terminate()
+
+
+    # Check the Google messages queue first, as that part is easy and quick
+    # All other Google data queries will be threaded so they can progress faster
+    query_webmaster_api_messages(qs,ql,qm)
+    exit(0)   
+
 
     # Check all domains - we'll perform the tests serially so as not to overload the API
     domains = obtain_domains(qs,qm)

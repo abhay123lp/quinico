@@ -1,0 +1,100 @@
+{% extends "base/base-foundation.html" %}
+
+{% comment %}
+
+ Copyright 2013 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<br>
+
+<div class="row">
+  <div class="large-12 columns">
+    <span class="navigation">
+      {% if msgs.has_previous %}
+        <a href="?page={{ msgs.previous_page_number }}">&laquo;</a>
+      {% endif %}
+
+      Page {{ msgs.number }} of {{ msgs.paginator.num_pages }}
+
+      {% if msgs.has_next %}
+        <a href="?page={{ msgs.next_page_number }}">&raquo;</a>
+      {% endif %}
+    </span>
+  </div>
+</div>
+
+<div class="row">
+  <div class="spacer_small"></div>
+</div>
+
+<div class="row">
+  <div class="large-12 columns">
+      <form action="/webmaster/messages" method="get" name="messages">
+        <label>Filter: 
+          <select name="filter" class="status" onchange="this.form.submit()">
+            <option value="" selected="true">--</option>
+            {% for status in statuses %}
+              {% if status.id == filter %}
+                <option value="{{status.id}}" selected="true">{{status.status}}</option>
+              {% else %}
+                <option value="{{status.id}}">{{status.status}}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </label>
+        <input type="hidden" name="page" value="{{msgs.number}}">
+      </form>
+
+  </div>
+</div>
+
+<div class="row">
+  <div class="spacer_small"></div>
+</div>
+
+<div class="row">
+  <div class="large-12 columns">
+    <table class="standard">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th class="date">Date Added (Quinico)</th>
+          <th class="date">Date Discovered (Google)</th>
+          <th>Subject</th>
+          <th>Updates</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for message in msgs %}
+        <tr>
+          <td><a href="/webmaster/message_detail?id={{message.id}}">{{message.id}}</a></td>
+          <td>{{message.date|date:"Y-m-d H:i:s"}}</td>
+          <td>{{message.date_discovered|date:"Y-m-d H:i:s"}}</td>
+          <td>{{message.subject}}</td>
+          <td>{{message.num_updates}}</td>
+          <td>{{message.status__status}}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

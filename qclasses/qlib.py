@@ -181,7 +181,7 @@ class lib:
 
     def convert_date(self,timezone,d):
         """
-        Convert a date given in UTC to a given timezone and format as %Y-%m-%d
+        Convert a datetime given in UTC to a given timezone and format as %Y-%m-%d
         The input format must be: %Y-%m-%dT%H:%M:%S.%f
         """
 
@@ -192,6 +192,40 @@ class lib:
 
         # Localize the naive time (time w/o timezone) to UTC and then set to the local timezone
         formatted = tz.localize(d).astimezone(pytz.timezone(timezone)).strftime("%Y-%m-%d")
+
+        return formatted
+
+
+    def convert_datetime(self,timezone,d):
+        """
+        Convert a datetime given in UTC to a given timezone and format as %Y-%m-%d %H:%M:%S
+        The input format must be: %Y-%m-%dT%H:%M:%S.%f
+        """
+
+        d = datetime.datetime.strptime(d, '%Y-%m-%dT%H:%M:%S.%f')
+
+        # The input timezone, which is expected to be UTC
+        tz = pytz.timezone('Etc/UTC')
+
+        # Localize the naive time (time w/o timezone) to UTC and then set to the local timezone
+        formatted = tz.localize(d).astimezone(pytz.timezone(timezone)).strftime("%Y-%m-%d %H:%M:%S")
+
+        return formatted
+
+
+    def convert_datetime_now(self,timezone):
+        """
+        Return a datetime string in UTC formatted as %Y-%m-%d %H:%M:%S
+        The timezone to convert from must be given
+        """
+
+        d = datetime.datetime.now()
+        
+        # The input timezone, which is expected to be UTC
+        tz = pytz.timezone(timezone)
+
+        # Localize the naive time (time w/o timezone) to UTC and then set to the local timezone
+        formatted = tz.localize(d).astimezone(pytz.timezone('Etc/UTC')).strftime("%Y-%m-%d %H:%M:%S")
 
         return formatted
 

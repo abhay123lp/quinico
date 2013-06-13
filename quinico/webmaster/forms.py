@@ -53,6 +53,7 @@ class QueriesForm(forms.Form):
     keyword = forms.CharField()
     format = FormatField()
 
+
 class CrawlErrorTrendForm(forms.Form):
     """Form for querying Google crawl error trends"""
 
@@ -61,6 +62,7 @@ class CrawlErrorTrendForm(forms.Form):
     domain = forms.CharField()
     error_id = forms.IntegerField()
     format = FormatField()
+
 
 class TotalCrawlErrorTrendForm(forms.Form):
     """Form for querying Total Google crawl error trends"""
@@ -76,3 +78,24 @@ class CrawlErrorSummaryForm(forms.Form):
 
     date = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
     domain = forms.CharField()
+
+
+class MessageDetailForm(forms.Form):
+    """Form for displaying details of a Google Webmaster message"""
+
+    id = forms.IntegerField(required=True)
+
+
+class MessageUpdateForm(forms.Form):
+    """Form for updating details of a Google Webmaster message"""
+
+    id = forms.IntegerField(required=True)
+    update = forms.CharField(required=True)
+    status = forms.IntegerField(required=True)
+
+
+class MessageForm(forms.Form):
+    """Form for querying messages"""
+
+    page = forms.IntegerField(required=False)
+    filter = forms.IntegerField(required=False)

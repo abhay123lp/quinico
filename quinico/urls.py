@@ -26,41 +26,49 @@ urlpatterns = patterns('',
     # url(r'^admin/doc/', include('django.contrib.admindocs.urls')),
 
     # keyword_rank upload area of admin site
-    url(r'^admin/keyword_rank/upload$',  'quinico.keyword_rank.views.upload'),
+    url(r'^admin/keyword_rank/upload$', 'quinico.keyword_rank.views.upload'),
 
     # Data job manager area of admin site
-    url(r'^admin/datajobs$',  'quinico.main.views.datajobs'),
+    url(r'^admin/datajobs$',            'quinico.main.views.datajobs'),
 
     # Configuration area of admin site
-    url(r'^admin/config$',  'quinico.main.views.config'),
+    url(r'^admin/config$',              'quinico.main.views.config'),
 
     # User login
-    url(r'^accounts/login/$', 'django.contrib.auth.views.login'),
+    url(r'^accounts/login/$',           'django.contrib.auth.views.login'),
 
     # User logout
-    url(r'^accounts/logout/$', 'django.contrib.auth.views.logout',{'next_page': '/'}),
+    url(r'^accounts/logout/$',          'django.contrib.auth.views.logout',{'next_page': '/'}),
 
     # Standard Django admin
     url(r'^admin/', include(admin.site.urls)),
 
     # Quinico specific URLs
-    url(r'^$',                       'quinico.main.views.index'),
-    url(r'^keyword_rank/dashboard$', 'quinico.keyword_rank.views.dashboard'),
-    url(r'^keyword_rank/trends$',    'quinico.keyword_rank.views.trends'),
-    url(r'^seomoz/dashboard$',       'quinico.seomoz.views.dashboard'),
-    url(r'^seomoz/trends$',          'quinico.seomoz.views.trends'),
-    url(r'^pagespeed/breakdown$',    'quinico.pagespeed.views.breakdown'),
-    url(r'^pagespeed/report$',       'quinico.pagespeed.views.report'),
-    url(r'^pagespeed/trends$',       'quinico.pagespeed.views.trends'),
-    url(r'^pagespeed/history$',      'quinico.pagespeed.views.history'),
-    url(r'^webpagetest/history$',    'quinico.webpagetest.views.history'),
-    url(r'^webpagetest/report$',     'quinico.webpagetest.views.report'),
-    url(r'^webpagetest/trends$',     'quinico.webpagetest.views.trends'),
-    url(r'^dashboard/$',             'quinico.dashboard.views.index'),
-    url(r'^dashboard/admin$',        'quinico.dashboard.views.admin'),
-    url(r'^webmaster/queries$',      'quinico.webmaster.views.queries'),
-    url(r'^webmaster/summary$',      'quinico.webmaster.views.summary'),
-    url(r'^webmaster/trends$',       'quinico.webmaster.views.trends'),
-    url(r'^webmaster/total$',        'quinico.webmaster.views.total'),
-    url(r'^status/api$',             'quinico.status.views.api')
+    url(r'^$',                          'quinico.main.views.index'),
+    url(r'^keyword_rank/dashboard$',    'quinico.keyword_rank.views.dashboard'),
+    url(r'^keyword_rank/trends$',       'quinico.keyword_rank.views.trends'),
+
+    url(r'^seomoz/dashboard$',          'quinico.seomoz.views.dashboard'),
+    url(r'^seomoz/trends$',             'quinico.seomoz.views.trends'),
+
+    url(r'^pagespeed/breakdown$',       'quinico.pagespeed.views.breakdown'),
+    url(r'^pagespeed/report$',          'quinico.pagespeed.views.report'),
+    url(r'^pagespeed/trends$',          'quinico.pagespeed.views.trends'),
+    url(r'^pagespeed/history$',         'quinico.pagespeed.views.history'),
+
+    url(r'^webpagetest/history$',       'quinico.webpagetest.views.history'),
+    url(r'^webpagetest/report$',        'quinico.webpagetest.views.report'),
+    url(r'^webpagetest/trends$',        'quinico.webpagetest.views.trends'),
+
+    url(r'^dashboard/$',                'quinico.dashboard.views.index'),
+    url(r'^dashboard/admin$',           'quinico.dashboard.views.admin'),
+
+    url(r'^webmaster/queries$',         'quinico.webmaster.views.queries'),
+    url(r'^webmaster/messages$',        'quinico.webmaster.views.messages'),
+    url(r'^webmaster/message_detail$',  'quinico.webmaster.views.message_detail'),
+    url(r'^webmaster/message_update$',  'quinico.webmaster.views.message_update'),
+    url(r'^webmaster/summary$',         'quinico.webmaster.views.summary'),
+    url(r'^webmaster/trends$',          'quinico.webmaster.views.trends'),
+    url(r'^webmaster/total$',           'quinico.webmaster.views.total'),
+    url(r'^status/api$',                'quinico.status.views.api')
 )

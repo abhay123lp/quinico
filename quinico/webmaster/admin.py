@@ -24,6 +24,7 @@
 
 
 from quinico.webmaster.models import Domain
+from quinico.webmaster.models import Message_Status
 from django.contrib import admin
 
 
@@ -35,5 +36,14 @@ class DomainAdmin(admin.ModelAdmin):
     ]
 
 
+class Message_StatusAdmin(admin.ModelAdmin):
+    """Domain admin class for manipulating message statuses"""
+
+    fieldsets = [
+       ('Message Status',{'fields':['status']})
+    ]
+
+
 # Register the classes with the admin
 admin.site.register(Domain,DomainAdmin)
+admin.site.register(Message_Status,Message_StatusAdmin)
