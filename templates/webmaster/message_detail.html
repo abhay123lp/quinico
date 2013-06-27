@@ -41,6 +41,13 @@
 	  |
 	  <a href=# id="update_link">Update Message</a>
 	</span>
+	<br><br><br>
+  </div>
+</div>
+
+<div class="row">
+  <div class="large-12 columns">
+  	<b>Subject:</b> {{detail.0.subject}}
 	<br><br>
   </div>
 </div>
@@ -53,7 +60,7 @@
 	  {% csrf_token %}
         <fieldset>
   	      <legend>Add Update</legend>
-	      <textarea class="small{% if form.errors %} error{% endif %}" name="update" placeholder="Enter an update" maxlength="160"></textarea>
+	      <textarea class="small{% if form.errors %} error{% endif %}" name="update" placeholder="Enter an update"></textarea>
 	      {% if form.update.errors %}
 	      <small class="error">
 	        {% for error in form.update.errors %}{{error}}{% endfor %}

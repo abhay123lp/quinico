@@ -703,7 +703,7 @@ def message_detail(request):
 		logger.error('Invalid Form: %s' % 'MessageDetailForm')
 		return HttpResponseRedirect('/webmaster/messages')
     	
-	detail = Messages.objects.filter(id=id).values('body','status__status')
+	detail = Messages.objects.filter(id=id).values('subject','body','status__status')
 	statuses = Message_Status.objects.values('id','status').order_by('status')
 	updates = Message_Update.objects.filter(message_id=id).values('date','user_id__first_name','user_id__last_name','update')
 
