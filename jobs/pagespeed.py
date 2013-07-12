@@ -28,7 +28,6 @@ import logging
 import quinico
 import urllib
 import json
-import uuid
 import datetime
 import Queue
 import threading
