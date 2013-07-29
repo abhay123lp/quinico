@@ -1,0 +1,88 @@
+{% extends "base/base-graph.html" %}
+
+{% comment %}
+
+ Copyright 2013 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#vuls').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{test.0.domain}}{{test.0.url}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: '{{test.0.location}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [{% for row in scores %}{% if forloop.last %}'{{row.date|date:"m-d"}}'{% else %}'{{row.date|date:"m-d"}}',{% endif %}{% endfor %}],
+                labels: {
+                    rotation: 290,
+                    y: 20
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'View 1',
+                data: [{% for row in scores %}{% if forloop.last %}{{row.view1}}{% else %}{{row.view1}},{% endif %}{% endfor %}],
+                color: 'blue'
+            }, {
+                name: 'View 2',
+                data: [{% for row in scores %}{% if forloop.last %}{{row.view1}}{% else %}{{row.view2}},{% endif %}{% endfor %}],
+                color: 'red'
+            }]
+        });
+});
+
+
+
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="vuls" style="width: {{width}}px; height: {{height}}px; margin: 0 auto"></div>
+    <br><br>
+  </div>
+</div>
+
+{% endblock %}

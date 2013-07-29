@@ -111,6 +111,7 @@ def trends(request):
         form = WebpagetestTrendForm(request.GET)
 
         if form.is_valid():
+
             # Obtain the cleaned data
             test_id = form.cleaned_data['test_id']
             date_to = form.cleaned_data['date_to']
@@ -118,6 +119,8 @@ def trends(request):
             metric = form.cleaned_data['metric']
             include_failed = form.cleaned_data['include_failed']
             format = form.cleaned_data['format']
+            width = form.cleaned_data['width']
+            height = form.cleaned_data['height']
 
             # If the from or to dates are missing, set them b/c this is probably
             # an API or DB request (just give the last 30 days of data)
@@ -146,109 +149,133 @@ def trends(request):
             date_to = datetime.datetime.strptime(date_to, '%Y-%m-%d %H:%M:%S')
             date_to = pytz.timezone(settings.TIME_ZONE).localize(date_to)
 
-	    # Obtain the domain, url and location for the chart display
-	    test = Test.objects.filter(id=test_id)
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: WebpagetestTrendForm: %s' % form.errors)
 
-            if include_failed:
-                test_failed = 1
-            else:
-                test_failed = 0
 
-	    # Obtain the scores for this test
-            scores1 = Score.objects.filter(test_id=test_id,
-                                           date__range=[date_from,date_to],
-                                           viewNumber='1',
-                                           test_failed__lte=test_failed,
-                                         ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
-                                         ).values('date').annotate(Avg(metric)).order_by('date')
+        # Obtain the domain, url and location for the chart display
+        test = Test.objects.filter(id=test_id)
 
-            logger.debug(scores1.query)
-            logger.debug(scores1)
+        if include_failed:
+            test_failed = 1
+        else:
+            test_failed = 0
 
 	    # Obtain the scores for this test
-            scores2 = Score.objects.filter(test_id=test_id,
-                                           date__range=[date_from,date_to],
-                                           viewNumber='2',
-                                           test_failed__lte=test_failed,
-                                         ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
-                                         ).values('date').annotate(Avg(metric)).order_by('date')
+        scores1 = Score.objects.filter(test_id=test_id,
+                                       date__range=[date_from,date_to],
+                                       viewNumber='1',
+                                       test_failed__lte=test_failed,
+                                    ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
+                                    ).values('date').annotate(Avg(metric)).order_by('date')
 
-            logger.debug(scores2.query)
-            logger.debug(scores2)
+        logger.debug(scores1.query)
+        logger.debug(scores1)
+
+	    # Obtain the scores for this test
+        scores2 = Score.objects.filter(test_id=test_id,
+                                       date__range=[date_from,date_to],
+                                       viewNumber='2',
+                                       test_failed__lte=test_failed,
+                                     ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
+                                     ).values('date').annotate(Avg(metric)).order_by('date')
+
+        logger.debug(scores2.query)
+        logger.debug(scores2)
 
 	    # Put the data together so its easier to manipulate in the template
 	    # like this: scores[{'date':'2012-01-01','view1':'4023',view2':'321'}]
-	    scores = []
+        scores = []
 
 	    # We'll always have two views for every date because the data job will just enter zeroes
-            # if one view fails
-	    for i in range(len(scores1)):
-		# Create a new dict for each date.
-		dict = {'date':scores1[i]['date'],'view1':scores1[i]['%s__avg' % metric],'view2':scores2[i]['%s__avg' % metric]}
+        # if one view fails
+        for i in range(len(scores1)):
+            # Create a new dict for each date.
+            dict = {'date':scores1[i]['date'],'view1':scores1[i]['%s__avg' % metric],'view2':scores2[i]['%s__avg' % metric]}
 
-		# Push onto the main scores array
-		scores.append(dict)
+            # Push onto the main scores array
+            scores.append(dict)
 
-            logger.debug(scores)
+        logger.debug(scores)
 
 	    # Construct the dashboard, download and monitoring links
-            base_url = 'http://%s/webpagetest/trends?' % (request.META['HTTP_HOST'])
-	    db_link = '%stest_id=%s&metric=%s&format=db' % (base_url,test_id,metric)
-	    json_link = '%stest_id=%s&metric=%s&format=json' % (base_url,test_id,metric)
+        base_url = 'http://%s/webpagetest/trends?' % (request.META['HTTP_HOST'])
+        db_link = '%stest_id=%s&metric=%s&format=db' % (base_url,test_id,metric)
+        json_link = '%stest_id=%s&metric=%s&format=json' % (base_url,test_id,metric)
+        graph_link = '%stest_id=%s&metric=%s&format=graph' % (base_url,test_id,metric)
 
 	    # Print the page
             
 	    # If this is a request for special formatting, give it, otherwise give everything
-	    if format:
-		# JSON request
-		if format == 'json':
-                    return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
-                                                           'view1': str(row['view1']),
-                                                           'view2': str(row['view2'])} for row in scores]),
+        if format:
+            # JSON request
+            if format == 'json':
+                return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
+                                                       'view1': str(row['view1']),
+                                                       'view2': str(row['view2'])} for row in scores]),
                                         mimetype="application/json")
 
-		# Dashboard request
-		if format == 'db':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+            # Dashboard request
+            if format == 'db':
+                
+                # If the user is authenticated and has a preference for size, set it
+                dash_settings = None
+                if request.user.is_authenticated():
+                    # Obtain the user's dashboard settings
+                    dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
-		    if not dash_settings:
-			# Give the default
-                        dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+                if not dash_settings:
+                    # Give the default
+                    dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+                                      'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+                                      'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
 
-		    return render_to_response(
-		     'webpagetest/trends-db.html',
-		      {
-			'title':'Quinico | Webpagetest Trends',
-			'metric':metric,
-			'test':test,
-			'scores':scores,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
+                return render_to_response(
+                    'webpagetest/trends-db.html',
+    		      {
+                    'title':'Quinico | Webpagetest Trends',
+                    'metric':metric,
+                    'test':test,
+                    'scores':scores,
+                    'dash_settings':dash_settings
+    		      },
+                    mimetype='application/json',
+                    context_instance=RequestContext(request)
+    		    )
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		   'webpagetest/trends.html',
-		   {
-		      'title':'Quinico | Webpagetest Trends',
-		      'metric':metric,
-		      'test':test,
-		      'scores':scores,
-		      'db_link':db_link,
-		      'json_link':json_link,
+            # Dashboard request
+            if format == 'graph':
+                
+                return render_to_response(
+                    'webpagetest/trends-graph.html',
+                  {
+                    'title':'Quinico | Webpagetest Trends',
+                    'test':test,
+                    'metric':metric,
+                    'scores':scores,
+                    'width':width,
+                    'height':height
 
-		   },
-		   context_instance=RequestContext(request)
-		)
+                  },
+                    context_instance=RequestContext(request)
+                )
+
+        # Just a standard HTML response is being requested
+        else:
+            return render_to_response(
+                'webpagetest/trends.html',
+    		   {
+                'title':'Quinico | Webpagetest Trends',
+                'metric':metric,
+                'test':test,
+                'scores':scores,
+                'db_link':db_link,
+                'json_link':json_link,
+                'graph_link':graph_link
+    		   },
+    		   context_instance=RequestContext(request)
+    		)
 
     # Ok, its not a form submit
     else:

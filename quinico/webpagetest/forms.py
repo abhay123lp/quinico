@@ -37,7 +37,7 @@ class FormatField(forms.Field):
     """
 
     def validate(self, value):
-        if value and not re.match(r'^(csv|db|db1|db2|json|json1|json2)$', value):
+        if value and not re.match(r'^(csv|db|db1|db2|json|json1|json2|graph)$', value):
             raise forms.ValidationError('Improperly formatted format:%s' % (value))
 
 
@@ -53,6 +53,24 @@ class WebpagetestTrendForm(forms.Form):
     metric = forms.CharField()
     test_id = forms.IntegerField()
     include_failed = forms.BooleanField(required=False)
+    width = forms.IntegerField(required=False)
+    height = forms.IntegerField(required=False)
+
+    # Override the form clean method - there is some special logic to validate 
+
+    def clean(self):
+        cleaned_data = super(WebpagetestTrendForm, self).clean()
+        width = cleaned_data.get('width')
+        height = cleaned_data.get('height')
+
+        if width and not height:
+            self._errors["height"] = self.error_class(['You must define a width and height'])
+        
+        if height and not width:
+            self._errors["width"] = self.error_class(['You must define a width and height'])
+        
+        # Return the full collection of cleaned data
+        return cleaned_data
 
 
 class WebpagetestHistoryForm(forms.Form):

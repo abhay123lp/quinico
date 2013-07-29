@@ -27,7 +27,6 @@
 <script type="text/javascript" src="/html/js/jquery-ui-1.8.22.custom.min.js"></script>
 <script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script> 
 
-
 <link rel="StyleSheet" href="/html/css/quinico.css" type="text/css">
 <script type="text/javascript" src="/html/js/quinico.js"></script>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
@@ -96,6 +95,10 @@
 
       {% if db_link2 %}
       <a href="{{db_link2}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+      {% endif %}
+
+      {% if graph_link %}
+      <a href="{{graph_link}}"><img src="/html/images/graph.png" title="Graph Link: This link is suitable for iframing into your own custom dashboard application."></a>
       {% endif %}
      </td>
     </tr>
