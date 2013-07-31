@@ -16,134 +16,241 @@
 
 {% endcomment %}
 
+<!DOCTYPE html>
+<!--[if IE 8]>         <html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 
-<html>
+
 <head>
 <title>{{title}}</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" /> 
 
+
+<!-- Set the viewport for mobile optimization -->
+<meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+
+<link rel="stylesheet" href="/html/css/foundation.css" />
+<link rel="stylesheet" href="/html/css/normalize.css" />
+
+
 <link type="text/css" href="/html/css/ui-lightness/jquery-ui-1.8.22.custom.css" rel="stylesheet" />
+
+<script type="text/javascript" src="/html/js/vendor/custom.modernizr.js"></script>
 <script type="text/javascript" src="/html/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="/html/js/jquery-ui-1.8.22.custom.min.js"></script>
 <script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script> 
 
-<link rel="StyleSheet" href="/html/css/quinico.css" type="text/css">
+<!--<link rel="StyleSheet" href="/html/css/quinico.css" type="text/css">-->
+<link rel="StyleSheet" href="/html/css/app.css">
 <script type="text/javascript" src="/html/js/quinico.js"></script>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
 </head>
 
 <body>
-<br>
-<center>
 
 
-<table>
- <tr>
-  <td>
+<img src="/html/images/logo.png">
+{% if alert %}
+  <div class="alert">{{alert|safe}}</div>
+{% endif %}
 
-   <table class="outside_border">
-    <tr>
-     <td align="center">
-      <a href="/"><img src="/html/images/logo.png"></a>
-     </td>
-    </tr>
-    {% if alert %}
-    <tr>
-     <td align="center">
-      <div class="alert">{{alert|safe}}</div>
-     </td>
-    </tr>
+
+<nav class="top-bar">
+  <ul class="title-area">
+    <li class="name"></li>
+    <!-- Remove the class "menu-icon" to get rid of menu icon. Take out "Menu" to just have icon alone -->
+    <li class="toggle-topbar menu-icon"><a href="#"><span>Menu</span></a></li>
+  </ul>
+
+  <section class="top-bar-section">
+    <!-- Left Nav Section -->
+    <ul class="left">
+      
+      <li class="divider"></li>
+      <li ><a href="/">Home</a></li>
+
+      <li class="divider"></li>
+      <li ><a href="http://www.quinico.com">Docs</a></li>
+
+      <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">API Status</a>
+        <ul class="dropdown">
+          <li><a href="/status/api">API Counts</a></li>
+        </ul>
+      </li>
+      
+      <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">Dashboard</a>
+        <ul class="dropdown">
+          <li><a href="/dashboard/admin">Admin</a></li>
+          <li><a href="/dashboard/">Launch</a></li>
+        </ul>
+      </li>
+
+      <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">Webmaster</a>
+        <ul class="dropdown">
+          <li><a href="/webmaster/trends">Crawl Error Trends</a></li>
+          <li><a href="/webmaster/total">Crawl Error Total</a></li>
+          <li><a href="/webmaster/summary">Crawl Error Summary</a></li>
+          <li><a href="/webmaster/queries">Top Search Queries</a></li>
+          <li><a href="/webmaster/messages">Webmaster Messages</a></li>
+        </ul>
+      </li>
+
+      <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">Keywords</a>
+        <ul class="dropdown">
+          <li><a href="/keyword_rank/dashboard">Dashboard</a></li>
+          <li><a href="/keyword_rank/trends">Trends</a></li>
+        </ul>
+      </li>
+
+      <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">SEO</a>
+        <ul class="dropdown">
+          <li><a href="/seomoz/dashboard">Dashboard</a></li>
+          <li><a href="/seomoz/trends">Trends</a></li>
+        </ul>
+      </li>
+
+      <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">Web Page</a>
+        <ul class="dropdown">
+          <li class="has-dropdown"><a href="#">Optimization</a>
+            <ul class="dropdown">
+              <li><a href="/pagespeed/trends">Trends</a></li>
+              <li><a href="/pagespeed/history">History</a></li>
+              <li><a href="/pagespeed/breakdown">Breakdown</a></li>
+            </ul>
+          <li>
+          <li class="has-dropdown"><a href="#">Performance</a>
+            <ul class="dropdown">
+              <li><a href="/webpagetest/trends">Trends</a></li>
+              <li><a href="/webpagetest/history">History</a></li>
+            </ul>
+          <li>
+        </ul>
+      </li>
+
+      <li class="divider"></li>
+
+  </section>
+</nav>
+
+<div class="row left">
+  <span style="float:left">&nbsp;&nbsp;<b>{{title}}</b></span>
+</div>
+
+<div class="spacer_small"></div>
+
+<div class="row left">
+  <span style="float:left">
+    {% if user.is_authenticated %}
+     <a class="nu" href="/accounts/logout">&nbsp;&nbsp;Logout</a>
+     ({{user.username}})
+    {% else %}
+     <a class="nu" href="/accounts/login">&nbsp;&nbsp;Login</a>
     {% endif %}
-    <tr>
-     <td align="right">
-      {% if back_link %}
-      <a class="nav" href="{{back_link}}">&laquo; older</a>
-      {% endif %}
+  </span>
+</div>
 
-      {% if forward_link %}
-      <a class="nav" href="{{forward_link}}">newer &raquo;</a>
-      {% endif %}
+<div class="spacer_small"></div>
 
-      {% if help_blurb %}
-      <img height="25" width="25" src="/html/images/info.jpg" title="Help" onclick="hide_show('help')">
-      {% endif %}
+<div class="row left">
+  <span style="float:left">
+    {% if app_version %}
+    <a class="nu" href="http://www.quinico.com">&nbsp;&nbsp;Quinico</a> v-{{app_version}}
+    {% endif %}
+  </span>
+</div>
 
-      {% if csv_link %}
-      <a href="{{csv_link}}"><img height="25" width="25" src="/html/images/csv.jpg" title="Raw Data Download: Download Data in CSV format."></a>
-      {% endif %}
+<div class="spacer_medium"></div>
 
-      {% if json_link %}
-      <a href="{{json_link}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
-      {% endif %}
+<div class="row left">
 
-      {% if json_link1 %}
-      <a href="{{json_link1}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
-      {% endif %}
+  &nbsp;
 
-      {% if json_link2 %}
-      <a href="{{json_link2}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
-      {% endif %}
+  {% if back_link %}
+  <a class="nav" href="{{back_link}}">&laquo; older</a>
+  {% endif %}
 
-      {% if db_link %}
-      <a href="{{db_link}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
-      {% endif %}
+  {% if forward_link %}
+  <a class="nav" href="{{forward_link}}">newer &raquo;</a>
+  {% endif %}
 
-      {% if db_link1 %}
-      <a href="{{db_link1}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
-      {% endif %}
+  {% if help_blurb %}
+  <img height="25" width="25" src="/html/images/info.jpg" title="Help" onclick="hide_show('help')">
+  {% endif %}
 
-      {% if db_link2 %}
-      <a href="{{db_link2}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
-      {% endif %}
+  {% if csv_link %}
+  <a href="{{csv_link}}"><img height="25" width="25" src="/html/images/csv.jpg" title="Raw Data Download: Download Data in CSV format."></a>
+  {% endif %}
 
-      {% if graph_link %}
-      <a href="{{graph_link}}"><img src="/html/images/graph.png" title="Graph Link: This link is suitable for iframing into your own custom dashboard application."></a>
-      {% endif %}
-     </td>
-    </tr>
-    <tr>
-     <td>
-      <hr>
-     </td>
-    </tr>
-    <tr>
-     <td align="center">
-      {% block content %}{% endblock %}
-     </td>
-    </tr>
-   </table>
+  {% if json_link %}
+  <a href="{{json_link}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
+  {% endif %}
 
-   <br>
+  {% if json_link1 %}
+  <a href="{{json_link1}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
+  {% endif %}
 
-   <table class="tiny_no_border" align="center">
-    <tr>
-     <td>
-      <a class="nu" href="/">Home</a>
-      |
-      {% if user.is_authenticated %}
-      <a class="nu" href="/admin">Admin</a>
-      |
-       <a class="nu" href="/accounts/logout">Logout</a>
-       ({{user.username}})
-      {% else %}
-       <a class="nu" href="/accounts/login">Login</a>
-      {% endif %}
-      {% if app_version %}
-      |
-      <a class="nu" href="http://www.quinico.com">Quinico</a> v-{{app_version}}
-      {% endif %}
-     </td>
-    </tr>
-   </table>
+  {% if json_link2 %}
+  <a href="{{json_link2}}"><img height="25" width="25" src="/html/images/json-logo.jpg" title="Monitoring Link: Use this link with your favorite monitoring application (i.e. Nagios and the Quinico plugin) to receive real-time alerts on performance of your key metrics."></a>
+  {% endif %}
 
-  </td>
-  <td valign="top">
-   <div id="help" class="help" style="display:none;">{% autoescape off %}{{help_blurb}}{% endautoescape %}</div>
-  </td>
- </tr>
-</table>
+  {% if db_link %}
+  <a href="{{db_link}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+  {% endif %}
 
-</center>
+  {% if db_link1 %}
+  <a href="{{db_link1}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+  {% endif %}
+
+  {% if db_link2 %}
+  <a href="{{db_link2}}"><img height="25" width="25" src="/html/images/db.png" title="Dashboard Link: Paste this link directly into the Quinico dashboard application to customize your dashboard view to only the data you are interested in."></a>
+  {% endif %}
+
+  {% if graph_link %}
+  <a href="{{graph_link}}"><img src="/html/images/graph.png" title="Graph Link: This link is suitable for iframing into your own custom dashboard application."></a>
+  {% endif %}
+</div>
+
+<div class="spacer_medium"></div>
+    
+<div class="row">
+  <div class="large-12 large-centered columns">
+  {% block content %}
+
+  {% endblock %}
+  </div>
+</div>
+
+<div id="help" class="help" style="display:none;">{% autoescape off %}{{help_blurb}}{% endautoescape %}</div>
+
+<script>
+  document.write('<script src=' +
+  ('__proto__' in {} ? '/html/js/vendor/zepto' : '/html/js/vendor/jquery') +
+  '.js><\/script>')
+  </script>
+  <script src="/html/js/foundation/foundation.js"></script>
+  <script src="/html/js/foundation/foundation.alerts.js"></script>
+  <script src="/html/js/foundation/foundation.clearing.js"></script>
+  <script src="/html/js/foundation/foundation.cookie.js"></script>
+  <script src="/html/js/foundation/foundation.dropdown.js"></script>
+  <script src="/html/js/foundation/foundation.forms.js"></script>
+  <script src="/html/js/foundation/foundation.joyride.js"></script>
+  <script src="/html/js/foundation/foundation.magellan.js"></script>
+  <script src="/html/js/foundation/foundation.orbit.js"></script>
+  <script src="/html/js/foundation/foundation.placeholder.js"></script>
+  <script src="/html/js/foundation/foundation.reveal.js"></script>
+  <script src="/html/js/foundation/foundation.section.js"></script>
+  <script src="/html/js/foundation/foundation.tooltips.js"></script>
+  <script src="/html/js/foundation/foundation.topbar.js"></script>
+  <script>
+  $(document).foundation();
+  </script>
+
 </body>
 </html>

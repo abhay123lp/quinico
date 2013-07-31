@@ -28,6 +28,23 @@ Quinico Stylesheets
 
 
 
+/* NAV BAR */
+.top-bar .name h1 {
+   font-size: 0.8em;
+}
+.top-bar-section li a:not(.button) {
+   background: #1c94c4;
+   color: black;
+}
+.top-bar {
+   background: #1c94c4;
+}
+.top-bar-section .has-form {
+   background: #1c94c4;
+}
+
+
+
 /* TEXTAREAS */
 textarea {
 	height: 150px;
@@ -96,10 +113,14 @@ table.footer td {
    text-align: center;
    color: #3f3f3f;
 }
-/* Date Width */
+/* Date Width */ 
 th.date {
    width: 160px;
 }
+/* Don't alternate row colors on pickers/indexes */
+table.index tr.even, table.index tr.alt, table.index tr:nth-of-type(even) {
+    background: white; 
+ }
 
 
 
