@@ -203,7 +203,6 @@ def trends(request):
         base_url = 'http://%s/webpagetest/trends?' % (request.META['HTTP_HOST'])
         db_link = '%stest_id=%s&metric=%s&format=db' % (base_url,test_id,metric)
         json_link = '%stest_id=%s&metric=%s&format=json' % (base_url,test_id,metric)
-        graph_link = '%stest_id=%s&metric=%s&format=graph' % (base_url,test_id,metric)
 
 	    # Print the page
             
@@ -238,28 +237,12 @@ def trends(request):
                     'metric':metric,
                     'test':test,
                     'scores':scores,
-                    'dash_settings':dash_settings
-    		      },
-                    mimetype='application/json',
-                    context_instance=RequestContext(request)
-    		    )
-
-            # Dashboard request
-            if format == 'graph':
-                
-                return render_to_response(
-                    'webpagetest/trends-graph.html',
-                  {
-                    'title':'Quinico | Webpagetest Trends',
-                    'test':test,
-                    'metric':metric,
-                    'scores':scores,
+                    'dash_settings':dash_settings,
                     'width':width,
                     'height':height
-
-                  },
+    		      },
                     context_instance=RequestContext(request)
-                )
+    		    )
 
         # Just a standard HTML response is being requested
         else:
@@ -271,8 +254,7 @@ def trends(request):
                 'test':test,
                 'scores':scores,
                 'db_link':db_link,
-                'json_link':json_link,
-                'graph_link':graph_link
+                'json_link':json_link
     		   },
     		   context_instance=RequestContext(request)
     		)

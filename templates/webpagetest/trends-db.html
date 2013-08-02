@@ -1,4 +1,4 @@
-{% extends "base/base.json" %}
+{% extends "base/base-graph.html" %}
 
 {% comment %}
 
@@ -21,39 +21,68 @@
 
 {% block content %}
 
-{
- "data":
-  {
-    "cols":
-     [
-       {"label":"Date","type":"string"},
-       {"label":"First View","type":"number"},
-       {"label":"Repeat View","type":"number"}
-     ],
-    "rows":[
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{test.0.domain}}{{test.0.url}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: '{{test.0.location}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [{% for row in scores %}{% if forloop.last %}'{{row.date|date:"m-d"}}'{% else %}'{{row.date|date:"m-d"}}',{% endif %}{% endfor %}],
+                labels: {
+                    rotation: 290,
+                    y: 20
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'View 1',
+                data: [{% for row in scores %}{% if forloop.last %}{{row.view1}}{% else %}{{row.view1}},{% endif %}{% endfor %}],
+                color: 'blue'
+            }, {
+                name: 'View 2',
+                data: [{% for row in scores %}{% if forloop.last %}{{row.view1}}{% else %}{{row.view2}},{% endif %}{% endfor %}],
+                color: 'red'
+            }]
+        });
+});
 
-     {% for row in scores %}
-       {% if forloop.first %}
-         {"c":[{"v":"{{row.date|date:"Y-m-d"}}"},{"v":{{row.view1}}},{"v":{{row.view2}}}]}
-       {% else %}
-         ,{"c":[{"v":"{{row.date|date:"Y-m-d"}}"},{"v":{{row.view1}}},{"v":{{row.view2}}}]}
-       {% endif %}
-     {% endfor %}
-  
-]},
 
- "options":
-   {
-    "title":"WEBPAGETEST: {{test.0.domain}}{{test.0.url}} | {{metric}} | {{test.0.location}}",
-    "width":"{{dash_settings.0.width}}",
-    "height":"{{dash_settings.0.height}}",
-    "fontSize":"{{dash_settings.0.font}}",
-    "legend":{"position":"right"},
-    "hAxis":{"textPosition":"out","slantedText":"true"},
-    "curveType":"function",
-    "pointSize":"3"
-   }
 
-}
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" style="width: {{width}}px; height: {{height}}px; margin: 0 auto"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}

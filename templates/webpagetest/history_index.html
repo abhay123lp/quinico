@@ -21,11 +21,6 @@
 
 {% block content %}
 
-<b><i>WEBPAGETEST HISTORY</i></b>
-
-<br>
-<br>
-
 
   <script>
    // Date Pickers and Submit
@@ -44,7 +39,7 @@
 
   
    <form name="test_select" id="test_select" action="/webpagetest/history" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Test</td>
@@ -82,25 +77,26 @@
       </td>
      </tr>
 
+     {% if form.test_id.errors %}
      <tr>
       <td></td>
       <td>
        <p class="error">
-        {% if form.test_id.errors %}
-         <br>{% for error in form.test_id.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_to.errors %}
-         <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_from.errors %}
-         <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
-      </td>
-     </tr>
+       
+        <br>{% for error in form.test_id.errors %}{{error}}{% endfor %}
+       {% endif %}
+       {% if form.date_to.errors %}
+        <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
+       {% endif %}
+       {% if form.date_from.errors %}
+        <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
+       {% endif %}
+       {% if form.format.errors %}
+        <br>{% for error in form.format.errors %}{{error}}{% endfor %}
+      </p>
+     </td>
+    </tr>
+    {% endif %}
 
     </table>
    </form>

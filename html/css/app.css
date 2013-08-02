@@ -29,18 +29,8 @@ Quinico Stylesheets
 
 
 /* NAV BAR */
-.top-bar .name h1 {
-   font-size: 0.8em;
-}
 .top-bar-section li a:not(.button) {
-   background: #1c94c4;
-   color: black;
-}
-.top-bar {
-   background: #1c94c4;
-}
-.top-bar-section .has-form {
-   background: #1c94c4;
+   color: #1c94c4;
 }
 
 
@@ -120,17 +110,28 @@ th.date {
 /* Don't alternate row colors on pickers/indexes */
 table.index tr.even, table.index tr.alt, table.index tr:nth-of-type(even) {
     background: white; 
- }
+}
+/* History tables */
+table.history tr, table.history td {
+   font-size: 11px;
+}
 
 
 
 /* DIVS AND SPACERS */
 /* Spacer rows when more space is required b/t rows in the layout */
 div.spacer_small {
-   height: 15px;
+   height: 20px;
 }
 div.spacer_medium {
    height: 35px;
+}
+/* Graph Containers */
+div.graph_container {
+   margin: 0 auto; 
+   border: 1px solid; 
+   border-color: #dddddd;
+   border-radius:5px;
 }
 
 
