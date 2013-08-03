@@ -55,6 +55,7 @@ class WebpagetestTrendForm(forms.Form):
     include_failed = forms.BooleanField(required=False)
     width = forms.IntegerField(required=False)
     height = forms.IntegerField(required=False)
+    step = forms.IntegerField(required=False)
 
     # Override the form clean method - there is some special logic to validate 
 

@@ -1,4 +1,4 @@
-{% extends "base/base.json" %}
+{% extends "base/base-graph.html" %}
 
 {% comment %}
 
@@ -21,34 +21,64 @@
 
 {% block content %}
 
-{
- "data":
-  {
-    "cols":
-     [
-       {"label":"Date","type":"string"},
-       {"label":"Value","type":"number"}
-     ],
-    "rows":[
-            {"c":[{"v":"javascript"},{"v":{{scores.0.javascriptResponseBytes__avg}}}]},
-            {"c":[{"v":"image"},{"v":{{scores.0.imageResponseBytes__avg}}}]},
-            {"c":[{"v":"html"},{"v":{{scores.0.htmlResponseBytes__avg}}}]},
-            {"c":[{"v":"text"},{"v":{{scores.0.textResponseBytes__avg}}}]},
-            {"c":[{"v":"css"},{"v":{{scores.0.cssResponseBytes__avg}}}]},
-            {"c":[{"v":"other"},{"v":{{scores.0.otherResponseBytes__avg}}}]}
-           ]
-  },
+<script type="text/javascript">
+  $(function () {
+      $('#graph').highcharts({
+          chart: {
+              plotBackgroundColor: null,
+              plotBorderWidth: null,
+              plotShadow: false
+          },
+          title: {
+              text: '{{domain}}{{url}}'
+          },
+          subtitle: {
+              text: 'Page Breakdown',
+              x: -20
+          },
+          tooltip: {
+            pointFormat: '{series.name}: <b>{point.y}</b>'
+          },
+          plotOptions: {
+              pie: {
+                  allowPointSelect: true,
+                  cursor: 'pointer',
+                  dataLabels: {
+                      enabled: true,
+                      color: '#000000',
+                      connectorColor: '#000000',
+                      format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                  }
+              }
+          },
+          series: [{
+              type: 'pie',
+              name: 'Bytes',
+              data: [
+                  
+               ['javascript',{{scores.0.javascriptResponseBytes__avg}}],
+               ['image',{{scores.0.imageResponseBytes__avg}}],
+               ['html',{{scores.0.htmlResponseBytes__avg}}],
+               ['text',{{scores.0.textResponseBytes__avg}}],
+               ['css',{{scores.0.cssResponseBytes__avg}}],
+               ['other',{{scores.0.otherResponseBytes__avg}}],
 
- "options":
-   {
-    "title":"PAGE BREAKDOWN | {{domain}}{{url}} | {{strategy}}",
-    "width":"{{dash_settings.0.width}}",
-    "height":"{{dash_settings.0.height}}",
-    "fontSize":"{{dash_settings.0.font}}"
-   }
+              ]
+          }]
+      });
+});
 
-}
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" style="margin: 0 auto; {% if width %}{% if height %}width: {{width}}px;height: {{height}}px;{% endif %}{% endif %}"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
-
 

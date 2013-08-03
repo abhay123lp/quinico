@@ -146,6 +146,12 @@ function switchImage(u,slot,w,h) {
 }
 
 
+// Change an image from Quinico
+function switchQImage(img_url,frame_id) {
+   document.getElementById(frame_id).src = img_url;
+}
+
+
 function changeElement(action,divName,fieldName,size) {
 
    var div = document.getElementById(divName);
@@ -211,3 +217,5 @@ function hide_show_img(div,img) {
       document.getElementById(img).src = '/html/images/plus.gif';
    }
 }
+
+

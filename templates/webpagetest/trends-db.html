@@ -43,7 +43,8 @@ $(function () {
                 categories: [{% for row in scores %}{% if forloop.last %}'{{row.date|date:"m-d"}}'{% else %}'{{row.date|date:"m-d"}}',{% endif %}{% endfor %}],
                 labels: {
                     rotation: 290,
-                    y: 20
+                    y: 20,
+                    {% if step %}step: {{step}}{% endif %}
                 }
             },
             yAxis: {
@@ -80,7 +81,7 @@ $(function () {
 
 <div class="row">
   <div class="large-12 columns">
-    <div id="graph" style="width: {{width}}px; height: {{height}}px; margin: 0 auto"></div>
+    <div id="graph" style="margin: 0 auto; {% if width %}{% if height %}width: {{width}}px;height: {{height}}px;{% endif %}{% endif %}"></div>
     <br><br>
   </div>
 </div>

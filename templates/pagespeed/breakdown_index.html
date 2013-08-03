@@ -21,11 +21,6 @@
 
 {% block content %}
 
-<b><i>PAGESPEED SUMMARY</i></b>
-
-<br>
-<br>
-
 
   <script type="text/javascript">
    // Dropdown population
@@ -56,7 +51,7 @@
 
   
    <form name="ps_select" id="ps_select" action="/pagespeed/breakdown" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Domain</td>
@@ -92,39 +87,29 @@
         Date
        </td>
        <td>
-        <input class="input_date" name="date" id="date" type="text" value="{{date}}">
+        <input name="date" id="date" type="text" value="{{date}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
      <tr>
       <td></td>
       <td>
-       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+       <input id="submit" type="submit" value="submit" style="width:75"/>
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.date.errors %}
-         <br>{% for error in form.date.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.domain.errors %}
-         <br>{% for error in form.domain.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.url.errors %}
-         <br>{% for error in form.url.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.strategy.errors %}
-         <br>{% for error in form.strategy.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
     </table>
    </form>

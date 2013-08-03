@@ -31,17 +31,15 @@
 
 <link rel="stylesheet" href="/html/css/foundation.css" />
 <link rel="stylesheet" href="/html/css/normalize.css" />
-
-
 <link type="text/css" href="/html/css/ui-lightness/jquery-ui-1.8.22.custom.css" rel="stylesheet" />
+<link rel="stylesheet" media="screen"  href="/html/css/responsive-tables.css" />
+<link rel="StyleSheet" href="/html/css/app.css">
 
 <script type="text/javascript" src="/html/js/vendor/custom.modernizr.js"></script>
 <script type="text/javascript" src="/html/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="/html/js/jquery-ui-1.8.22.custom.min.js"></script>
-<script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script> 
-
-<!--<link rel="StyleSheet" href="/html/css/quinico.css" type="text/css">-->
-<link rel="StyleSheet" href="/html/css/app.css">
+<script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script>
+<script type="text/javascript" src="/html/js/responsive-tables.js"></script>
 <script type="text/javascript" src="/html/js/quinico.js"></script>
 <script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
@@ -58,10 +56,10 @@
 <div>
   <span style="float:right">
     {% if user.is_authenticated %}
-      <a class="nu" href="/accounts/logout">Logout</a>&nbsp;
-         ({{user.username}})
+      <a class="nu" href="/accounts/logout">Logout</a>
+         ({{user.username}})&nbsp;&nbsp;
     {% else %}
-      <a class="nu" href="/accounts/login">Login</a>&nbsp;
+      <a class="nu" href="/accounts/login">Login</a>&nbsp;&nbsp;
     {% endif %}
   </span>
 </div>

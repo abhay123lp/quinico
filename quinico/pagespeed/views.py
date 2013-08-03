@@ -109,7 +109,7 @@ def report(request):
         #		urls: [
         #                      'http://www.foo.bar',
         #                      'http://www.clown.com
-  	#		      ]
+  	    #		      ]
         #              }
         #	      ]
         #      }
@@ -230,6 +230,9 @@ def trends(request):
             url = form.cleaned_data['url']
             strategy = form.cleaned_data['strategy']
             format = form.cleaned_data['format']
+            width = form.cleaned_data['width']
+            height = form.cleaned_data['height']
+            step = form.cleaned_data['step']
 
             # If the from or to dates are missing, set them b/c this is probably
             # an API or DB request (just give the last 30 days of data)
@@ -259,12 +262,12 @@ def trends(request):
             date_to_tz = datetime.datetime.strptime(date_to_tz, '%Y-%m-%d %H:%M:%S')
             date_to_tz = pytz.timezone(settings.TIME_ZONE).localize(date_to_tz)
 
-	    # Unquote the url to UTF-8 and then decode
-	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
+    	    # Unquote the url to UTF-8 and then decode
+    	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
 
-	    # Obtain the scores for this test
+    	    # Obtain the scores for this test
             # Convert the times to the server timezone first and then take the date portion
-	    scores = Score.objects.filter(test_id__domain__domain=domain,
+    	    scores = Score.objects.filter(test_id__domain__domain=domain,
                                           test_id__url__url=u_unenc,
                                           date__range=[date_from_tz,date_to_tz],
                                           strategy=strategy
@@ -274,87 +277,90 @@ def trends(request):
             logger.debug(scores.query)
             logger.debug(scores)
 
-	    # Construct the dashboard, download and monitoring links
+    	    # Construct the dashboard, download and monitoring links
             base_url = 'http://%s/pagespeed/trends?domain=%s' % (request.META['HTTP_HOST'],domain)
-	    db_link = '%s&url=%s&metric=%s&strategy=%s&format=db' % (base_url,url,metric,strategy)
-	    json_link = '%s&url=%s&metric=%s&strategy=%s&format=json' % (base_url,url,metric,strategy)
-	    csv_link = '%s&url=%s&metric=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,
-                                                                                                    url,
-                                                                                                    metric,
-                                                                                                    strategy,
-                                                                                                    date_from,
-                                                                                                    date_to)
+    	    db_link = '%s&url=%s&metric=%s&strategy=%s&format=db' % (base_url,url,metric,strategy)
+    	    json_link = '%s&url=%s&metric=%s&strategy=%s&format=json' % (base_url,url,metric,strategy)
+    	    csv_link = '%s&url=%s&metric=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,
+                                                                                               url,
+                                                                                               metric,
+                                                                                               strategy,
+                                                                                               date_from,
+                                                                                               date_to)
 
-	    # Print the page
+    	    # Print the page
 
-	    # If this is a request for special formatting, give it, otherwise give everything
-	    if format:
-                
-		# JSON request
+    	    # If this is a request for special formatting, give it, otherwise give everything
+            if format:
+                    
+                # JSON request
                 if format == 'json':
-                    return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
-                                                           metric: row['%s__avg' % metric]} for row in scores]),
-                                        mimetype="application/json")
+                    return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),metric: row['%s__avg' % metric]} for row in scores]),mimetype="application/json")
 
-		# Dashboard request
-		elif format == 'db':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+                # Dashboard request
+                elif format == 'db':
+                    # If the user is authenticated and has a preference for size, set it
+                    dash_settings = None
+                    if request.user.is_authenticated():
+                        # Obtain the user's dashboard settings
+                        dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
-		    if not dash_settings:
-			# Give the default
-                        dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+                        if not dash_settings:
+                            # Give the default
+                            dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+                                              'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+                                              'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
 
-		    return render_to_response(
-		     'pagespeed/trends-db.html',
-		      {
-			'title':'Quinico | Pagespeed Trends',
-			'domain':domain,
-			'strategy':strategy,
-			'url':u_unenc,
-			'metric':metric,
-			'scores':scores,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
+                    return render_to_response(
+            		    'pagespeed/trends-db.html',
+            		      {
+                			'title':'Quinico | Pagespeed Trends',
+                			'domain':domain,
+                			'strategy':strategy,
+                			'url':u_unenc,
+                			'metric':metric,
+                			'scores':scores,
+                			'dash_settings':dash_settings,
+                            'width':width,
+                            'height':height,
+                            'step':step
+            		      },
+            		      context_instance=RequestContext(request)
+            		    )
 
-		# CSV download (there is no template for this)
-		elif format == 'csv':
-		    response = HttpResponse(mimetype='text/csv')
-		    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
-		    writer = csv.writer(response)
-		    writer.writerow(['date','value'])
-		    for row in scores:
-			writer.writerow([row['date'].strftime("%Y-%m-%d"),row['%s__avg' % metric]])
-		    return response
+                # CSV download (there is no template for this)
+                elif format == 'csv':
+                    response = HttpResponse(mimetype='text/csv')
+                    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
+                    writer = csv.writer(response)
+                    writer.writerow(['date','value'])
+                    for row in scores:
+                        writer.writerow([row['date'].strftime("%Y-%m-%d"),row['%s__avg' % metric]])
+                    return response
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		   'pagespeed/trends.html',
-		   {
-		      'title':'Quinico | Pagespeed Trends',
-		      'domain':domain,
-		      'strategy':strategy,
-		      'url':u_unenc,
-		      'metric':metric,
-		      'scores':scores,
-		      'db_link':db_link,
-		      'json_link':json_link,
-		      'csv_link':csv_link
+    	    # Just a standard HTML response is being requested
+    	    else:
+        		return render_to_response(
+        		   'pagespeed/trends.html',
+        		   {
+        		      'title':'Quinico | Pagespeed Trends',
+        		      'domain':domain,
+        		      'strategy':strategy,
+        		      'url':u_unenc,
+        		      'metric':metric,
+        		      'scores':scores,
+        		      'db_link':db_link,
+        		      'json_link':json_link,
+        		      'csv_link':csv_link
 
-		   },
-		   context_instance=RequestContext(request)
-		)
+        		   },
+        		   context_instance=RequestContext(request)
+        		)
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: PagespeedTrendForm: %s' % form.errors)
 
-    # Ok, its not a form submit
+    # Its not a form submit, or its a failed form submit
     else:
         form = PagespeedTrendForm()
 
@@ -418,26 +424,28 @@ def breakdown(request):
             url = form.cleaned_data['url']
             strategy = form.cleaned_data['strategy']
             format = form.cleaned_data['format']
+            width = form.cleaned_data['width']
+            height = form.cleaned_data['height']
 
-	    # Unquote the url to UTF-8 and then decode
-	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
+    	    # Unquote the url to UTF-8 and then decode
+    	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
 
-	    # If the date is missing, set it b/c this is probably
-	    # an API or DB request (just give the most recent)
+    	    # If the date is missing, set it b/c this is probably
+    	    # an API or DB request (just give the most recent)
             if not date:
-		last_run = Score.objects.filter(test_id__domain__domain=domain,
+                last_run = Score.objects.filter(test_id__domain__domain=domain,
                                                 test_id__url__url=u_unenc,
                                                 strategy=strategy
                                                ).values('date').order_by('-date')[:1]
-	   
-		if last_run[0]['date']:
-		    date = last_run[0]['date']
+    	   
+                if last_run[0]['date']:
+                    date = last_run[0]['date']
 
                     # Convert from UTC to our timezone
                     date = date.astimezone(pytz.timezone(settings.TIME_ZONE))
 
                 # Looks like the pagespeed job has never been run
-		else:
+                else:
                     message = 'The report returned no data.  It appears the Pagespeed data job has never been run'
                     return render_to_response(
                         'misc/generic.html',
@@ -446,7 +454,7 @@ def breakdown(request):
                          'back_link':back_link,
                          'forward_link':forward_link,
                          'message':message
-                        },
+                         },
                         context_instance=RequestContext(request)
                      )
 
@@ -480,23 +488,23 @@ def breakdown(request):
             d_to = datetime.datetime.strptime(d_to,'%Y-%m-%d %H:%M:%S')
             d_to = pytz.timezone(settings.TIME_ZONE).localize(d_to)
 
-	    scores = Score.objects.filter(test_id__domain__domain=domain,
+            scores = Score.objects.filter(test_id__domain__domain=domain,
                                           test_id__url__url=u_unenc,
                                           date__range=[d_from,d_to],
                                           strategy=strategy,
                                          ).extra({'date':"date(convert_tz(date,'%s','%s'))" % ('UTC',settings.TIME_ZONE)}
                                          ).values('date').annotate(
-					          Avg('numberResources'),
-					          Avg('numberStaticResources'),
-					          Avg('numberCssResources'),
-					          Avg('totalRequestBytes'),
-					          Avg('textResponseBytes'),
-					          Avg('cssResponseBytes'),
-					          Avg('htmlResponseBytes'),
-					          Avg('imageResponseBytes'),
-					          Avg('javascriptResponseBytes'),
-					          Avg('otherResponseBytes')
-					         )
+    					                   Avg('numberResources'),
+    					                   Avg('numberStaticResources'),
+    					                   Avg('numberCssResources'),
+    					                   Avg('totalRequestBytes'),
+    					                   Avg('textResponseBytes'),
+    					                   Avg('cssResponseBytes'),
+    					                   Avg('htmlResponseBytes'),
+    					                   Avg('imageResponseBytes'),
+    					                   Avg('javascriptResponseBytes'),
+    					                   Avg('otherResponseBytes')
+    					                  )
 
             logger.debug(scores.query)
             logger.debug(scores)
@@ -515,27 +523,27 @@ def breakdown(request):
                    context_instance=RequestContext(request)
                 )
 
-	    # Construct an alternate strategy URL
-	    if strategy == 'desktop':
-		a_strategy = 'mobile'
-	    elif strategy == 'mobile':
-		a_strategy = 'desktop'
-	    else:
-		a_strategy = strategy
+    	    # Construct an alternate strategy URL
+            if strategy == 'desktop':
+                a_strategy = 'mobile'
+            elif strategy == 'mobile':
+                a_strategy = 'desktop'
+            else:
+                a_strategy = strategy
 
             base_url = 'http://%s/pagespeed/breakdown?domain' % (request.META['HTTP_HOST'])
-	    a_url = '%s=%s&url=%s&date=%s&strategy=%s' % (base_url,domain,url,date,a_strategy)
+            a_url = '%s=%s&url=%s&date=%s&strategy=%s' % (base_url,domain,url,date,a_strategy)
 
-	    # Construct the dashboard, download and monitoring links
-	    db_link2 = '%s=%s&url=%s&strategy=%s&format=db2' % (base_url,domain,url,strategy)
-	    json_link = '%s=%s&url=%s&strategy=%s&format=json' % (base_url,domain,url,strategy)
+            # Construct the dashboard, download and monitoring links
+            db_link2 = '%s=%s&url=%s&strategy=%s&format=db2' % (base_url,domain,url,strategy)
+            json_link = '%s=%s&url=%s&strategy=%s&format=json' % (base_url,domain,url,strategy)
 
-	    # Print the page
+    	    # Print the page
 
-	    # If this is a request for special formatting, give it, otherwise give everything
-	    if format:
-		# JSON request
-		if format == 'json':
+    	    # If this is a request for special formatting, give it, otherwise give everything
+            if format:
+                # JSON request
+                if format == 'json':
                     return HttpResponse(simplejson.dumps([{
                                                            'date': row['date'].strftime("%Y-%m-%d"),
                                                            'numberResources': row['numberResources__avg'],
@@ -550,57 +558,62 @@ def breakdown(request):
                                                            'otherResponseBytes': row['otherResponseBytes__avg']
                                                           } for row in scores]),
                                                           mimetype="application/json")
+                
+                # Dashboard request
+                elif format == 'db2':
+                    # If the user is authenticated and has a preference for size, set it
+                    dash_settings = None
+                    if request.user.is_authenticated():
+                        # Obtain the user's dashboard settings
+                        dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
-		# Dashboard request
-		elif format == 'db2':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
-
-		    if not dash_settings:
-			# Give the default
+                    if not dash_settings:
+                        # Give the default
                         dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+                                          'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+                                          'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
 
-		    return render_to_response(
-		     'pagespeed/breakdown-db2.html',
-		      {
-			'title':'Quinico | Pagespeed Breakdown',
-			'date':date,
-			'domain':domain,
-			'url':u_unenc,
-			'strategy':strategy,
-			'scores':scores,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
+                    return render_to_response(
+                        'pagespeed/breakdown-db2.html',
+        		      {
+            			'title':'Quinico | Pagespeed Breakdown',
+            			'date':date,
+            			'domain':domain,
+            			'url':u_unenc,
+            			'strategy':strategy,
+            			'scores':scores,
+            			'dash_settings':dash_settings,
+                        'width':width,
+                        'height':height,
+            		   },
+          		      context_instance=RequestContext(request)
+        		    )
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		   'pagespeed/breakdown.html',
-		   {
-		      'title':'Quinico | Pagespeed Breakdown',
+    	    # Just a standard HTML response is being requested
+            else:
+                return render_to_response(
+        		   'pagespeed/breakdown.html',
+        		   {
+        		      'title':'Quinico | Pagespeed Breakdown',
                       'back_link':back_link,
                       'forward_link':forward_link,
-		      'date':date,
-		      'domain':domain,
-		      'url':u_unenc,
-		      'strategy':strategy,
-		      'scores':scores,
-		      'a_url':a_url,
-		      'db_link2':db_link2,
-		      'json_link':json_link,
-		   },
-		   context_instance=RequestContext(request)
-		)
+        		      'date':date,
+        		      'domain':domain,
+        		      'url':u_unenc,
+        		      'strategy':strategy,
+        		      'scores':scores,
+        		      'a_url':a_url,
+        		      'db_link2':db_link2,
+        		      'json_link':json_link,
+        		   },
+        		   context_instance=RequestContext(request)
+        		)
 
-    # Ok, its not a form submit
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: PagespeedBreakdownForm: %s' % form.errors)
+
+    # Its not a form submit, or its a failed form submit
     else:
         form = PagespeedBreakdownForm()
 
@@ -676,17 +689,17 @@ def history(request):
                 date_to = date_to.strftime("%Y-%m-%d")
                 date_from = date_from.strftime("%Y-%m-%d")
 
-	    # Unquote the url to UTF-8 and then decode
-	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
+    	    # Unquote the url to UTF-8 and then decode
+    	    u_unenc = urllib.unquote(url.encode('utf-8')).decode('utf-8')
 
-	    # Values that we'll export in CSV
-	    headings = ['date','score','numberHosts','numberResources','numberStaticResources','numberCssResources',
-			'totalRequestBytes','textResponseBytes','cssResponseBytes','htmlResponseBytes','imageResponseBytes',
-			'javascriptResponseBytes','otherResponseBytes']
+    	    # Values that we'll export in CSV
+    	    headings = ['date','score','numberHosts','numberResources','numberStaticResources','numberCssResources',
+    			        'totalRequestBytes','textResponseBytes','cssResponseBytes','htmlResponseBytes','imageResponseBytes',
+    			        'javascriptResponseBytes','otherResponseBytes']
 
-	    # Construct the csv link
+            # Construct the csv link
             base_url = 'http://%s/pagespeed/history?domain=%s' % (request.META['HTTP_HOST'],domain)
-	    csv_link = '%s&url=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,url,strategy,date_from,date_to)
+            csv_link = '%s&url=%s&strategy=%s&date_from=%s&date_to=%s&format=csv' % (base_url,url,strategy,date_from,date_to)
 
             # Add time information to the dates and the timezone (use the server's timezone)
             date_from += ' 00:00:00'
@@ -697,50 +710,55 @@ def history(request):
             date_to = datetime.datetime.strptime(date_to, '%Y-%m-%d %H:%M:%S')
             date_to = pytz.timezone(settings.TIME_ZONE).localize(date_to)
 
-	    # Obtain the data
-	    dates = Score.objects.filter(test_id__domain__domain=domain,
-                                         test_id__url__url=u_unenc,
-                                         date__range=[date_from,date_to],
-                                         strategy=strategy
-                                        ).values().order_by('-date')
+    	    # Obtain the data
+    	    dates = Score.objects.filter(test_id__domain__domain=domain,
+                                             test_id__url__url=u_unenc,
+                                             date__range=[date_from,date_to],
+                                             strategy=strategy
+                                            ).values().order_by('-date')
 
 
-	    # Print the page
+    	    # Print the page
 
-	    # If this is a request for special formatting, give it, otherwise give everything
-	    # Dashboard request
-	    if format:
-		# CSV download (there is no template for this)
-		if request.GET['format'] == 'csv':
-		    response = HttpResponse(mimetype='text/csv')
-		    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
-		    writer = csv.writer(response)
-		    writer.writerow(headings)
-		    for row in dates:
-			# Construct the next row
-			wr = []
-			for heading in headings:
-			    wr.append(row[heading])
-			# Add the row    
-			writer.writerow(wr)
-		    return response
+    	    # If this is a request for special formatting, give it, otherwise give everything
+    	    # Dashboard request
+            if format:
+                # CSV download (there is no template for this)
+                if request.GET['format'] == 'csv':
+                    response = HttpResponse(mimetype='text/csv')
+                    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
+                    writer = csv.writer(response)
+                    writer.writerow(headings)
+                    for row in dates:
+                        # Construct the next row
+                        wr = []
+                        for heading in headings:
+                            wr.append(row[heading])
+        			
+                        # Add the row    
+                        writer.writerow(wr)
+                    return response
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		   'pagespeed/history.html',
-		   {
-		      'title':'Quinico | Pagespeed History',
-		      'domain':domain,
-		      'strategy':strategy,
-		      'url':u_unenc,
-		      'dates':dates,
-		      'csv_link':csv_link
-		   },
-		   context_instance=RequestContext(request)
-		)
+    	    # Just a standard HTML response is being requested
+    	    else:
+        		return render_to_response(
+        		   'pagespeed/history.html',
+        		   {
+        		      'title':'Quinico | Pagespeed History',
+        		      'domain':domain,
+        		      'strategy':strategy,
+        		      'url':u_unenc,
+        		      'dates':dates,
+        		      'csv_link':csv_link
+        		   },
+        		   context_instance=RequestContext(request)
+        		)
 
-    # Ok, its not a form submit
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: PagespeedHistoryForm: %s' % form.errors)
+
+    # Its not a form submit, or its a failed form submit
     else:
         form = PagespeedHistoryForm()
 

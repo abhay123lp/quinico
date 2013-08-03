@@ -42,7 +42,7 @@
      <tr>
       <td>Test</td>
       <td>
-       <select class="standard" name="test_id" id="test_id">
+       <select name="test_id" id="test_id">
        {% for test in tests %}
            <option value="{{test.id}}">{{test.domain}}{{test.url}} ({{test.location}})</option>
        {% endfor %}
@@ -53,7 +53,7 @@
      <tr>
       <td>Metric</td>
       <td>
-       <select class="standard" name="metric" id="metric">
+       <select class="standard" name="metric" id="metric" style="width:200px;">
         <option>loadTime</option>
         <option>ttfb</option>
         <option>bytesOut</option>
@@ -76,7 +76,7 @@
         Date from
        </td>
        <td>
-        <input class="input_date" name="date_from" id="date_from" type="text" value="{{date_from}}">
+        <input name="date_from" id="date_from" type="text" value="{{date_from}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -85,7 +85,7 @@
         Date to
        </td>
        <td>
-        <input class="input_date" name="date_to" id="date_to" type="text" value="{{date_to}}">
+        <input name="date_to" id="date_to" type="text" value="{{date_to}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -99,32 +99,19 @@
      <tr>
       <td></td>
       <td>
-       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+       <input id="submit" type="submit" value="submit" style="width:75"/>
       </td>
      </tr>
 
-     {% if form.test_id.errors %}
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-         <br>Test ID Error: {% for error in form.test_id.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_to.errors %}
-         <br>Date To Error: {% for error in form.date_to.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_from.errors %}
-         <br>Date From Error: {% for error in form.date_from.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.metric.errors %}
-         <br>Metric Error: {% for error in form.metric.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.tests_failed.errors %}
-         <br>Failed Tests Error: {% for error in form.tests_failed.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>Format Error: {% for error in form.format.errors %}{{error}}{% endfor %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
      {% endif %}

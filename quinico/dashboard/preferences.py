@@ -102,7 +102,7 @@ class prefs:
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'desktop',
 					        metric)
-                url_list[url_json] = 'graph'
+                url_list[url_json] = 'qimage'
 
                 # Mobile
                 url_json = ps_trend_base_url % (host,
@@ -110,7 +110,7 @@ class prefs:
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'mobile',
                                                 metric)
-                url_list[url_json] = 'graph'
+                url_list[url_json] = 'qimage'
 
         # Also add the piechart page breakdown for every URL
         for url in ps_list:
@@ -119,14 +119,14 @@ class prefs:
                                                 url['domain__domain'],
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'desktop')
-            url_list[url_json] = 'pie'
+            url_list[url_json] = 'qimage'
 
             # Mobile
             url_json = ps_breakdown_base_url % (host,
                                                 url['domain__domain'],
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'mobile')
-            url_list[url_json] = 'pie'
+            url_list[url_json] = 'qimage'
 
         return url_list
 
@@ -148,7 +148,7 @@ class prefs:
         for metric in metrics:
             for url in wpt_trend_list:
                 url_json = wpt_trend_base_url % (host,url['id'],metric)
-                url_list[url_json] = 'graph'
+                url_list[url_json] = 'qimage'
 
         return url_list
 

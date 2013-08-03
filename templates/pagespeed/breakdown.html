@@ -21,63 +21,64 @@
 
 {% block content %}
 
-<b><i>PAGESPEED SUMMARY REPORT</i></b>
-
-<br>
-<br>
-
- <table class="tiny_no_border">
-  <tr>
-   <td>
-    Date:<b>{{date}}</b>
-   </td>
-  </tr>
-  <tr>
-   <td height="15">
-   </td>
-  </tr>
-  <tr>
-   <td>
-    <a href="{{a_url}}" class="submit-button" id="switch" name="switch">Switch Strategy</a>
-    <script>
-    $("#switch").button();
-    </script>
-   </td>
-  </tr>
- </table>
-
-<br>
-
 <script type="text/javascript">
-         google.load("visualization", "1", {packages:["corechart"]});
-         google.setOnLoadCallback(drawChart);
-         function drawChart() {
-            var data = new google.visualization.DataTable();
-            data.addColumn('string', 'Value');
-            data.addColumn('number', 'Count');
-            data.addRows([
-   
+  $(function () {
+      $('#graph').highcharts({
+          chart: {
+              plotBackgroundColor: null,
+              plotBorderWidth: null,
+              plotShadow: false
+          },
+          title: {
+              text: '{{domain}}{{url}}'
+          },
+          subtitle: {
+              text: 'Page Breakdown',
+              x: -20
+          },
+          tooltip: {
+            pointFormat: '{series.name}: <b>{point.y}</b>'
+          },
+          plotOptions: {
+              pie: {
+                  allowPointSelect: true,
+                  cursor: 'pointer',
+                  dataLabels: {
+                      enabled: true,
+                      color: '#000000',
+                      connectorColor: '#000000',
+                      format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                  }
+              }
+          },
+          series: [{
+              type: 'pie',
+              name: 'Bytes',
+              data: [
+                  
                ['javascript',{{scores.0.javascriptResponseBytes__avg}}],
                ['image',{{scores.0.imageResponseBytes__avg}}],
                ['html',{{scores.0.htmlResponseBytes__avg}}],
                ['text',{{scores.0.textResponseBytes__avg}}],
                ['css',{{scores.0.cssResponseBytes__avg}}],
                ['other',{{scores.0.otherResponseBytes__avg}}],
-      
-           ]);
 
-            var options = {
-               'title':'{{domain}}{{url}} | {{strategy}}',
-  	    };
-	
-            var chart = new google.visualization.PieChart(document.getElementById('chart_div'));
-            var formatter = new google.visualization.NumberFormat(
-               {fractionDigits:'0'}
-            );
-            formatter.format(data,1); 
-            chart.draw(data, options);
-         }
-      </script>
-      <div id="chart_div" style="width: 750px; height: 425px;"></div>
+              ]
+          }]
+      });
+});
+
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" class="graph_container"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
+

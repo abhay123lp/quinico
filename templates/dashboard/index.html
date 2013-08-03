@@ -65,7 +65,7 @@
       if (slot == slots.length) {
          slot = 0;
       }
-      
+      http://dev.quinico.com/pagespeed/trends?domain=brasil.babycenter.com&url=%2F&strategy=mobile&metric=numberStaticResources&format=db
       // Send to the correct switcher
       if (url_type[url_list[url]] == 'graph') {
          switchGraph(url_list[url],slots[slot]);
@@ -75,6 +75,10 @@
          switchHTML(url_list[url],slots[slot]);
       } else if (url_type[url_list[url]] == 'image') {
          switchImage(url_list[url],slots[slot],{{dash_settings.0.width}},{{dash_settings.0.height}});
+      } else if (url_type[url_list[url]] == 'qimage') {
+         // Add the custom size and step to the URLs
+         sized_url = url_list[url] + '&width={{dash_settings.0.width}}&height={{dash_settings.0.height}}&step=2'
+         switchQImage(sized_url,slots[slot]);
       }
 
       // Increment the counters
@@ -90,13 +94,13 @@
 
    <table style="border-collapse:collapse;">
    {% if dash_settings.0.slots == '2x2'%}
-    <tr style="border:3px solid #1c94c4;">
-     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot1"></div></td>
-     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot2"></div></td>
+    <tr style="border:3px solid black;">
+     <td style="border:3px solid black;padding:1px 1px 1px 1px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><iframe id="slot1" frameborder="0" scrolling="no" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"></iframe></td>
+     <td style="border:3px solid black;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><iframe id="slot2" frameborder="0" scrolling="no" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"></iframe></td>
     </tr>
-    <tr style="border:3px solid #1c94c4;">
-     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot3"></div></td>
-     <td style="border:3px solid #1c94c4;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><div id="slot4"></div></td>
+    <tr style="border:3px solid black">
+     <td style="border:3px solid black;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><iframe id="slot3" frameborder="0" scrolling="no" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"></iframe></td>
+     <td style="border:3px solid black;padding:15px 15px 15px 15px;" align="center" valign="middle" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"><iframe id="slot4" frameborder="0" scrolling="no" width="{{dash_settings.0.width}}" height="{{dash_settings.0.height}}"></iframe></td>
     </tr>
    {% else %}{% if dash_settings.0.slots == '3x3' %}
     <tr style="border:3px solid #1c94c4;">
