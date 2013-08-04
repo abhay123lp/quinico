@@ -21,10 +21,6 @@
 
 {% block content %}
 
-<b><i>KEYWORD TRENDS</i></b>
-
-<br>
-<br>
 <script type="text/javascript">
 
    // Dropdown population
@@ -60,7 +56,7 @@
 
 
    <form name="kw_select" id="kw_select" action="/keyword_rank/trends" method="get" accept-charset="utf-8" enctype="application/x-www-form-urlencoded">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Domain</td>
@@ -108,7 +104,7 @@
         Date from
        </td>
        <td>
-        <input class="input_date" name="date_from" id="date_from" type="text" value="{{date_from}}">
+        <input name="date_from" id="date_from" type="text" value="{{date_from}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -117,7 +113,7 @@
         Date to
        </td>
        <td>
-        <input class="input_date" name="date_to" id="date_to" type="text" value="{{date_to}}">
+        <input name="date_to" id="date_to" type="text" value="{{date_to}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -128,34 +124,18 @@
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.date_to.errors %}
-         <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_from.errors %}
-         <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.domain.errors %}
-         <br>{% for error in form.domain.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.keyword.errors %}
-         <br>{% for error in form.keyword.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.gl.errors %}
-         <br>{% for error in form.gl.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.googlehost.errors %}
-         <br>{% for error in form.googlehost.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
 
     </table>

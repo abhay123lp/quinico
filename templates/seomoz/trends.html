@@ -21,76 +21,83 @@
 
 {% block content %}
 
-<b><i>SEO TRENDS REPORT</i></b>
 
-<br>
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{url}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'SEOMoz: {{metric_name}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [{% for row in trends %}{% if forloop.last %}'{{row.date|date:"m-d"}}'{% else %}'{{row.date|date:"m-d"}}',{% endif %}{% endfor %}],
+                labels: {
+                    rotation: 290,
+                    y: 20
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric_name}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Average',
+                data: [
 
-<table border="0">
- <tr>
-  <td align="center">
-   <script type="text/javascript">
-    google.load("visualization","1",{packages:["corechart"]});
-    google.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string','Date');
-        data.addColumn('number','Value');
-        data.addRows([
+                {# This is very ugly - need to find a way to name the __avg value so we can call it out directly #}
+                {% for row in trends %}
+                    {% if forloop.last %}
+                        {% for key,value in row.items %}
+                            {% if key != 'date' %}
+                              {{value}}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for key,value in row.items %}
+                            {% if key != 'date' %}
+                              {{value}},
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
 
-        {% for row in trends %}
-            {% if forloop.first %}
-              {% for key,value in row.items %}
-                {% if forloop.first %}
-                  ['{{value|date:"Y-m-d"}}',
-                {% else %}
-                  {{value}}]
-                {% endif %}
-              {% endfor %}
-            {% else %}
-              {% for key,value in row.items %}
-                {% if forloop.first %}
-                  ,['{{value|date:"Y-m-d"}}',
-                {% else %}
-                  {{value}}]
-                {% endif %}
-              {% endfor %}
-            {% endif %}
-        {% endfor %}
 
-        ]);
+                ],
+                color: '#1c94c4'
+            }]
+        });
+});
 
-        var options = {
-            'title':'{{url}} | {{metric_name}}',
-            'titleTextStyle':{fontSize:'14'},
-            'width':750,
-            'height':375,
-            'fontSize':10,
-            'hAxis':{textPosition:'out'},
-            'hAxis':{slantedText:'true'},
-            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
-            'curveType':'function',
-            'pointSize':3
-        };
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
 
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        var formatter = new google.visualization.NumberFormat(
 
-        {% if metric_represent == 'integer' %}
-         {fractionDigits:'0'}
-        {% else %}
-         {% if metric_represent == 'decimal' %}
-         {fractionDigits:'1'}
-         {% endif %}
-        {% endif %}
-
-        );
-        formatter.format(data,1);
-        chart.draw(data,options);
-    }
-   </script>
-   <div id="chart_div" style="width:750px; height:375px;"></div>
-   </td>
-  </tr>
-</table>
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" class="graph_container"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}

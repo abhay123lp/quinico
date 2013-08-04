@@ -21,12 +21,7 @@
 
 {% block content %}
 
-<b><i>KEYWORD SUMMARY</i></b>
-
-<br>
-<br>
-
-  
+ 
   <script>
    $(function() {
 
@@ -38,7 +33,7 @@
 
 
    <form name="kw_select" id="kw_select" action="/keyword_rank/dashboard" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Domain</td>
@@ -80,19 +75,18 @@
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.domain.errors %}
-         <br>{% for error in form.domain.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
 
     </table>

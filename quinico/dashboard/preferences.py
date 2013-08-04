@@ -57,7 +57,7 @@ class prefs:
                                             row['domain__googlehost'],
                                             urllib.urlencode({'keyword':row['keyword__keyword'].encode('utf-8')})
                                            )
-            url_list[url] = 'graph'
+            url_list[url] = 'qimage'
 
         # Keyword Summary URLs.  There are two types
         # Example 1: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db&gl=com&googlehost=google.com  (json)
@@ -178,7 +178,7 @@ class prefs:
         for url in seo_trend_list:
             for metric in metrics:
                 url_json = seo_trend_base_url % (host,urllib.urlencode({'url':url['url']}),metric)
-                url_list[url_json] = 'graph'
+                url_list[url_json] = 'qimage'
 
         return url_list
 

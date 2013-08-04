@@ -22,79 +22,75 @@
 {% block content %}
 
 
-<b><i>KEYWORD TRENDS REPORT</i></b>
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{domain_name}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Google Keyword Rank: {{keyword_name|escapejs}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [{% for item in ranks %}{% if forloop.last %}'{{item.date|date:"m-d"}}'{% else %}'{{item.date|date:"m-d"}}',{% endif %}{% endfor %}],
+                labels: {
+                    rotation: 290,
+                    y: 20
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric_name}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Average',
+                data: [{% for item in ranks %}{% if forloop.last %}{{item.rank}}{% else %}{{item.rank}},{% endif %}{% endfor %}],
+                color: '#1c94c4'
+            }]
+        });
+});
 
-<br>
-<br>
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
 
- <table class="tiny_no_border">
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" class="graph_container"></div>
+    <br><br>
+  </div>
+</div>
+
+<div class="spacer_medium"></div>
+
+<b>Top Results (last day)</b>
+<div class="spacer_micro"></div>
+<table class="history responsive">
+  {% for item in top_ten %}
   <tr>
-   <td>Geolocation:<b>{{gl}}</b></td>
-   <td width="10"></td>
-   <td>Google Domain:<b>{{googlehost}}</b></td>
-   <td width="10"></td>
+    <td align="center">{{item.rank}}</td>
+    <td>{{item.url__url}}</td>
   </tr>
- </table>
-
-<br>
-
-<table border="0">
- <tr>
-  <td align="center">
-   <script type="text/javascript">
-    google.load("visualization","1",{packages:["corechart"]});
-    google.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string','Date');
-        data.addColumn('number','Value');
-        data.addRows([
-
-        {% for item in ranks %}
-         {% if forloop.first %}
-            ['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
-         {% else %}
-            ,['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
-         {% endif %}
-        {% endfor %}
-
-        ]);
-
-        var options = {
-            'title':'{{domain_name}} | {{keyword_name|escapejs}}',
-            'titleTextStyle':{fontSize:'14'},
- 	          'width':750,
-            'height':375,
-            'fontSize':10,
-            'hAxis':{textPosition:'out'},
-            'hAxis':{slantedText:'true'},
-            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
-            'curveType':'function',
-            'pointSize':3
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
-        formatter.format(data,1); 
-        chart.draw(data,options);
-    }
-   </script>
-   <div id="chart_div" style="width:750px; height:375px;"></div>
-   </td>
-  </tr>
-  <tr>
-   <td align="center">
-     <table class="standard_l" width="600">
-      <th colspan="2">Top Results (last day)</th>
-      {% for item in top_ten %}
-      <tr><td align="center">{{item.rank}}</td><td>{{item.url__url}}</td></tr>
-      {% endfor %} 
-     </table>
-   </td>
- </tr>
+  {% endfor %} 
 </table>
 
-
-
 {% endblock %}
-

@@ -1,56 +1,104 @@
-{% extends "base/base.json" %}
-{% block content %}
+{% extends "base/base-graph.html" %}
+
 {% comment %}
-The for loop below is more complicated than necessary but its not possible
-to alias a column in the DJANGO ORM and the template does not know which
-value we are looking for so we have to do it this way
+
+ Copyright 2013 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
 {% endcomment %}
 
 
-{
- "data":
-  {
-    "cols":
-     [
-       {"label":"Date","type":"string"},
-       {"label":"Value","type":"number"}
-     ],
-    "rows":[
+{% block content %}
 
-     {% for row in trends %}
-      {% if forloop.first %}
-       {% for key,value in row.items %}
-        {% if forloop.first %}
-         {"c":[{"v":"{{value|date:"Y-m-d"}}"},
-        {% else %}
-         {"v":{{value}}}]}
-        {% endif %}
-       {% endfor %}
-      {% else %}
-       {% for key,value in row.items %}
-        {% if forloop.first %}
-         ,{"c":[{"v":"{{value|date:"Y-m-d"}}"},
-        {% else %}
-         {"v":{{value}}}]}
-        {% endif %}
-       {% endfor %}
-      {% endif %}
-     {% endfor %}
-  
-]},
 
- "options":
-   {
-    "title":"SEO: {{url}} | {{metric_name}}",
-    "width":"{{dash_settings.0.width}}",
-    "height":"{{dash_settings.0.height}}",
-    "fontSize":"{{dash_settings.0.font}}",
-    "hAxis":{"textPosition":"out","slantedText":"true"},
-    "series":{"0":{"color":"#1c94c4","visibleInLegend":"false"}},
-    "curveType":"function",
-    "pointSize":"3"
-   }
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{url}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'SEOMoz: {{metric_name}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [{% for row in trends %}{% if forloop.last %}'{{row.date|date:"m-d"}}'{% else %}'{{row.date|date:"m-d"}}',{% endif %}{% endfor %}],
+                labels: {
+                    rotation: 290,
+                    y: 20,
+                    {% if step %}step: {{step}}{% endif %}
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric_name}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Average',
+                data: [
 
-}
+                {# This is very ugly - need to find a way to name the __avg value so we can call it out directly #}
+                {% for row in trends %}
+                    {% if forloop.last %}
+                        {% for key,value in row.items %}
+                            {% if key != 'date' %}
+                              {{value}}
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        {% for key,value in row.items %}
+                            {% if key != 'date' %}
+                              {{value}},
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                {% endfor %}
+
+
+                ],
+                color: '#1c94c4'
+            }]
+        });
+});
+
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" style="margin: 0 auto; {% if width %}{% if height %}width: {{width}}px;height: {{height}}px;{% endif %}{% endif %}"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}

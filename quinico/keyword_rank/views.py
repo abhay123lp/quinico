@@ -110,6 +110,9 @@ def trends(request):
             format = form.cleaned_data['format']
             gl = form.cleaned_data['gl']
             googlehost = form.cleaned_data['googlehost']
+            width = form.cleaned_data['width']
+            height = form.cleaned_data['height']
+            step = form.cleaned_data['step']
 
             # If the from or to dates are missing, set them b/c this is probably
             # an API or DB request (just give the last 30 days of data)
@@ -184,9 +187,11 @@ def trends(request):
                         'domain_name':domain,
                         'keyword_name':keyword,
                         'ranks':ranks,
-                        'dash_settings':dash_settings
+                        'dash_settings':dash_settings,
+                        'width':width,
+                        'height':height,
+                        'step':step
                       },
-                      mimetype='application/json',
                       context_instance=RequestContext(request)
                     )
 
@@ -219,6 +224,10 @@ def trends(request):
                   },
                   context_instance=RequestContext(request)
                 )
+
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: KeywordTrendForm: %s' % form.errors)
 
     # Ok, its not a form submit
     else:

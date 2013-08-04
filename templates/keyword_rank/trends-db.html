@@ -1,4 +1,4 @@
-{% extends "base/base.json" %}
+{% extends "base/base-graph.html" %}
 
 {% comment %}
 
@@ -21,43 +21,64 @@
 
 {% block content %}
 
-{
- "data":
-  {
-    "cols":
-     [
-       {"label":"Date","type":"string"},
-       {"label":"Value","type":"number"}
-     ],
-    "rows":[
 
- {% for item in ranks %}
-  {% if forloop.first %}
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{domain_name}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Google Keyword Rank: {{keyword_name|escapejs}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [{% for item in ranks %}{% if forloop.last %}'{{item.date|date:"m-d"}}'{% else %}'{{item.date|date:"m-d"}}',{% endif %}{% endfor %}],
+                labels: {
+                    rotation: 290,
+                    y: 20,
+                    {% if step %}step: {{step}}{% endif %}
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric_name}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Average',
+                data: [{% for item in ranks %}{% if forloop.last %}{{item.rank}}{% else %}{{item.rank}},{% endif %}{% endfor %}],
+                color: '#1c94c4'
+            }]
+        });
+});
 
-    {"c":[{"v":"{{item.date|date:"Y-m-d"}}"},{"v":{{item.rank}}}]}
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
 
-  {% else %}
 
-   ,{"c":[{"v":"{{item.date|date:"Y-m-d"}}"},{"v":{{item.rank}}}]}
-
-  {% endif %}
-  {% endfor %}
-
-]},
-
- "options":
-   {
-    "title":"KEYWORD RANK: {{domain_name}} | {{keyword_name|escapejs}}",
-    "width":"{{dash_settings.0.width}}",
-    "height":"{{dash_settings.0.height}}",
-    "fontSize":"{{dash_settings.0.font}}",
-    "hAxis":{"textPosition":"out","slantedText":"true"},
-    "series":{"0":{"color":"#1c94c4","visibleInLegend":"false"}},
-    "curveType":"function",
-    "pointSize":"3"
-   }
-
-}
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" style="margin: 0 auto; {% if width %}{% if height %}width: {{width}}px;height: {{height}}px;{% endif %}{% endif %}"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
-

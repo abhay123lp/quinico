@@ -21,11 +21,6 @@
 
 {% block content %}
 
-<b><i>SEO TRENDS</i></b>
-
-<br>
-<br>
-
   <script>
    // Date Pickers and Submit
    $(function() {
@@ -40,21 +35,10 @@
       $("#submit").button();
    });
   </script>
-
-  
-  <script>
-   // Submit
-   $(function() {
-
-      //Submit
-      $("#submit").button();
-   });
-  </script>
-
-
+ 
 
    <form name="seo_select" id="seo_select" action="/seomoz/trends" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Url</td>
@@ -116,7 +100,7 @@
         Date from
        </td>
        <td>
-        <input class="input_date" name="date_from" id="date_from" type="text" value="{{date_from}}">
+        <input name="date_from" id="date_from" type="text" value="{{date_from}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -125,7 +109,7 @@
         Date to
        </td>
        <td>
-        <input class="input_date" name="date_to" id="date_to" type="text" value="{{date_to}}">
+        <input name="date_to" id="date_to" type="text" value="{{date_to}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -136,28 +120,18 @@
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.date_to.errors %}
-         <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_from.errors %}
-         <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.metric.errors %}
-         <br>{% for error in form.metric.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.url.errors %}
-         <br>{% for error in form.url.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
     </table>
    </form>

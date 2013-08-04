@@ -22,35 +22,17 @@
 {% block content %}
 {% load humanize %}
 
-<b><i>SEO METRICS DASHBOARD REPORT</i></b>
-
-<br>
-<br>
-
- <table class="tiny_no_border">
+ <table class="history">
   <tr>
    <td>Target:<b>{{url}}</b></td>
    <td width="10"></td>
    <td>Date:<b>{{date}}</b></td>
    <td>Account Type:<b>{{account_type.0.config_value}}</b></td>
   </tr>
-  <tr>
-   <td height="25">
-   </td>
-  </tr>
-  <tr>
-   <td colspan="4">
-    <b>** Click through any number below to view long term trends **</b>
-   </td>
-  </tr>
  </table>
 
 <br>
 
-<table>
- 
- <tr>
-  <td align="center">
 
   {% comment %}
    Paid accounts have much more data than free accounts.  See what type of account the user
@@ -61,10 +43,10 @@
   {% comment %}
    Its a free account so only show minimal information
   {% endcomment %}
-  <table class="standard">
-   <tr>
-    <th colspan="3">LINK METRICS</td>
-   </tr>
+  <b>LINK METRICS</b>
+  <div class="spacer_micro"></div>
+  <table class="history responsive">
+
    <tr>
     <th>Url</th>
       <th width="100">{% for row in descriptions %}{% if row.metric == 'uid' %}<span title="{{row.full_description}}"><u>uid</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
@@ -91,11 +73,9 @@
     {% comment %}
      Its a paid account so show everything
     {% endcomment %}
-
-    <table class="standard">
-     <tr>
-      <th colspan="13">LINK METRICS</td>
-     </tr>
+    <b>LINK METRICS</b>
+    <div class="spacer_micro"></div>
+    <table class="history responsive">
      <tr>
       <th>Url</th>
       <th width="100">{% for row in descriptions %}{% if row.metric == 'uid' %}<span title="{{row.full_description}}"><u>uid</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
@@ -152,15 +132,11 @@
     </font></b>
    {% endif %}
   {% endif %}
-  </td>
- </tr>
 
- <tr>
-  <td height="25">
- </tr>  
 
- <tr>
-  <td align="center">
+<div class="spacer_medium"></div>
+
+
   {% comment %}
    Paid accounts have much more data than free accounts.  See what type of account the user
    claims to have and show them the appropriate data
@@ -170,10 +146,10 @@
   {% comment %}
    Its a free account so only show minimal information
   {% endcomment %}
-  <table class="standard">
-   <tr>
-    <th colspan="7">RANK METRICS</td>
-   </tr>
+  <b>RANK METRICS</b>
+  <div class="spacer_micro"></div>
+  <table class="history responsive">
+
    <tr>
     <th>Url</th>
     <th width="100">{% for row in descriptions %}{% if row.metric == 'fmrp' %}<span title="{{row.full_description}}"><u>fmrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
@@ -207,25 +183,24 @@
      Its a paid account so show everything
     {% endcomment %}
 
-    <table class="standard">
-     <tr>
-      <th colspan="14">RANK METRICS</td>
-     </tr>
+  <b>RANK METRICS</b>
+  <div class="spacer_micro"></div>
+  <table class="history responsive">
      <tr>
       <th>Url</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'fmrp' %}<span title="{{row.full_description}}"><u>fmrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'umrp' %}<span title="{{row.full_description}}"><u>umrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'upa' %}<span title="{{row.full_description}}"><u>upa</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'pda' %}<span title="{{row.full_description}}"><u>pda</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'pmrp' %}<span title="{{row.full_description}}"><u>pmrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'utrp' %}<span title="{{row.full_description}}"><u>utrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'ftrp' %}<span title="{{row.full_description}}"><u>ftrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'ptrp' %}<span title="{{row.full_description}}"><u>ptrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'uemrp' %}<span title="{{row.full_description}}"><u>uemrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'fejp' %}<span title="{{row.full_description}}"><u>fejp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'pejp' %}<span title="{{row.full_description}}"><u>pejp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'fjp' %}<span title="{{row.full_description}}"><u>fjp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
-    <th width="100">{% for row in descriptions %}{% if row.metric == 'pjp' %}<span title="{{row.full_description}}"><u>pjp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'fmrp' %}<span title="{{row.full_description}}"><u>fmrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'umrp' %}<span title="{{row.full_description}}"><u>umrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'upa' %}<span title="{{row.full_description}}"><u>upa</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'pda' %}<span title="{{row.full_description}}"><u>pda</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'pmrp' %}<span title="{{row.full_description}}"><u>pmrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'utrp' %}<span title="{{row.full_description}}"><u>utrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'ftrp' %}<span title="{{row.full_description}}"><u>ftrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'ptrp' %}<span title="{{row.full_description}}"><u>ptrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'uemrp' %}<span title="{{row.full_description}}"><u>uemrp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'fejp' %}<span title="{{row.full_description}}"><u>fejp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'pejp' %}<span title="{{row.full_description}}"><u>pejp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'fjp' %}<span title="{{row.full_description}}"><u>fjp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
+      <th width="100">{% for row in descriptions %}{% if row.metric == 'pjp' %}<span title="{{row.full_description}}"><u>pjp</u></span><br>{{row.column_description}}{% endif %}{% endfor %}</th>
      </tr>
 
      <tr>
@@ -270,21 +245,8 @@
     </font></b>
    {% endif %}
   {% endif %}
-  </td>
- </tr>
-
- <tr>
-  <td height="25">
- </tr>  
-
-</table>
-
- <br>
- <br>
 
  <a href="http://www.seomoz.org"><img src="/html/images/seomoz.png"></a>
-
- <br>
 
 
 

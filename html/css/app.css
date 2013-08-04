@@ -96,13 +96,16 @@ table.index tr.even, table.index tr.alt, table.index tr:nth-of-type(even) {
 }
 /* History tables */
 table.history tr, table.history td {
-   font-size: 11px;
+   font-size: 12px;
 }
 
 
 
 /* DIVS AND SPACERS */
 /* Spacer rows when more space is required b/t rows in the layout */
+div.spacer_micro {
+   height: 10px;
+}
 div.spacer_small {
    height: 20px;
 }

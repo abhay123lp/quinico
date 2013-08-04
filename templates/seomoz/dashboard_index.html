@@ -21,11 +21,6 @@
 
 {% block content %}
 
-<b><i>SEO DASHBOARD</i></b>
-
-<br>
-<br>
-
    <script>
     // Date Pickers and Submit
     $(function() {
@@ -39,7 +34,7 @@
    </script>
 
    <form name="seo_select" id="seo_select" action="/seomoz/dashboard" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Url</td>
@@ -57,7 +52,7 @@
        Date
       </td>
       <td>
-       <input class="input_date" name="date" id="date" type="text" value="{{today.date|date:'Y-m-d'}}">
+       <input name="date" id="date" type="text" value="{{today.date|date:'Y-m-d'}}" placeholder="Enter date" class="date_box">
       </td>
      </tr>
 
@@ -68,10 +63,11 @@
        Runs
       </td>
       <td>
-       <textarea class="textarea_recent">
-{% for date in dates %}{{date.date|date:'Y-m-d'}}
-{% endfor %}
-       </textarea>
+
+        {% for date in dates %}
+        {{date.date|date:'Y-m-d'}}<br>
+        {% endfor %}
+
       </td>
      </tr>
 
@@ -82,29 +78,21 @@
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.date.errors %}
-         <br>{% for error in form.date.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.url.errors %}
-         <br>{% for error in form.url.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
     </table>
 
    </form>
-
-   <div id="cal_div" STYLE="position:absolute;visibility:hidden;background-color:white;layer-background-color:white;"></div>
-
-
 
 {% endblock %}

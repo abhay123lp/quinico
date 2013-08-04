@@ -64,6 +64,9 @@ def trends(request):
             date_to = form.cleaned_data['date_to']
             date_from = form.cleaned_data['date_from']
             format = form.cleaned_data['format']
+            width = form.cleaned_data['width']
+            height = form.cleaned_data['height']
+            step = form.cleaned_data['step']
 
             # If the from or to dates are missing, set them b/c this is probably
             # an API or DB request (just give the last 30 days of data)
@@ -72,7 +75,7 @@ def trends(request):
                 now = datetime.datetime.today()
                 date_to = now.strftime("%Y-%m-%d")
 
-                # Move back 180 days
+                # Move back 180 days which should give us 6-10 data points
                 then = datetime.timedelta(days=180)
                 date_from = now - then
                 date_from = date_from.strftime("%Y-%m-%d")
@@ -122,9 +125,11 @@ def trends(request):
                         'url':url,
                         'metric_name':metric_details[0]['column_description'],
                         'trends':trends,
-                        'dash_settings':dash_settings
+                        'dash_settings':dash_settings,
+                        'width':width,
+                        'height':height,
+                        'step':step
                       },
-                      mimetype='application/json',
                       context_instance=RequestContext(request)
                     )
 
@@ -155,6 +160,10 @@ def trends(request):
                   context_instance=RequestContext(request)
                 )
         
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: SEOTrendForm: %s' % form.errors)
+
     # Ok, its not a form submit
     else:
         form = SEOTrendForm()
