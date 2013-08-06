@@ -68,11 +68,11 @@ class prefs:
         for row in keyword_domain_list:
             # First the html one
             url_html = keyword_summary_base_url % (host,row['domain'],'',row['gl'],row['googlehost'])
-            url_list[url_html] = 'graph'
+            url_list[url_html] = 'qimage'
 
             # Now the json one
             url_json = keyword_summary_base_url % (host,row['domain'],1,row['gl'],row['googlehost'])
-            url_list[url_json] = 'html'
+            url_list[url_json] = 'qimage'
 
         return url_list
 

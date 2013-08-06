@@ -105,6 +105,25 @@ class KeywordDashboardForm(forms.Form):
     gl = forms.CharField()
     googlehost = forms.CharField()
     format = FormatField()
+    width = forms.IntegerField(required=False)
+    height = forms.IntegerField(required=False)
+    step = forms.IntegerField(required=False)
+
+    # Override the form clean method - there is some special logic to validate 
+
+    def clean(self):
+        cleaned_data = super(KeywordDashboardForm, self).clean()
+        width = cleaned_data.get('width')
+        height = cleaned_data.get('height')
+
+        if width and not height:
+            self._errors["height"] = self.error_class(['You must define a width and height'])
+        
+        if height and not width:
+            self._errors["width"] = self.error_class(['You must define a width and height'])
+        
+        # Return the full collection of cleaned data
+        return cleaned_data
 
 
 class UploadForm(forms.Form):

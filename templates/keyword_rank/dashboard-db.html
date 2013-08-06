@@ -1,4 +1,4 @@
-{% extends "base/base.json" %}
+{% extends "base/base-graph.html" %}
 
 {% comment %}
 
@@ -21,44 +21,91 @@
 
 {% block content %}
 
-{
- "data":
-  {
-    "cols":
-     [
-       {"label":"Date","type":"string"},
-       {"label":"Value","type":"number"}
-     ],
-    "rows":[
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 75
+            },
+            title: {
+                text: 'Keyword Rank, 1st Page Rankings: {{domain}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Geolocation:{{gl}}, Google Host:{{googlehost}}',
+                x: -20
+            },
+            xAxis: {
+                categories: [
 
- {% for item in first_page reversed %}
+                 {% for item in first_page reversed%}
+                  {% if forloop.last %}
+                   {% for date,value in item.items %}
+                     '{{date}}'
+                   {% endfor %}
 
-  {% if forloop.first %}
-   {% for date,value in item.items %}
-     {"c":[{"v":"{{date}}"},{"v":{{value}}}]}
-   {% endfor %}
-  {% else %}
-   {% for date,value in item.items %}
-     ,{"c":[{"v":"{{date}}"},{"v":{{value}}}]}
-   {% endfor %}
-  {% endif %}
- {% endfor %}
+                  {% else %}
+                   {% for date,value in item.items %}
+                     '{{date}}',
+                   {% endfor %}
+                  {% endif %}
+                 {% endfor %}
 
-]},
+                ],
+                labels: {
+                    rotation: 290,
+                    y: 35,
+                    {% if step %}step: {{step}}{% endif %}
+                }
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Count',
+                data: [
+                 {% for item in first_page reversed%}
+                  {% if forloop.last %}
+                   {% for date,value in item.items %}
+                     {{value}}
+                   {% endfor %}
 
- "options":
-   {
-    "title":"KEYWORD RANK (1st page) | {{domain}} | {{gl}},{{googlehost}}",
-    "width":"{{dash_settings.0.width}}",
-    "height":"{{dash_settings.0.height}}",
-    "fontSize":"{{dash_settings.0.font}}",
-    "hAxis":{"textPosition":"out","slantedText":"true"},
-    "series":{"0":{"color":"#1c94c4","visibleInLegend":"false"}},
-    "curveType":"function",
-    "pointSize":"3"
-   }
+                  {% else %}
+                   {% for date,value in item.items %}
+                     {{value}},
+                   {% endfor %}
+                  {% endif %}
+                 {% endfor %}
 
-}
+                ],
+                color: '#1c94c4'
+            }]
+        });
+});
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" style="margin: 0 auto; {% if width %}{% if height %}width: {{width}}px;height: {{height}}px;{% endif %}{% endif %}"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
 
