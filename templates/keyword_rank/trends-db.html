@@ -62,7 +62,7 @@ $(function () {
                 borderWidth: 0
             },
             series: [{
-                name: 'Average',
+                name: 'Rank',
                 data: [{% for item in ranks %}{% if forloop.last %}{{item.rank}}{% else %}{{item.rank}},{% endif %}{% endfor %}],
                 color: '#1c94c4'
             }]

@@ -320,13 +320,21 @@ def dashboard(request):
 	    # Setup a lookup table for the up/down/unch dates
 	    updown_dates = []
 
-	    # Setup the dates that we'll check ranks for
+	    # Setup the dates that we'll check ranks for - there can be spans here if desired
+        # but the first day must be 0 (today) because we store special data for this one
+        # including the rank on this day and the URL.
 	    numbers = [
 		     0,	# Today
 		     1,	# Yesterday
 		     2,	# Two days ago
-		     7,	# Seven days ago
-		     14	# Fourteen days ago
+		     3,	# Seven days ago
+		     4,	# Fourteen days ago
+             5, # Today
+             6, # Yesterday
+             7, # Two days ago
+             8, # Seven days ago
+             9, # Fourteen days ago
+             30 # Today
 		    ]
 
 	    # Run through the dates and compile the data

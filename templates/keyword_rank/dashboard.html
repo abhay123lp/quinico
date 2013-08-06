@@ -21,134 +21,157 @@
 
 {% block content %}
 
- <table class="history">
-  <tr>
-   <td style="text-align:left;">Target:<b>{{domain}}</b></td>
-   <td width="10"></td>
-   <td style="text-align:left;">Keywords:<b>{{keyword_count}}</b></td>
-  </tr>
-  <tr>
-   <td style="text-align:left;">Search Country:<b>{{gl}}</b></td>
-   <td width="10"></td>
-   <td style="text-align:left;">Google Domain:<b>{{googlehost}}</b></td>
-  </tr>
- </table>
-
-<br>
-<br>
 
 <script type="text/javascript">
-    google.load("visualization","1",{packages:["corechart"]});
-    google.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string','Date');
-        data.addColumn('number','Value');
-        data.addRows([
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 60
+            },
+            title: {
+                text: 'First Page Rankings',
+                x: -20 //center
+            },
+            xAxis: {
+                categories: [
 
- {% for item in first_page reversed%}
+                 {% for item in first_page reversed%}
+                  {% if forloop.last %}
+                   {% for date,value in item.items %}
+                     '{{date}}'
+                   {% endfor %}
 
-  {% if forloop.first %}
-   {% for date,value in item.items %}
-     ['{{date}}',{{value}}]
-   {% endfor %}
+                  {% else %}
+                   {% for date,value in item.items %}
+                     '{{date}}',
+                   {% endfor %}
+                  {% endif %}
+                 {% endfor %}
 
-  {% else %}
-   {% for date,value in item.items %}
-     ,['{{date}}',{{value}}]
-   {% endfor %}
-  {% endif %}
- {% endfor %}
-     ]);
+                ],
+                labels: {
+                    rotation: 290,
+                    y: 30
+                }
+            },
+            yAxis: {
+                title: {
+                    text: '{{metric_name}}'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'Count',
+                data: [
+                 {% for item in first_page reversed%}
+                  {% if forloop.last %}
+                   {% for date,value in item.items %}
+                     {{value}}
+                   {% endfor %}
 
-        var options = {
-            'title':'First Page Rankings',
-            'titleTextStyle':{fontSize:'14'},
-            'width':400,
-            'height':300,
-            'fontSize':10,
-            'hAxis':{textPosition:'out'},
-            'hAxis':{slantedText:'true'},
-            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
-            'curveType':'function',
-            'pointSize':3
-        };
+                  {% else %}
+                   {% for date,value in item.items %}
+                     {{value}},
+                   {% endfor %}
+                  {% endif %}
+                 {% endfor %}
 
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
-        formatter.format(data,1);
-        chart.draw(data,options);
-    }
+                ],
+                color: '#1c94c4'
+            }]
+        });
+});
 </script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
 
 
-<table>
- <tr>
-  <td>
-
-   <table class="index">
+<div class="row">
+  <div class="large-4 columns">
+    <div class="row">
+      <div class="large-12 columns">
+        <table class="history">
+        <tr>
+         <td style="text-align:left;">Target:<b>{{domain}}</b></td>
+         <td width="10"></td>
+         <td style="text-align:left;">Keywords:<b>{{keyword_count}}</b></td>
+        </tr>
+        <tr>
+         <td style="text-align:left;">Search Country:<b>{{gl}}</b></td>
+         <td width="10"></td>
+         <td style="text-align:left;">Google Domain:<b>{{googlehost}}</b></td>
+        </tr>
+        </table>
+      </div>
+    </div>
+    <div class="row">
+      <div class="spacer_small"></div>
+    </div>
+    <div class="row">
+      <div class="large-12 columns left">
+        <div id="graph" class="graph_container" style="width:350px; height:300px;"></div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="spacer_small"></div>
+    </div>
+  </div>
+  <div class="large-4 columns large-offset-1 left">
+    <table class="index">
     <tr>
      <th colspan="4">
       Keyword Position Changes
      </th>
     </tr>
     <tr>
-      <th width="55">Since</th>
+      <th width="100">Since</th>
       <th colspan="3">Changes</th>
     </tr>
     {% for date,values in changes %}
     <tr>
-     <td>{{date}}</td>
+     <td width="100">{{date}}</td>
      <td align="center"><img src="/html/images/up.png"><font size="4"> {{values.up}}</font></td>
      <td align="center"><img src="/html/images/down.png"><font size="4"> {{values.down}}</font></td>
      <td align="center"><img src="/html/images/unch.png"><font size="4"> {{values.unch}}</font></td>
     </tr>
     {% endfor %}
-   </table>
-
-  </td>
-
-  <td width="25">
-  </td>
-
-  <td valign="center">
-   <div id="chart_div" style="width:400px; height:300px;"></div>
-  </td>
-
- </tr>
-</table>
-
-<br>
-<br>
+    </table>
+  </div>
+</div>
 
 
-<script type="text/javascript">
-$(document).ready(function() {
-        $("#full_ranks").tablesorter(
-           {
-            sortList: [[0,0]]
-           }
-         );
-});
-</script>
-
-<table width="850" id="full_ranks" class="tablesorter">
+<table class="responsive">
 <thead>
  <tr>
- {% for heading in headings %}
-  <th>{{heading}}</th>
- {% endfor %}
+
+ {# Add the headings - these can be iterated over if all data are desired in the table #}
+ 
+  <th>{{headings.0}}</th>
+  <th>{{headings.1}} ({{headings.2}})</th>
+  <th style="width:100px;">Rank ({{headings.2}})</th>
+  <th>History</th>
+
  </tr>
 </thead>
 <tbody>
- {% for keyword,dates in ranks.items %}
+ {% for keyword,data in ranks.items %}
  <tr>
   <td><a href="/keyword_rank/trends?domain={{domain}}&keyword={{keyword}}&gl={{gl}}&googlehost={{googlehost}}">{{keyword}}</a></td>
   
-  {# First the dates #}
-  {% for date in dates %}
-  <td>{{date}}</td>
-  {% endfor %}
+  {# First the data - these can be iterated over if all dates are desired #}
+   <td>{{data.0}}</td>
+   <td>{{data.1}}</td>
+ 
  
   {# Now the small chart #}
   <td>
