@@ -22,13 +22,7 @@
 {% block content %}
 {% load humanize %}
 
-
-<b><i>WEBMASTER CRAWL ERROR SUMMARY REPORT</i></b>
-
-<br>
-<br>
-
- <table class="tiny_no_border">
+ <table class="history">
   <tr>
    <td>Target:<b>{{domain}}</b></td>
    <td>Date:<b>{{date}}</b></td>
@@ -37,7 +31,7 @@
 
 <br>
 
-<table class="standard_l">
+<table class="responsive">
  <tr>
   <th style="width:350px;">Error Type</th>
   <th>Count</th>

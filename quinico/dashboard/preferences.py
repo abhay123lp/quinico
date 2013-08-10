@@ -57,7 +57,7 @@ class prefs:
                                             row['domain__googlehost'],
                                             urllib.urlencode({'keyword':row['keyword__keyword'].encode('utf-8')})
                                            )
-            url_list[url] = 'qimage'
+            url_list[url] = 'qgraph'
 
         # Keyword Summary URLs.  There are two types
         # Example 1: http://www.domain.com/keyword_rank/dashboard?domain=www.domain.com&format=db&gl=com&googlehost=google.com  (json)
@@ -68,11 +68,11 @@ class prefs:
         for row in keyword_domain_list:
             # First the html one
             url_html = keyword_summary_base_url % (host,row['domain'],'',row['gl'],row['googlehost'])
-            url_list[url_html] = 'qimage'
+            url_list[url_html] = 'qgraph'
 
             # Now the json one
             url_json = keyword_summary_base_url % (host,row['domain'],1,row['gl'],row['googlehost'])
-            url_list[url_json] = 'qimage'
+            url_list[url_json] = 'qgraph'
 
         return url_list
 
@@ -102,7 +102,7 @@ class prefs:
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'desktop',
 					        metric)
-                url_list[url_json] = 'qimage'
+                url_list[url_json] = 'qgraph'
 
                 # Mobile
                 url_json = ps_trend_base_url % (host,
@@ -110,7 +110,7 @@ class prefs:
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'mobile',
                                                 metric)
-                url_list[url_json] = 'qimage'
+                url_list[url_json] = 'qgraph'
 
         # Also add the piechart page breakdown for every URL
         for url in ps_list:
@@ -119,14 +119,14 @@ class prefs:
                                                 url['domain__domain'],
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'desktop')
-            url_list[url_json] = 'qimage'
+            url_list[url_json] = 'qpie'
 
             # Mobile
             url_json = ps_breakdown_base_url % (host,
                                                 url['domain__domain'],
                                                 urllib.urlencode({'url':url['url__url']}),
                                                 'mobile')
-            url_list[url_json] = 'qimage'
+            url_list[url_json] = 'qpie'
 
         return url_list
 
@@ -148,7 +148,7 @@ class prefs:
         for metric in metrics:
             for url in wpt_trend_list:
                 url_json = wpt_trend_base_url % (host,url['id'],metric)
-                url_list[url_json] = 'qimage'
+                url_list[url_json] = 'qgraph'
 
         return url_list
 
@@ -178,7 +178,7 @@ class prefs:
         for url in seo_trend_list:
             for metric in metrics:
                 url_json = seo_trend_base_url % (host,urllib.urlencode({'url':url['url']}),metric)
-                url_list[url_json] = 'qimage'
+                url_list[url_json] = 'qgraph'
 
         return url_list
 
@@ -194,7 +194,13 @@ class prefs:
         webmaster_tt_list = Webmaster_Domain.objects.values('domain')
         for row in webmaster_tt_list:
             url_json = webmaster_tt_base_url % (host,urllib.urlencode({'domain':row['domain']}))
-            url_list[url_json] = 'graph'
+            url_list[url_json] = 'qgraph'
+
+        # Webmaster Messages
+        # Example: http://www.domain.com/webmaster/messages?format=db
+        # Messages are not categorized by domain so there is only a single URL
+        # We'll just treat this like an iframed image
+        url_list['http://%s/webmaster/messages?format=db' % host] = 'qgraph'
 
         return url_list
 

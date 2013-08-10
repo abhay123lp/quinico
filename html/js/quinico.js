@@ -74,80 +74,8 @@ function encodeValues(formName,selectName) {
    }
 
 
-function getJSONData(u) {
-
-   var request = $.ajax({
-       type: "GET",
-       url: u,
-       dataType: 'json',
-       async: false
-   }).responseText;
-
-   return request;
-}
-
-
-function getHTMLData(u) {
-
-   var request = $.ajax({
-       type: "GET",
-       url: u,
-       dataType: 'html',
-       async: false
-   }).responseText;
-
-   return request;
-}
-
-
-function switchGraph(u,slot) {
-
-   var request = getJSONData(u);
-
-   // Create our data table out of JSON data loaded from the server.
-   // We need to create a JSON object first and then obtain the data portion
-   var data = new google.visualization.DataTable($.parseJSON(request)['data']);
-
-   var chart = new google.visualization.LineChart(document.getElementById(slot));
-   chart.draw(data,$.parseJSON(request)['options']);
-
-}
-
-
-function switchPie(u,slot) {
-
-   var request = getJSONData(u);
-
-   // Create our data table out of JSON data loaded from the server.
-   // We need to create a JSON object first and then obtain the data portion
-   var data = new google.visualization.DataTable($.parseJSON(request)['data']);
-
-   var chart = new google.visualization.PieChart(document.getElementById(slot));
-   chart.draw(data,$.parseJSON(request)['options']);
-
-}
-
-
-function switchHTML(u,slot) {
-
-   // Grab the HTML data
-   var request = getHTMLData(u);
-
-   // Set the DIV contents
-   document.getElementById(slot).innerHTML = request;
-}
-
-
-function switchImage(u,slot,w,h) {
-
-   // Set the DIV contents
-   img = '<img src=\"' + u + '\" width=\"' + w + '\" height=\"' + h + '\">'
-   document.getElementById(slot).innerHTML = img
-}
-
-
-// Change an image from Quinico
-function switchQImage(img_url,frame_id) {
+// Switch out the contents of an iFrame in the Quinico dashboard application
+function switchQFrame(img_url,frame_id) {
    document.getElementById(frame_id).src = img_url;
 }
 

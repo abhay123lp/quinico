@@ -132,9 +132,10 @@ select.status {
 
 /* IFRAMES */
 iframe {
-   margin: 0;
    padding: 0;
    border: none;
+   margin-left: auto;
+   margin-right: auto;
 }
 
 
@@ -177,3 +178,4 @@ input, textarea, select {
 input.date_box {
    width: 100px;
 }
+

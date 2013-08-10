@@ -21,59 +21,78 @@
 
 {% block content %}
 
+<script type="text/javascript">
+$(function () {
+        
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 50,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{domain}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Google Webmaster Total Crawl Errors',
+                x: -20
+            },
+            xAxis: {
+                categories: [
 
-<b><i>WEBMASTER TOTAL CRAWL ERROR TRENDS REPORT</i></b>
+                    {% for item in counts %}
+                     {% if forloop.last %}
+                        '{{item.date|date:"m-d"}}'
+                     {% else %}
+                        '{{item.date|date:"m-d"}}',
+                     {% endif %}
+                    {% endfor %}
 
-<br>
-<br>
+                ],
+                labels: {
+                    rotation: 290,
+                    y: 20
+                }
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+            },
+            legend: {
+                enabled: false
+            },
+            series: [{
+                name: 'Count',
+                data: [
 
-<table border="0">
- <tr>
-  <td align="center">
-   <script type="text/javascript">
-    google.load("visualization","1",{packages:["corechart"]});
-    google.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string','Date');
-        data.addColumn('number','Value');
-        data.addRows([
+                    {% for item in counts %}
+                     {% if forloop.last %}
+                        {{item.count__sum}}
+                     {% else %}
+                        {{item.count__sum}},
+                     {% endif %}
+                    {% endfor %}
 
-        {% for item in counts %}
-         {% if forloop.first %}
-            ['{{item.date|date:"Y-m-d"}}',{{item.count__sum}}]
-         {% else %}
-            ,['{{item.date|date:"Y-m-d"}}',{{item.count__sum}}]
-         {% endif %}
-        {% endfor %}
-
-        ]);
-
-        var options = {
-            'title':'{{domain}}',
-            'titleTextStyle':{fontSize:'14'},
- 	    'width':750,
-            'height':375,
-            'fontSize':10,
-            'hAxis':{textPosition:'out'},
-            'hAxis':{slantedText:'true'},
-            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
-            'curveType':'function',
-            'pointSize':3
-        };
-
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
-        formatter.format(data,1); 
-        chart.draw(data,options);
-    }
-   </script>
-   <div id="chart_div" style="width:750px; height:375px;"></div>
-   </td>
-  </tr>
-</table>
+                ],
+                color: '#1c94c4'
+            }]
+        });
+});
 
 
+
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" class="graph_container"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
-

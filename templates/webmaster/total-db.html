@@ -1,4 +1,4 @@
-{% extends "base/base.json" %}
+{% extends "base/base-db.html" %}
 
 {% comment %}
 
@@ -21,43 +21,79 @@
 
 {% block content %}
 
-{
- "data":
-  {
-    "cols":
-     [
-       {"label":"Date","type":"string"},
-       {"label":"Value","type":"number"}
-     ],
-    "rows":[
+<script type="text/javascript">
+$(function () {
+        
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 50,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{domain}}',
+                x: -20 //center
+            },
+            subtitle: {
+                text: 'Google Webmaster Total Crawl Errors',
+                x: -20
+            },
+            xAxis: {
+                categories: [
 
- {% for item in counts %}
-  {% if forloop.first %}
+                    {% for item in counts %}
+                     {% if forloop.last %}
+                        '{{item.date|date:"m-d"}}'
+                     {% else %}
+                        '{{item.date|date:"m-d"}}',
+                     {% endif %}
+                    {% endfor %}
 
-    {"c":[{"v":"{{item.date|date:"Y-m-d"}}"},{"v":{{item.count__sum}}}]}
+                ],
+                labels: {
+                    rotation: 290,
+                    y: 20,
+                    {% if step %}step: {{step}}{% endif %}
+                }
+            },
+            yAxis: {
+                title: {
+                    text: null
+                },
+            },
+            legend: {
+                enabled: false,
+            },
+            series: [{
+                name: 'Count',
+                data: [
 
-  {% else %}
+                    {% for item in counts %}
+                     {% if forloop.last %}
+                        {{item.count__sum}}
+                     {% else %}
+                        {{item.count__sum}},
+                     {% endif %}
+                    {% endfor %}
 
-   ,{"c":[{"v":"{{item.date|date:"Y-m-d"}}"},{"v":{{item.count__sum}}}]}
+                ],
+                color: '#1c94c4'
+            }]
+        });
+});
 
-  {% endif %}
-  {% endfor %}
 
-]},
 
- "options":
-   {
-    "title":"TOTAL CRAWL ERRORS: {{domain}}",
-    "width":"{{dash_settings.0.width}}",
-    "height":"{{dash_settings.0.height}}",
-    "fontSize":"{{dash_settings.0.font}}",
-    "hAxis":{"textPosition":"out","slantedText":"true"},
-    "series":{"0":{"color":"#1c94c4","visibleInLegend":"false"}},
-    "curveType":"function",
-    "pointSize":"3"
-   }
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
 
-}
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" style="margin: 0 auto; {% if width %}{% if height %}width: {{width}}px;height: {{height}}px;{% endif %}{% endif %}"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
-

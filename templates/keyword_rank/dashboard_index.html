@@ -38,7 +38,7 @@
      <tr>
       <td>Domain</td>
       <td>
-       <select class="standard" name="domain" id="domain">
+       <select name="domain" id="domain">
        {% for item in list %}
            <option value="{{item.domain}}">{{item.domain}}</option>
        {% endfor %}
@@ -49,7 +49,7 @@
      <tr>
       <td>Gl</td>
       <td>
-       <select class="standard" name="gl" id="gl">
+       <select name="gl" id="gl">
        {% for item in gl_list %}
            <option value="{{item.gl}}">{{item.gl}}</option>
        {% endfor %}
@@ -60,7 +60,7 @@
      <tr>
       <td>Googlehost</td>
       <td>
-       <select class="standard" name="googlehost" id="googlehost">
+       <select name="googlehost" id="googlehost">
        {% for item in googlehost_list %}
            <option value="{{item.googlehost}}">{{item.googlehost}}</option>
        {% endfor %}

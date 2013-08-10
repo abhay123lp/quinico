@@ -1,4 +1,4 @@
-{% extends "base/base-graph.html" %}
+{% extends "base/base-db.html" %}
 
 {% comment %}
 
@@ -24,19 +24,18 @@
 <script type="text/javascript">
 $(function () {
         
-        // Vulnerability Chart
         $('#graph').highcharts({
             chart: {
                 type: 'spline',
-                marginRight: 130,
-                marginBottom: 75
+                marginRight: 90,
+                marginBottom: 90
             },
             title: {
-                text: 'Keyword Rank, 1st Page Rankings: {{domain}}',
+                text: '{{domain}}',
                 x: -20 //center
             },
             subtitle: {
-                text: 'Geolocation:{{gl}}, Google Host:{{googlehost}}',
+                text: 'Google First Page Rankings: Geolocation:{{gl}}, Google Host:{{googlehost}}',
                 x: -20
             },
             xAxis: {
@@ -68,12 +67,7 @@ $(function () {
                 },
             },
             legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'top',
-                x: -10,
-                y: 100,
-                borderWidth: 0
+                enabled: false
             },
             series: [{
                 name: 'Count',

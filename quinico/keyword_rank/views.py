@@ -76,7 +76,7 @@ def upload(request):
     return render_to_response(
        'keyword_rank/upload.html',
        {
-          'title':'Quinico | Keyword Upload',
+          'title':'Keyword Upload',
           'domain_list':domain_list,
           'gl_list':gl_list,
           'googlehost_list':googlehost_list,
@@ -183,7 +183,7 @@ def trends(request):
                     return render_to_response(
                      'keyword_rank/trends-db.html',
                       {
-                        'title':'Quinico | Keyword Trends',
+                        'title':'Keyword Trends',
                         'domain_name':domain,
                         'keyword_name':keyword,
                         'ranks':ranks,
@@ -211,7 +211,7 @@ def trends(request):
                 return render_to_response(
                  'keyword_rank/trends.html',
                   {
-                    'title':'Quinico | Keyword Trends',
+                    'title':'Keyword Trends',
                     'domain_name':domain,
                     'gl':gl,
                     'googlehost':googlehost,
@@ -268,7 +268,7 @@ def trends(request):
     return render_to_response(
        'keyword_rank/trends_index.html',               
        {
-          'title':'Quinico | Keyword Trends',
+          'title':'Keyword Trends',
           'form':form,
           'list':kw_dict,
           'gl_list':gl_list,
@@ -328,14 +328,13 @@ def dashboard(request):
             # including the rank on this day and the URL.
     	    numbers = [
     		     0,	# Today
-    		     1,	# Yesterday
+    		     1,	# One day ago
     		     2,	# Two days ago
-    		     3,	# Seven days ago
-    		     4,	# Fourteen days ago
-                 5, # Today
-                 6, # Yesterday
-                 7, # Two days ago
-                 30 # Today
+    		     3,	# Three days ago
+    		     4,	# Four days ago
+                 5, # Five days ago
+                 6, # Six days ago
+                 30 # 30 days ago
     		    ]
 
     	    # Run through the dates and compile the data
@@ -347,7 +346,7 @@ def dashboard(request):
                 return render_to_response(
                      'error/nodata.html',
                       {
-                        'title':'Quinico | No Data',
+                        'title':'No Data',
                         'type':'keyword_rank'
                       },
                       context_instance=RequestContext(request)
@@ -573,7 +572,7 @@ def dashboard(request):
                     return render_to_response(
                         'keyword_rank/dashboard-db.html',
                         {
-                            'title':'Quinico | Keyword Dashboard',
+                            'title':'Keyword Dashboard',
                             'domain':domain,
                             'gl':gl,
                             'googlehost':googlehost,
@@ -602,7 +601,7 @@ def dashboard(request):
                     return render_to_response(
                         'keyword_rank/dashboard-db1.html',
                         {
-                            'title':'Quinico | Keyword Dashboard',
+                            'title':'Keyword Dashboard',
                             'domain':domain,
                             'gl':gl,
                             'googlehost':googlehost,
@@ -637,7 +636,7 @@ def dashboard(request):
                 return render_to_response(
                     'keyword_rank/dashboard.html',
                     {
-                        'title':'Quinico | Keyword Dashboard',
+                        'title':'Keyword Dashboard',
                         'domain':domain,
                         'headings':headings,
                         'ranks':ranks,
@@ -677,7 +676,7 @@ def dashboard(request):
     return render_to_response(
         'keyword_rank/dashboard_index.html',
         {
-            'title':'Quinico | Keyword Dashboard',
+            'title':'Keyword Dashboard',
             'form':form,
             'list':list,
             'gl_list':gl_list,

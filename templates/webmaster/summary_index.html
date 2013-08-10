@@ -21,11 +21,6 @@
 
 {% block content %}
 
-<b><i>CRAWL ERRORS SUMMARY</i></b>
-
-<br>
-<br>
-
   
   <script>
    $(function() {
@@ -39,15 +34,13 @@
    });
   </script>
 
-
-
    <form name="ce_select" id="ce_select" action="/webmaster/summary" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Domain</td>
       <td>
-       <select class="standard" name="domain" id="domain">
+       <select name="domain" id="domain">
        {% for domain in domains %}
            <option value="{{domain}}">{{domain}}</option>
        {% endfor %}
@@ -60,7 +53,7 @@
         Date
        </td>
        <td>
-        <input class="input_date" name="date" id="date" type="text" value="{{date|date:"Y-m-d"}}">
+        <input name="date" id="date" type="text" value="{{date|date:"Y-m-d"}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -71,19 +64,18 @@
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.date.errors %}
-         <br>{% for error in form.date.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.domain.errors %}
-         <br>{% for error in form.domain.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
     </table>
    </form>

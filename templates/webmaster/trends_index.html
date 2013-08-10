@@ -21,12 +21,6 @@
 
 {% block content %}
 
-<b><i>CRAWL ERROR TRENDS</i></b>
-
-<br>
-<br>
-
-
   <script>
    // Date Pickers and Submit
    $(function() {
@@ -55,12 +49,12 @@
 
 
    <form name="ce_select" id="ce_select" action="/webmaster/trends" method="get">
-    <table>
+    <table class="index">
 
      <tr>
       <td>Domain</td>
       <td>
-       <select class="standard" name="domain" id="domain">
+       <select name="domain" id="domain">
        {% for domain in domains %}
            <option value="{{domain}}">{{domain}}</option>
        {% endfor %}
@@ -71,7 +65,7 @@
      <tr>
       <td>Error Type</td>
       <td>
-       <select class="standard" name="error_id" id="error_id">
+       <select name="error_id" id="error_id">
        {% for error in error_types %}
            <option value="{{error.id}}">{{error.type}}</option>
        {% endfor %}
@@ -84,7 +78,7 @@
         Date from
        </td>
        <td>
-        <input class="input_date" name="date_from" id="date_from" type="text" value="{{date_from}}">
+        <input name="date_from" id="date_from" type="text" value="{{date_from}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -93,7 +87,7 @@
         Date to
        </td>
        <td>
-        <input class="input_date" name="date_to" id="date_to" type="text" value="{{date_to}}">
+        <input name="date_to" id="date_to" type="text" value="{{date_to}}" placeholder="Enter date" class="date_box">
        </td>
      <tr>
 
@@ -104,28 +98,18 @@
       </td>
      </tr>
 
+     {% if form.errors %}
      <tr>
       <td></td>
       <td>
-       <p class="error">
-        {% if form.date_to.errors %}
-         <br>{% for error in form.date_to.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.date_from.errors %}
-         <br>{% for error in form.date_from.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.domain.errors %}
-         <br>{% for error in form.domain.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.error_id.errors %}
-         <br>{% for error in form.error_id.errors %}{{error}}{% endfor %}
-        {% endif %}
-        {% if form.format.errors %}
-         <br>{% for error in form.format.errors %}{{error}}{% endfor %}
-        {% endif %}
-       </p>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
       </td>
      </tr>
+     {% endif %}
 
     </table>
    </form>

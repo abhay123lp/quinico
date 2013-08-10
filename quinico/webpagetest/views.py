@@ -72,7 +72,7 @@ def report(request):
             return render_to_response(
                'error/error.html',    
                {   
-                  'title':'Quinico | Error',
+                  'title':'Error',
                   'error':'File not found:%s/%s' % (report_path,report)
                },  
                context_instance=RequestContext(request)
@@ -90,7 +90,7 @@ def report(request):
         return render_to_response(
            'error/error.html',
            {
-              'title':'Quinico | Error',
+              'title':'Error',
               'error':'Invalid request',
        },
        context_instance=RequestContext(request)
@@ -230,7 +230,7 @@ def trends(request):
                     return render_to_response(
                         'webpagetest/trends-db.html',
         		      {
-                        'title':'Quinico | Webpagetest Trends',
+                        'title':'Webpagetest Trends',
                         'metric':metric,
                         'test':test,
                         'scores':scores,
@@ -247,7 +247,7 @@ def trends(request):
                 return render_to_response(
                     'webpagetest/trends.html',
         		   {
-                    'title':'Quinico | Webpagetest Trends',
+                    'title':'Webpagetest Trends',
                     'metric':metric,
                     'test':test,
                     'scores':scores,
@@ -281,7 +281,7 @@ def trends(request):
     return render_to_response(
        'webpagetest/trends_index.html',
        {
-          'title':'Quinico | Webpagetest Trends',
+          'title':'Webpagetest Trends',
           'form':form,
           'tests':tests,
           'date_from':date_from,
@@ -383,7 +383,7 @@ def history(request):
                 return render_to_response(
         		   'webpagetest/history.html',
         		   {
-        		      'title':'Quinico | Webpagetest History',
+        		      'title':'Webpagetest History',
         		      'test':test,
         		      'dates':dates,
         		      'csv_link':csv_link
@@ -415,7 +415,7 @@ def history(request):
     return render_to_response(
        'webpagetest/history_index.html',
        {
-          'title':'Quinico | Webpagetest History',
+          'title':'Webpagetest History',
           'form':form,
           'tests':tests,
           'date_from':date_from,

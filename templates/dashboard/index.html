@@ -25,9 +25,6 @@
 
    <script>
 
-   // Load the visualization API and the line chart package
-   google.load("visualization","1",{packages:["corechart"]});
-
    {% comment %} Setup the lookup table {% endcomment %}
    var url_type = [];
    {% for url,type in url_list.items %}
@@ -65,21 +62,20 @@
       if (slot == slots.length) {
          slot = 0;
       }
-      http://dev.quinico.com/pagespeed/trends?domain=brasil.babycenter.com&url=%2F&strategy=mobile&metric=numberStaticResources&format=db
+      
       // Send to the correct switcher
-      if (url_type[url_list[url]] == 'graph') {
-         switchGraph(url_list[url],slots[slot]);
-      } else if (url_type[url_list[url]] == 'pie') {
-         switchPie(url_list[url],slots[slot]);
-      } else if (url_type[url_list[url]] == 'html') {
-         switchHTML(url_list[url],slots[slot]);
-      } else if (url_type[url_list[url]] == 'image') {
-         switchImage(url_list[url],slots[slot],{{dash_settings.0.width}},{{dash_settings.0.height}});
-      } else if (url_type[url_list[url]] == 'qimage') {
+      if (url_type[url_list[url]] == 'qpie') {
+         // Add the custom size to the URLs
+         sized_url = url_list[url] + '&width={{dash_settings.0.width}}&height={{dash_settings.0.height}}'
+         switchQFrame(sized_url,slots[slot]);
+      } else if (url_type[url_list[url]] == 'qgraph') {
          // Add the custom size and step to the URLs
          sized_url = url_list[url] + '&width={{dash_settings.0.width}}&height={{dash_settings.0.height}}&step=2'
-         switchQImage(sized_url,slots[slot]);
-      }
+         switchQFrame(sized_url,slots[slot]);
+      } else if (url_type[url_list[url]] == 'custom') {
+         // This is custom so the user will need to have added the appropriate sizing if its a quinico URL
+         switchQFrame(url_list[url],slots[slot]);  
+      } 
 
       // Increment the counters
       url++;

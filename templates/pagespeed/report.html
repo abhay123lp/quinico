@@ -21,13 +21,8 @@
 
 {% block content %}
 
-<b><i>PAGESPEED REPORT</i></b>
 
-<br>
-<br>
-
-
- <table class="tiny_no_border">
+ <table class="history">
   <tr>
    <td>Date:<b>{{date|date:"Y-m-d H:i:s"}}</b></td>
    <td>Timezone:<b>{{TIME_ZONE}}</b></td>
@@ -36,8 +31,6 @@
    <td>Strategy:<b>{{strategy}}</b></td>
   </tr>
  </table>
-
-<br>
 
 
 <script type="text/javascript">
@@ -51,8 +44,6 @@ $(document).ready(function() {
 </script>
 
 
-
-<br>
 <table id="ps_report" class="tablesorter"> 
  <thead>
  <tr>

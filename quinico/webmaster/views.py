@@ -73,100 +73,109 @@ def queries(request):
 
         if form.is_valid():
             # Obtain the cleaned data
-            domain = form.cleaned_data['domain']
-            date_to = form.cleaned_data['date_to']
-            date_from = form.cleaned_data['date_from']
-            keyword = form.cleaned_data['keyword']
-            format = form.cleaned_data['format']
+			domain = form.cleaned_data['domain']
+			date_to = form.cleaned_data['date_to']
+			date_from = form.cleaned_data['date_from']
+			keyword = form.cleaned_data['keyword']
+			format = form.cleaned_data['format']
+			width = form.cleaned_data['width']
+			height = form.cleaned_data['height']
+			step = form.cleaned_data['step']
 
             # If the from or to dates are missing, set them b/c this is probably
             # an API or DB request (just give the last 30 days of data)
-            if not date_to or not date_from:
-                now = datetime.datetime.today()
-                date_to = now.strftime("%Y-%m-%d")
+			if not date_to or not date_from:
+				now = datetime.datetime.today()
+				date_to = now.strftime("%Y-%m-%d")
 
-                # Move back 30 days
-                then = datetime.timedelta(days=30)
-                date_from = now - then
-                date_from = date_from.strftime("%Y-%m-%d")
+				# Move back 30 days
+				then = datetime.timedelta(days=30)
+				date_from = now - then
+				date_from = date_from.strftime("%Y-%m-%d")
 
-	    # Obtain the top search queries for this keyword and domain
-	    data = Top_Search_Queries.objects.filter(domain__domain=domain,
-                                                     keyword__keyword=keyword,
- 						     date__range=[date_from,date_to]
-     					            ).values('date','impressions','clicks').order_by('date')
+		    # Obtain the top search queries for this keyword and domain
+			data = Top_Search_Queries.objects.filter(domain__domain=domain,
+	                                                 keyword__keyword=keyword,
+	 						     					 date__range=[date_from,date_to]
+	     					            		     ).values('date','impressions','clicks').order_by('date')
 
-	    # Construct the dashboard, download and monitoring links
-            # Quote special characters
-            keyword_enc = urllib.quote_plus(keyword.encode('utf-8'))
- 
-            base_url = 'http://%s/webmaster/queries?domain' % request.META['HTTP_HOST']
-	    db_link = '%s=%s&keyword=%s&format=db' % (base_url,domain,keyword_enc)
-	    json_link = '%s=%s&keyword=%s&format=json' % (base_url,domain,keyword_enc)
-	    csv_link = '%s=%s&keyword=%s&date_from=%s&date_to=%s&format=csv' % (base_url,domain,keyword_enc,date_from,date_to)
+		    # Construct the dashboard, download and monitoring links
+	        # Quote special characters
+			keyword_enc = urllib.quote_plus(keyword.encode('utf-8'))
+	 
+			base_url = 'http://%s/webmaster/queries?domain' % request.META['HTTP_HOST']
+			db_link = '%s=%s&keyword=%s&format=db' % (base_url,domain,keyword_enc)
+			json_link = '%s=%s&keyword=%s&format=json' % (base_url,domain,keyword_enc)
+			csv_link = '%s=%s&keyword=%s&date_from=%s&date_to=%s&format=csv' % (base_url,domain,keyword_enc,date_from,date_to)
 
-	    # Print the page
+		    # Print the page
 
-	    # If this is a request for special formatting, give it, otherwise give everything
-	    if format:
-		# JSON request
-		if format == 'json':
-                    return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
-  							   'impressions': row['impressions'],
-							   'clicks': row['clicks']} for row in data]),
-                                        mimetype="application/json")
-                    
-		elif format == 'db':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+		    # If this is a request for special formatting, give it, otherwise give everything
+			if format:
+				# JSON request
+				if format == 'json':
+					return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
+	  										    		   'impressions': row['impressions'],
+								   						   'clicks': row['clicks']} for row in data]),
+	                                        				mimetype="application/json")
+	            # Dashboard request        
+				elif format == 'db':
+				    # If the user is authenticated and has a preference for size, set it
+					dash_settings = None
+					if request.user.is_authenticated():
+						# Obtain the user's dashboard settings
+						dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
-		    if not dash_settings:
-			# Give the default
-                        dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+					if not dash_settings:
+						# Give the default
+						dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+		                                  'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+		                                  'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
 
-		    return render_to_response(
-		     'webmaster/queries-db.html',
-		      {
-			'title':'Quinico | Google Top Search Queries',
-			'domain':domain,
-			'keyword_name':keyword,
-			'data':data,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
+					return render_to_response(
+				     'webmaster/queries-db.html',
+				      {
+						'title':'Google Top Search Queries',
+						'domain':domain,
+						'keyword_name':keyword,
+						'data':data,
+						'dash_settings':dash_settings,
+			            'width':width,
+			            'height':height,
+			            'step':step
+				      },
+				      context_instance=RequestContext(request)
+				    )
 
-		# CSV download (there is no template for this)
-		elif format == 'csv':
-		    response = HttpResponse(mimetype='text/csv')
-		    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
-		    writer = csv.writer(response)
-		    writer.writerow(['date','impressions','clicks'])
-		    for item in data:
-			writer.writerow([item['date'],item['impressions'],item['clicks']])
-		    return response
+				# CSV download (there is no template for this)
+				elif format == 'csv':
+				    response = HttpResponse(mimetype='text/csv')
+				    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
+				    writer = csv.writer(response)
+				    writer.writerow(['date','impressions','clicks'])
+				    for item in data:
+						writer.writerow([item['date'],item['impressions'],item['clicks']])
+				    return response
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		 'webmaster/queries.html',
-		  {
-		    'title':'Quinico | Google Top Search Queries',
-		    'domain_name':domain,
-		    'keyword_name':keyword,
-		    'data':data,
-		    'db_link':db_link,
-		    'json_link':json_link,
-		    'csv_link':csv_link
-		  },
-		  context_instance=RequestContext(request)
-		)
+			# Just a standard HTML response is being requested
+			else:
+				return render_to_response(
+				 'webmaster/queries.html',
+				  {
+				    'title':'Google Top Search Queries',
+				    'domain_name':domain,
+				    'keyword_name':keyword,
+				    'data':data,
+				    'db_link':db_link,
+				    'json_link':json_link,
+				    'csv_link':csv_link
+				  },
+				  context_instance=RequestContext(request)
+				)
+
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: QueriesForm: %s' % form.errors)
 
     # Ok, its not a form submit
     else:
@@ -200,7 +209,7 @@ def queries(request):
     return render_to_response(
        'webmaster/queries_index.html',
        {
-          'title':'Quinico | Google Top Search Queries',
+          'title':'Google Top Search Queries',
           'form':form,
           'list':kw_dict,
           'date_to':date_to,
@@ -224,103 +233,112 @@ def trends(request):
         form = CrawlErrorTrendForm(request.GET)
 
         if form.is_valid():
-            # Obtain the cleaned data
-            domain = form.cleaned_data['domain']
-            error_id = form.cleaned_data['error_id']
-            date_to = form.cleaned_data['date_to']
-            date_from = form.cleaned_data['date_from']
-            format = form.cleaned_data['format']
+			# Obtain the cleaned data
+			domain = form.cleaned_data['domain']
+			error_id = form.cleaned_data['error_id']
+			date_to = form.cleaned_data['date_to']
+			date_from = form.cleaned_data['date_from']
+			format = form.cleaned_data['format']
+			width = form.cleaned_data['width']
+			height = form.cleaned_data['height']
+			step = form.cleaned_data['step']
 
-            # If the from or to dates are missing, set them b/c this is probably
-            # an API or DB request (just give the last 30 days of data)
-            if not date_to or not date_from:
-                now = datetime.datetime.today()
-                date_to = now.strftime("%Y-%m-%d")
+			# If the from or to dates are missing, set them b/c this is probably
+			# an API or DB request (just give the last 30 days of data)
+			if not date_to or not date_from:
+				now = datetime.datetime.today()
+				date_to = now.strftime("%Y-%m-%d")
 
-                # Move back 30 days
-                then = datetime.timedelta(days=30)
-                date_from = now - then
-                date_from = date_from.strftime("%Y-%m-%d")
+				# Move back 30 days
+				then = datetime.timedelta(days=30)
+				date_from = now - then
+				date_from = date_from.strftime("%Y-%m-%d")
 
-	    # Obtain the error counts for this domain and error type
-	    counts = Crawl_Error.objects.filter(domain__domain=domain,
-						type_id=error_id,
-						date__range=[date_from,date_to]
-					       ).values('date','count').order_by('date')
+		    # Obtain the error counts for this domain and error type
+			counts = Crawl_Error.objects.filter(domain__domain=domain,
+												type_id=error_id,
+												date__range=[date_from,date_to]
+											    ).values('date','count').order_by('date')
 
-	    # Obtain the friendly error name for the report
-	    error_name = Crawl_Error_Type.objects.filter(id=error_id).values('type')
+		    # Obtain the friendly error name for the report
+			error_name = Crawl_Error_Type.objects.filter(id=error_id).values('type')
 
-	    # Construct the dashboard, download and monitoring links
-            base_url = 'http://%s/webmaster/trends?domain' % request.META['HTTP_HOST']
-	    db_link = '%s=%s&error_id=%s&format=db' % (base_url,domain,error_id)
-	    json_link = '%s=%s&error_id=%s&format=json' % (base_url,domain,error_id)
-	    csv_link = '%s=%s&error_id=%s&date_from=%s&date_to=%s&format=csv' % (base_url,domain,error_id,date_from,date_to)
+		    # Construct the dashboard, download and monitoring links
+			base_url = 'http://%s/webmaster/trends?domain' % request.META['HTTP_HOST']
+			db_link = '%s=%s&error_id=%s&format=db' % (base_url,domain,error_id)
+			json_link = '%s=%s&error_id=%s&format=json' % (base_url,domain,error_id)
+			csv_link = '%s=%s&error_id=%s&date_from=%s&date_to=%s&format=csv' % (base_url,domain,error_id,date_from,date_to)
 
-	    # Print the page
+		    # Print the page
 
-	    # If this is a request for special formatting, give it, otherwise give everything
-	    if format:
-		# Dashboard request
-		if format == 'db':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+		    # If this is a request for special formatting, give it, otherwise give everything
+			if format:
+				# Dashboard request
+				if format == 'db':
+				    # If the user is authenticated and has a preference for size, set it
+				    dash_settings = None
+				    if request.user.is_authenticated():
+						# Obtain the user's dashboard settings
+						dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
-		    if not dash_settings:
-			# Give the default
-			dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+				    if not dash_settings:
+					# Give the default
+					dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+		                              'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+		                              'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
 
-		    return render_to_response(
-		     'webmaster/trends-db.html',
-		      {
-			'title':'Quinico | Webmaster Crawl Error Trends',
-			'domain':domain,
-			'error_name':error_name,
-			'counts':counts,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
+				    return render_to_response(
+				     'webmaster/trends-db.html',
+				      {
+						'title':'Webmaster Crawl Error Trends',
+						'domain':domain,
+						'error_name':error_name,
+						'counts':counts,
+						'dash_settings':dash_settings,
+			            'width':width,
+			            'height':height,
+			            'step':step
+				      },
+				      context_instance=RequestContext(request)
+				    )
 
-		# JSON request
-		elif format == 'json':
-                    return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
-							   'count': row['count']} for row in counts]),
-                                        mimetype="application/json")
+				# JSON request
+				elif format == 'json':
+					return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
+					   				   'count': row['count']} for row in counts]),
+		                                mimetype="application/json")
 
-		# CSV download (there is no template for this)
-		elif format == 'csv':
-		    response = HttpResponse(mimetype='text/csv')
-		    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
-		    writer = csv.writer(response)
-		    writer.writerow(['date','count'])
-		    for item in counts:
-			writer.writerow([item['date'],item['count']])
-		    return response
+				# CSV download (there is no template for this)
+				elif format == 'csv':
+				    response = HttpResponse(mimetype='text/csv')
+				    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
+				    writer = csv.writer(response)
+				    writer.writerow(['date','count'])
+				    for item in counts:
+						writer.writerow([item['date'],item['count']])
+				    return response
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		   'webmaster/trends.html',
-		   {
-		    'title':'Quinico | Webmaster Crawl Error Trends',
-		    'domain':domain,
-		    'error_name':error_name,
-		    'counts':counts,
-		    'db_link':db_link,
-		    'json_link':json_link,
-		    'csv_link':csv_link
-		   },
-		   context_instance=RequestContext(request)
-		)
+		    # Just a standard HTML response is being requested
+			else:
+				return render_to_response(
+				   'webmaster/trends.html',
+				   {
+				    'title':'Webmaster Crawl Error Trends',
+				    'domain':domain,
+				    'error_name':error_name,
+				    'counts':counts,
+				    'db_link':db_link,
+				    'json_link':json_link,
+				    'csv_link':csv_link
+				   },
+				   context_instance=RequestContext(request)
+				)
 
-    # Ok, its not a form submit
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: CrawlErrorTrendForm: %s' % form.errors)
+
+    # Its not a form submit, or its a failed form submit
     else:
         form = CrawlErrorTrendForm()
 
@@ -343,7 +361,7 @@ def trends(request):
     return render_to_response(
        'webmaster/trends_index.html',
        {
-          'title':'Quinico | Webmaster Crawl Error Trends',
+          'title':'Webmaster Crawl Error Trends',
           'form':form,
           'domains':domains,
           'error_types':error_types,
@@ -368,96 +386,104 @@ def total(request):
         form = TotalCrawlErrorTrendForm(request.GET)
 
         if form.is_valid():
-            # Obtain the cleaned data
-            domain = form.cleaned_data['domain']
-            date_to = form.cleaned_data['date_to']
-            date_from = form.cleaned_data['date_from']
-            format = form.cleaned_data['format']
+			# Obtain the cleaned data
+			domain = form.cleaned_data['domain']
+			date_to = form.cleaned_data['date_to']
+			date_from = form.cleaned_data['date_from']
+			format = form.cleaned_data['format']
+			width = form.cleaned_data['width']
+			height = form.cleaned_data['height']
+			step = form.cleaned_data['step']
 
-            # If the from or to dates are missing, set them b/c this is probably
-            # an API or DB request (just give the last 30 days of data)
-            if not date_to or not date_from:
-                now = datetime.datetime.today()
-                date_to = now.strftime("%Y-%m-%d")
+			# If the from or to dates are missing, set them b/c this is probably
+			# an API or DB request (just give the last 30 days of data)
+			if not date_to or not date_from:
+				now = datetime.datetime.today()
+				date_to = now.strftime("%Y-%m-%d")
 
-                # Move back 30 days
-                then = datetime.timedelta(days=30)
-                date_from = now - then
-                date_from = date_from.strftime("%Y-%m-%d")
+				# Move back 30 days
+				then = datetime.timedelta(days=30)
+				date_from = now - then
+				date_from = date_from.strftime("%Y-%m-%d")
+			
+			# Obtain the error counts for this domain and error type
+			counts = Crawl_Error.objects.filter(domain__domain=domain,date__range=[date_from,date_to]
+						       				   ).values('date').annotate(Sum('count')).order_by('date')
 
-	    # Obtain the error counts for this domain and error type
-	    counts = Crawl_Error.objects.filter(domain__domain=domain,
-					        date__range=[date_from,date_to]
-					       ).values('date').annotate(Sum('count')).order_by('date')
+			# Construct the dashboard, download and monitoring links
+			base_url = 'http://%s/webmaster/total?domain' % request.META['HTTP_HOST']
+			db_link = '%s=%s&format=db' % (base_url,domain)
+			json_link = '%s=%s&format=json' % (base_url,domain)
+			csv_link = '%s=%s&date_from=%s&date_to=%s&format=csv' % (base_url,domain,date_from,date_to)
 
-	    # Construct the dashboard, download and monitoring links
-            base_url = 'http://%s/webmaster/total?domain' % request.META['HTTP_HOST']
-	    db_link = '%s=%s&format=db' % (base_url,domain)
-	    json_link = '%s=%s&format=json' % (base_url,domain)
-	    csv_link = '%s=%s&date_from=%s&date_to=%s&format=csv' % (base_url,domain,date_from,date_to)
+		    # Print the page
 
-	    # Print the page
+			# If this is a request for special formatting, give it, otherwise give everything
+			if format:
+				# Dashboard request
+				if format == 'db':
+				    # If the user is authenticated and has a preference for size, set it
+				    dash_settings = None
+				    if request.user.is_authenticated():
+						# Obtain the user's dashboard settings
+						dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
 
-	    # If this is a request for special formatting, give it, otherwise give everything
-	    if format:
-		# Dashboard request
-		if format == 'db':
-		    # If the user is authenticated and has a preference for size, set it
-		    dash_settings = None
-		    if request.user.is_authenticated():
-			# Obtain the user's dashboard settings
-			dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+				    if not dash_settings:
+						# Give the default
+						dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+		                              	  'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+		                              	  'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
 
-		    if not dash_settings:
-			# Give the default
-			dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
-                                         'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
-                                         'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+				    return render_to_response(
+				     'webmaster/total-db.html',
+				      {
+						'title':'Total Webmaster Crawl Error Trends',
+						'domain':domain,
+						'counts':counts,
+						'dash_settings':dash_settings,
+			            'width':width,
+			            'height':height,
+			            'step':step
+				      },
+				      context_instance=RequestContext(request)
+				    )
 
-		    return render_to_response(
-		     'webmaster/total-db.html',
-		      {
-			'title':'Quinico | Total Webmaster Crawl Error Trends',
-			'domain':domain,
-			'counts':counts,
-			'dash_settings':dash_settings
-		      },
-		      mimetype='application/json',
-		      context_instance=RequestContext(request)
-		    )
+				# JSON request
+				elif format == 'json':
+					return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
+							   			'count': row['count__sum']} for row in counts]),
+		                                 mimetype="application/json")
 
-		# JSON request
-		elif format == 'json':
-                    return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
-							   'count': row['count__sum']} for row in counts]),
-                                        mimetype="application/json")
+				# CSV download (there is no template for this)
+				elif format == 'csv':
+				    response = HttpResponse(mimetype='text/csv')
+				    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
+				    writer = csv.writer(response)
+				    writer.writerow(['date','count'])
+				    for item in counts:
+						writer.writerow([item['date'],item['count']])
+				    return response
 
-		# CSV download (there is no template for this)
-		elif format == 'csv':
-		    response = HttpResponse(mimetype='text/csv')
-		    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
-		    writer = csv.writer(response)
-		    writer.writerow(['date','count'])
-		    for item in counts:
-			writer.writerow([item['date'],item['count']])
-		    return response
+		    # Just a standard HTML response is being requested
+			else:
+				return render_to_response(
+				   'webmaster/total.html',
+				   {
+				    'title':'Total Webmaster Crawl Error Trends',
+				    'domain':domain,
+				    'counts':counts,
+				    'db_link':db_link,
+				    'json_link':json_link,
+				    'csv_link':csv_link
+				   },
+				   context_instance=RequestContext(request)
+				)
 
-	    # Just a standard HTML response is being requested
-	    else:
-		return render_to_response(
-		   'webmaster/total.html',
-		   {
-		    'title':'Quinico | Total Webmaster Crawl Error Trends',
-		    'domain':domain,
-		    'counts':counts,
-		    'db_link':db_link,
-		    'json_link':json_link,
-		    'csv_link':csv_link
-		   },
-		   context_instance=RequestContext(request)
-		)
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: TotalCrawlErrorTrendForm: %s' % form.errors)
 
-    # Ok, its not a form submit
+    # Its not a form submit, or its a failed form submit
     else:
         form = TotalCrawlErrorTrendForm()
 
@@ -477,7 +503,7 @@ def total(request):
     return render_to_response(
        'webmaster/total_index.html',
        {
-          'title':'Quinico | Webmaster Total Crawl Error Trends',
+          'title':'Webmaster Total Crawl Error Trends',
           'domains':domains,
           'date_from':date_from,
           'date_to':date_to
@@ -496,44 +522,42 @@ def summary(request):
     # the form and provide the results
 
     if request.GET:
-        # Check the form elements
-        form = CrawlErrorSummaryForm(request.GET)
+		# Check the form elements
+		form = CrawlErrorSummaryForm(request.GET)
 
-        if form.is_valid():
-            # Obtain the cleaned data
-            domain = form.cleaned_data['domain']
-            date = form.cleaned_data['date']
+		if form.is_valid():
+			# Obtain the cleaned data
+			domain = form.cleaned_data['domain']
+			date = form.cleaned_data['date']
 
-            # Create forward/backward links for navigation
-            date_back = (date - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-            back_link = '/webmaster/summary?domain=%s&date=%s' % (domain,date_back)
-            date_forward = (date + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-            forward_link = '/webmaster/summary?domain=%s&date=%s' % (domain,date_forward)
+			# Create forward/backward links for navigation
+			date_back = (date - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+			back_link = '/webmaster/summary?domain=%s&date=%s' % (domain,date_back)
+			date_forward = (date + datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+			forward_link = '/webmaster/summary?domain=%s&date=%s' % (domain,date_forward)
             
-	    # Obtain the errors and counts for this domain
-	    errors = Crawl_Error.objects.filter(domain__domain=domain,
-						date=date
-					       ).values('type__type','count')
+		# Obtain the errors and counts for this domain
+		errors = Crawl_Error.objects.filter(domain__domain=domain,date=date).values('type__type','count')
 
-	    # If there is no data, let the user know
-	    if not errors:
-	       message = 'The report returned no data.  Domain:%s, Date:%s' % (domain,date)
-	       return render_to_response(
-		   'misc/generic.html',
-		   {
-		    'title':'Quinico | No Data',
-                    'back_link':back_link,
-                    'forward_link':forward_link,
-		    'message':message
-		   },
-		   context_instance=RequestContext(request)
-		)
+		# If there is no data, let the user know
+		if not errors:
+			message = 'The report returned no data.  Domain:%s, Date:%s' % (domain,date)
+			return render_to_response(
+			   'misc/generic.html',
+			   {
+			    'title':'No Data',
+	            'back_link':back_link,
+	            'forward_link':forward_link,
+			    'message':message
+			   },
+			   context_instance=RequestContext(request)
+			)
 
-	    # Print the page
-	    return render_to_response(
+		# Print the page
+		return render_to_response(
 	       'webmaster/summary.html',
 	       {
-		  'title':'Quinico | Webmaster Crawl Error Summary',
+		  'title':'Webmaster Crawl Error Summary',
 		  'date':date,
 		  'domain':domain,
                   'back_link':back_link,
@@ -557,7 +581,7 @@ def summary(request):
     return render_to_response(
        'webmaster/summary_index.html',
        {
-          'title':'Quinico | Webmaster Crawl Error Summary',
+          'title':'Webmaster Crawl Error Summary',
           'form':form,
           'domains':domains,
           'date':date
@@ -579,6 +603,32 @@ def messages(request):
 
 		page = form.cleaned_data['page']
 		filter = form.cleaned_data['filter']
+		format = form.cleaned_data['format']
+		color = form.cleaned_data['color']
+		size = form.cleaned_data['size']
+
+		# Construct the dashboard link
+		db_link = 'http://%s/webmaster/messages?format=db' % request.META['HTTP_HOST']
+
+		# If this is a dashboard request, get the desired messages and return, otherwise, process with the paginator/filter
+		# If this is a request for special formatting, give it, otherwise give everything
+		if format:
+			# Dashboard request
+			if format == 'db':
+				# Give the newest 2 messages
+				messages = Messages.objects.values('date_discovered','subject').order_by('-date_discovered')[:5]
+
+			    # Print the page
+				return render_to_response(
+			       'webmaster/messages-db.html',
+			       {
+			          'title':'Webmaster Messages',
+			          'messages':messages,
+			          'color':color,
+	          		  'size':size
+			       },
+			       context_instance=RequestContext(request)
+			    )
 
 		# Obtain the possible statuses for filtering
 		statuses = Message_Status.objects.values('id','status').order_by('status')
@@ -600,7 +650,7 @@ def messages(request):
 		except EmptyPage:
 			# If page is out of range (e.g. 9999), deliver last page of results.
 			msgs = paginator.page(paginator.num_pages)
-
+    
 	    # Print the page
 		return render_to_response(
 	       'webmaster/messages.html',
@@ -608,7 +658,8 @@ def messages(request):
 	          'title':'Webmaster Messages',
 	          'statuses':statuses,
 	          'msgs':msgs,
-	          'filter':filter
+	          'filter':filter,
+	          'db_link':db_link
 	       },
 	       context_instance=RequestContext(request)
 	    )
@@ -669,7 +720,7 @@ def message_update(request):
 			return render_to_response(
 		       'webmaster/message_detail.html',
 		       {
-		          'title':'Quinico | Webmaster Message Detail',
+		          'title':'Webmaster Message Detail',
 		          'form':form,
 		          'id':id,
 		          'detail':detail,
@@ -711,7 +762,7 @@ def message_detail(request):
 	return render_to_response(
        'webmaster/message_detail.html',
        {
-          'title':'Quinico | Webmaster Message Detail',
+          'title':'Webmaster Message Detail',
           'id':id,
           'detail':detail,
           'statuses':statuses,

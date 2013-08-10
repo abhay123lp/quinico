@@ -83,7 +83,7 @@ def report(request):
             return render_to_response(
                'error/error.html',               
                {
-                  'title':'Quinico | Error',
+                  'title':'Error',
                   'error':'File not found:%s/%s' % (report_path,report)
                },
                context_instance=RequestContext(request)
@@ -185,7 +185,7 @@ def report(request):
         return render_to_response(
            'pagespeed/report.html',               
            {
-              'title':'Quinico | Pagespeed Report',
+              'title':'Pagespeed Report',
               'date':date,
               'domain':domain[0]['domain_id__domain'],
               'url':domain[0]['url_id__url'],
@@ -201,7 +201,7 @@ def report(request):
         return render_to_response(
            'error/error.html',               
            {
-              'title':'Quinico | Error',
+              'title':'Error',
               'error':'Invalid request',
            },
            context_instance=RequestContext(request)
@@ -314,7 +314,7 @@ def trends(request):
                     return render_to_response(
             		    'pagespeed/trends-db.html',
             		      {
-                			'title':'Quinico | Pagespeed Trends',
+                			'title':'Pagespeed Trends',
                 			'domain':domain,
                 			'strategy':strategy,
                 			'url':u_unenc,
@@ -343,7 +343,7 @@ def trends(request):
         		return render_to_response(
         		   'pagespeed/trends.html',
         		   {
-        		      'title':'Quinico | Pagespeed Trends',
+        		      'title':'Pagespeed Trends',
         		      'domain':domain,
         		      'strategy':strategy,
         		      'url':u_unenc,
@@ -393,7 +393,7 @@ def trends(request):
     return render_to_response(
        'pagespeed/trends_index.html',               
        {
-          'title':'Quinico | Pagespeed Trends',
+          'title':'Pagespeed Trends',
           'form':form,
           'domains':domains,
           'url_dict':url_dict,
@@ -450,7 +450,7 @@ def breakdown(request):
                     return render_to_response(
                         'misc/generic.html',
                         {
-                         'title':'Quinico | No Data',
+                         'title':'No Data',
                          'back_link':back_link,
                          'forward_link':forward_link,
                          'message':message
@@ -515,7 +515,7 @@ def breakdown(request):
                return render_to_response(
                    'misc/generic.html',
                    {
-                    'title':'Quinico | No Data',
+                    'title':'No Data',
                     'back_link':back_link,
                     'forward_link':forward_link,
                     'message':message
@@ -576,7 +576,7 @@ def breakdown(request):
                     return render_to_response(
                         'pagespeed/breakdown-db2.html',
         		      {
-            			'title':'Quinico | Pagespeed Breakdown',
+            			'title':'Pagespeed Breakdown',
             			'date':date,
             			'domain':domain,
             			'url':u_unenc,
@@ -594,7 +594,7 @@ def breakdown(request):
                 return render_to_response(
         		   'pagespeed/breakdown.html',
         		   {
-        		      'title':'Quinico | Pagespeed Breakdown',
+        		      'title':'Pagespeed Breakdown',
                       'back_link':back_link,
                       'forward_link':forward_link,
         		      'date':date,
@@ -641,7 +641,7 @@ def breakdown(request):
     return render_to_response(
        'pagespeed/breakdown_index.html',
        {
-          'title':'Quinico | Pagespeed Breakdown',
+          'title':'Pagespeed Breakdown',
           'form':form,
           'domains':domains,
           'url_dict':url_dict,
@@ -744,7 +744,7 @@ def history(request):
         		return render_to_response(
         		   'pagespeed/history.html',
         		   {
-        		      'title':'Quinico | Pagespeed History',
+        		      'title':'Pagespeed History',
         		      'domain':domain,
         		      'strategy':strategy,
         		      'url':u_unenc,
@@ -791,7 +791,7 @@ def history(request):
     return render_to_response(
        'pagespeed/history_index.html',
        {
-          'title':'Quinico | Pagespeed History',
+          'title':'Pagespeed History',
           'domains':domains,
           'url_dict':url_dict,
           'date_from':date_from,

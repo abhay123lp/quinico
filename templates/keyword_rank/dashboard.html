@@ -25,15 +25,14 @@
 <script type="text/javascript">
 $(function () {
         
-        // Vulnerability Chart
         $('#graph').highcharts({
             chart: {
                 type: 'spline',
-                marginRight: 130,
-                marginBottom: 60
+                marginRight: 10,
+                marginBottom: 75
             },
             title: {
-                text: 'First Page Rankings',
+                text: 'Total First Page Rankings',
                 x: -20 //center
             },
             xAxis: {
@@ -64,12 +63,7 @@ $(function () {
                 },
             },
             legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'top',
-                x: -10,
-                y: 100,
-                borderWidth: 0
+                enabled: false
             },
             series: [{
                 name: 'Count',
@@ -93,8 +87,6 @@ $(function () {
         });
 });
 </script>
-<script type="text/javascript" src="/html/js/highcharts.js"></script>
-
 
 <div class="row">
   <div class="large-4 columns">
@@ -126,7 +118,7 @@ $(function () {
 
 
   <div class="large-4 columns large-offset-1 left">
-    <table class="index">
+    <table>
     <tr>
      <th colspan="4">
       Keyword Position Changes
@@ -178,47 +170,80 @@ $(function () {
     {% if sc_keyword == keyword %}
      
       {# match, so draw the chart #}
-      <script type="text/javascript">
-        google.load("visualization","1",{packages:["corechart"]});
-        google.setOnLoadCallback(drawChart);
-        function drawChart() {
-          var data = new google.visualization.DataTable();
-          data.addColumn('string','Date');
-          data.addColumn('number','Value');
-          data.addRows([
+        <script type="text/javascript">
+        $(function () {
+                
+                // Vulnerability Chart
+                $('#chart_div_{{keyword|urlencode|slugify|escapejs}}').highcharts({
+                    chart: {
+                        type: 'spline',
+                        marginRight: 10,
+                        marginBottom: 5
+                    },
+                    title: {
+                        text: null
+                    },
+                    xAxis: {
+                        categories: [
 
-          {% for item in data %}
-            {% if forloop.first %}
-              ['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
-            {% else %}
-             ,['{{item.date|date:"Y-m-d"}}',{{item.rank}}]
-            {% endif %}
-          {% endfor %}
+                        {% for item in data %}
+                          {% if forloop.last %}
+                            '{{item.date|date:"Y-m-d"}}'
+                          {% else %}
+                            '{{item.date|date:"Y-m-d"}}',
+                          {% endif %}
+                        {% endfor %}
 
-          ]);
+                        ],                      
+                        labels: {
+                          enabled: false
+                        },
+                        lineWidth: 0,
+                        minorGridLineWidth: 0,
+                        lineColor: 'transparent',
+                        tickColor: 'transparent'
+                    },
+                    yAxis: {
+                        title: {
+                            text: null
+                        },
+                        labels: {
+                          enabled: false
+                        },
+                        gridLineColor: 'transparent'
+                    },
+                    legend: {
+                      enabled: false
+                    },
+                    series: [{
+                        name: 'rank',
+                        data: [
 
-          var options = {
-            'width':150,
-            'height':100,
-            'fontSize':10,
-            'lineWidth':1.5,
-            'backgroundColor':{'fill':'#EEEEEE'},
-            'hAxis':{textPosition:'none', gridlines:{count:0}},
-            'vAxis':{textPosition:'none', gridlines:{count:0}, minValue:'0', maxValue:'{{maxValue}}'},
-            'axisTitlesPosition':'none',
-            'series':{0:{color:'#1c94c4', visibleInLegend: false}},
-            'curveType':'function',
-            'enableInteractivity':true,
-            'pointSize':1
-          };
+                        {% for item in data %}
+                          {% if forloop.last %}
+                            {{item.rank}}
+                          {% else %}
+                            {{item.rank}},
+                          {% endif %}
+                        {% endfor %}
 
-          var chart = new google.visualization.LineChart(document.getElementById('chart_div_{{keyword}}'));
-          var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
-          formatter.format(data,1); 
-          chart.draw(data,options);
-        }
-      </script>
-      <div id="chart_div_{{keyword}}" style="width:150px; height:100px;"></div>
+                        ],
+                        color: '#1c94c4'
+                    }],
+                    plotOptions: {
+                      spline: {
+                        lineWidth: 1,
+                        marker: {
+                          radius: 2
+                        }
+
+                      }
+                    }
+                });
+        });
+        </script>
+
+      <div id="chart_div_{{keyword|urlencode|slugify|escapejs}}" class="graph_container" style="width:150px; height:100px;"></div>
 
     {% endif %}
    {% endfor %}
@@ -230,6 +255,7 @@ $(function () {
 
 
 
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
 {% endblock %}
 
 

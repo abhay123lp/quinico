@@ -78,3 +78,15 @@ def redirect(request):
     else:
         return{'next':'/'}
 
+
+def reports(request):
+
+    # See if we are disabling any reports (just load all configs)
+    reports = {}
+    reports['disable_pagespeed'] = int(Config.objects.filter(config_name='disable_pagespeed_reports').values('config_value')[0]['config_value'])
+    reports['disable_keyword_rank'] = int(Config.objects.filter(config_name='disable_keyword_rank_reports').values('config_value')[0]['config_value'])
+    reports['disable_webpagetest'] = int(Config.objects.filter(config_name='disable_webpagetest_reports').values('config_value')[0]['config_value'])
+    reports['disable_seomoz'] = int(Config.objects.filter(config_name='disable_seomoz_reports').values('config_value')[0]['config_value'])
+    reports['disable_webmaster'] = int(Config.objects.filter(config_name='disable_webmaster_reports').values('config_value')[0]['config_value'])
+
+    return{'reports':reports}

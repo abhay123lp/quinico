@@ -88,7 +88,7 @@ def api(request):
 		return render_to_response(
 		 'error/error.html',
 		  {
-		    'title':'Quinico | Error',
+		    'title':'Error',
 		    'error':e
 		  },
 		  context_instance=RequestContext(request)
@@ -125,7 +125,7 @@ def api(request):
 	       return render_to_response(
 		   'misc/generic.html',
 		   {
-		    'title':'Quinico | No Data',
+		    'title':'No Data',
 		    'message':message
 		   },
 		   context_instance=RequestContext(request)
@@ -162,7 +162,7 @@ def api(request):
 		return render_to_response(
 		 'status/api.html',
 		  {
-		   'title':'Quinico | API Status',
+		   'title':'API Status',
 		   'api':friendly_names[api],
 		   'data':data,
 		   'csv_link':csv_link
@@ -187,7 +187,7 @@ def api(request):
     return render_to_response(
        'status/api_index.html',
        {
-          'title':'Quinico | API Status',
+          'title':'API Status',
           'form':form,
           'date_from':date_from,
           'date_to':date_to

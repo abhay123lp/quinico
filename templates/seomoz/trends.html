@@ -25,11 +25,10 @@
 <script type="text/javascript">
 $(function () {
         
-        // Vulnerability Chart
         $('#graph').highcharts({
             chart: {
                 type: 'spline',
-                marginRight: 130,
+                marginRight: 50,
                 marginBottom: 50
             },
             title: {
@@ -49,16 +48,11 @@ $(function () {
             },
             yAxis: {
                 title: {
-                    text: '{{metric_name}}'
+                    text: null
                 },
             },
             legend: {
-                layout: 'vertical',
-                align: 'right',
-                verticalAlign: 'top',
-                x: -10,
-                y: 100,
-                borderWidth: 0
+                enabled: false
             },
             series: [{
                 name: 'Average',

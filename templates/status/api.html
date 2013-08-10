@@ -21,58 +21,94 @@
 
 {% block content %}
 
+<script type="text/javascript">
+$(function () {
+        
+        // Vulnerability Chart
+        $('#graph').highcharts({
+            chart: {
+                type: 'spline',
+                marginRight: 130,
+                marginBottom: 50
+            },
+            title: {
+                text: '{{api}}',
+                x: -20 //center
+            },
+            xAxis: {
+                categories: [
 
-<b><i>API STATUS REPORT</i></b>
+                  {% for row in data %}
+                    {% if forloop.last %}
+                       '{{row.0|date:"m-d"}}'
+                    {% else %}
+                       '{{row.0|date:"m-d"}}',
+                    {% endif %}
+                  {% endfor %}
 
-<br>
-<br>
+                ],
+                labels: {
+                    rotation: 290,
+                    y: 20
+                }
+            },
+            yAxis: {
+                title: {
+                    text: 'Count'
+                },
+            },
+            legend: {
+                layout: 'vertical',
+                align: 'right',
+                verticalAlign: 'top',
+                x: -10,
+                y: 100,
+                borderWidth: 0
+            },
+            series: [{
+                name: 'API Calls',
+                data: [
 
-<table border="0">
- <tr>
-  <td align="center">
-   <script type="text/javascript">
-    google.load("visualization","1",{packages:["corechart"]});
-    google.setOnLoadCallback(drawChart);
-    function drawChart() {
-        var data = new google.visualization.DataTable();
-        data.addColumn('string','Date');
-        data.addColumn('number','API Calls');
-        data.addColumn('number','API Errors');
-        data.addRows([
+                  {% for row in data %}
+                    {% if forloop.last %}
+                       {{row.1}}
+                    {% else %}
+                       {{row.1}},
+                    {% endif %}
+                  {% endfor %}
 
-        {% for row in data %}
-          {% if forloop.first %}
-             ['{{row.0|date:"Y-m-d"}}',{{row.1}},{{row.2}}]
-          {% else %}
-             ,['{{row.0|date:"Y-m-d"}}',{{row.1}},{{row.2}}]
-          {% endif %}
-        {% endfor %}
+                ],
+                color: 'blue'
+            }, {
+                name: 'API Errors',
+                data: [
 
-        ]);
+                  {% for row in data %}
+                    {% if forloop.last %}
+                       {{row.2}}
+                    {% else %}
+                       {{row.2}},
+                    {% endif %}
+                  {% endfor %}
 
-        var options = {
-            'title':'{{api}}',
-            'titleTextStyle':{fontSize:'14'},
-            'width':750,
-            'height':375,
-            'fontSize':10,
-            'legend':{position:'bottom'},
-            'hAxis':{textPosition:'out'},
-            'hAxis':{slantedText:'true'},
-            'curveType':'function',
-            'pointSize':3
-        };
+                ],
+                color: 'red'
+            }]
+        });
+});
 
-        var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
-        var formatter = new google.visualization.NumberFormat({fractionDigits:'0'});
-        formatter.format(data,1);
-        chart.draw(data,options);
-    }
-   </script>
-   <div id="chart_div" style="width:750px; height:375px;"></div>
-   </td>
-  </tr>
-</table>
+
+
+       
+</script>
+<script type="text/javascript" src="/html/js/highcharts.js"></script>
+
+
+<div class="row">
+  <div class="large-12 columns">
+    <div id="graph" class="graph_container"></div>
+    <br><br>
+  </div>
+</div>
 
 {% endblock %}
-

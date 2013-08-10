@@ -52,6 +52,25 @@ class QueriesForm(forms.Form):
     domain = forms.CharField()
     keyword = forms.CharField()
     format = FormatField()
+    width = forms.IntegerField(required=False)
+    height = forms.IntegerField(required=False)
+    step = forms.IntegerField(required=False)
+
+    # Override the form clean method - there is some special logic to validate 
+
+    def clean(self):
+        cleaned_data = super(QueriesForm, self).clean()
+        width = cleaned_data.get('width')
+        height = cleaned_data.get('height')
+
+        if width and not height:
+            self._errors["height"] = self.error_class(['You must define a width and height'])
+        
+        if height and not width:
+            self._errors["width"] = self.error_class(['You must define a width and height'])
+        
+        # Return the full collection of cleaned data
+        return cleaned_data
 
 
 class CrawlErrorTrendForm(forms.Form):
@@ -62,6 +81,25 @@ class CrawlErrorTrendForm(forms.Form):
     domain = forms.CharField()
     error_id = forms.IntegerField()
     format = FormatField()
+    width = forms.IntegerField(required=False)
+    height = forms.IntegerField(required=False)
+    step = forms.IntegerField(required=False)
+
+    # Override the form clean method - there is some special logic to validate 
+
+    def clean(self):
+        cleaned_data = super(CrawlErrorTrendForm, self).clean()
+        width = cleaned_data.get('width')
+        height = cleaned_data.get('height')
+
+        if width and not height:
+            self._errors["height"] = self.error_class(['You must define a width and height'])
+        
+        if height and not width:
+            self._errors["width"] = self.error_class(['You must define a width and height'])
+        
+        # Return the full collection of cleaned data
+        return cleaned_data
 
 
 class TotalCrawlErrorTrendForm(forms.Form):
@@ -71,6 +109,25 @@ class TotalCrawlErrorTrendForm(forms.Form):
     date_to = forms.DateField(required=False,input_formats=['%Y-%m-%d'])
     domain = forms.CharField()
     format = FormatField()
+    width = forms.IntegerField(required=False)
+    height = forms.IntegerField(required=False)
+    step = forms.IntegerField(required=False)
+
+    # Override the form clean method - there is some special logic to validate 
+
+    def clean(self):
+        cleaned_data = super(TotalCrawlErrorTrendForm, self).clean()
+        width = cleaned_data.get('width')
+        height = cleaned_data.get('height')
+
+        if width and not height:
+            self._errors["height"] = self.error_class(['You must define a width and height'])
+        
+        if height and not width:
+            self._errors["width"] = self.error_class(['You must define a width and height'])
+        
+        # Return the full collection of cleaned data
+        return cleaned_data
 
 
 class CrawlErrorSummaryForm(forms.Form):
@@ -99,3 +156,6 @@ class MessageForm(forms.Form):
 
     page = forms.IntegerField(required=False)
     filter = forms.IntegerField(required=False)
+    format = FormatField() 
+    color = forms.CharField(required=False)
+    size = forms.IntegerField(required=False)   

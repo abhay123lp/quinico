@@ -22,7 +22,7 @@
 
 
 <head>
-<title>{{title}}</title>
+<title>Quinico | {{title}}</title>
 <meta http-equiv="Content-type" content="text/html; charset=utf-8" /> 
 
 
@@ -38,10 +38,9 @@
 <script type="text/javascript" src="/html/js/vendor/custom.modernizr.js"></script>
 <script type="text/javascript" src="/html/js/jquery-1.7.2.min.js"></script>
 <script type="text/javascript" src="/html/js/jquery-ui-1.8.22.custom.min.js"></script>
-<script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script>
 <script type="text/javascript" src="/html/js/responsive-tables.js"></script>
+<script type="text/javascript" src="/html/js/jquery.tablesorter.min.js"></script> 
 <script type="text/javascript" src="/html/js/quinico.js"></script>
-<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 
 </head>
 
@@ -80,7 +79,7 @@
       <li ><a href="/">Home</a></li>
 
       <li class="divider"></li>
-      <li ><a href="http://www.quinico.com">Docs</a></li>
+      <li ><a href="http://www.quinico.com">Documentation</a></li>
 
       <li class="divider"></li>
       <li class="has-dropdown"><a href="#">Dashboard</a>
@@ -98,6 +97,8 @@
               <li><a href="/status/api">API Counts</a></li>
             </ul>
           </li>
+          
+          {% if reports.disable_webmaster %}
           <li class="has-dropdown"><a href="#">Webmaster</a>
             <ul class="dropdown">
               <li><a href="/webmaster/trends">Crawl Error Trends</a></li>
@@ -107,20 +108,29 @@
               <li><a href="/webmaster/messages">Webmaster Messages</a></li>
             </ul>
           </li>
+          {% endif %}
+          
+          {% if reports.disable_keyword_rank %}
           <li class="has-dropdown"><a href="#">Keywords</a>
             <ul class="dropdown">
               <li><a href="/keyword_rank/dashboard">Dashboard</a></li>
               <li><a href="/keyword_rank/trends">Trends</a></li>
             </ul>
           </li>
+          {% endif %}
+
+          {% if reports.seomoz %}
           <li class="has-dropdown"><a href="#">SEO</a>
             <ul class="dropdown">
               <li><a href="/seomoz/dashboard">Dashboard</a></li>
               <li><a href="/seomoz/trends">Trends</a></li>
             </ul>
           </li>
+          {% endif %}
+
           <li class="has-dropdown"><a href="#">Web Page</a>
             <ul class="dropdown">
+              {% if reports.disable_pagespeed %}
               <li class="has-dropdown"><a href="#">Optimization</a>
                 <ul class="dropdown">
                   <li><a href="/pagespeed/trends">Trends</a></li>
@@ -128,21 +138,50 @@
                   <li><a href="/pagespeed/breakdown">Breakdown</a></li>
                 </ul>
               <li>
+              {% endif %}
+
+              {% if reports.disable_webpagetest %}
               <li class="has-dropdown"><a href="#">Performance</a>
                 <ul class="dropdown">
                   <li><a href="/webpagetest/trends">Trends</a></li>
                   <li><a href="/webpagetest/history">History</a></li>
                 </ul>
               <li>
+              {% endif %}
             </ul>
           </li>
         </ul>
       </li>
 
+      {% if user.is_authenticated %}
       <li class="divider"></li>
+      <li class="has-dropdown"><a href="#">Admin</a>
+        <ul class="dropdown">
+          <li><a href="/admin">DJango Admin</a></li>
+        </ul>
+      </li>
+      {% endif %}
+
+      <li class="divider"></li>
+    </ul>
+    
+
+
+    <!-- Title Area -->
+    <ul>
+     <li class="name hide-for-small">
+      <a href="#"><i>{ {{title}} }</i></a>
+     </li>
+    </ul>
 
   </section>
 </nav>
+
+<div class="row left">
+  <div class="large-12 large-centered columns">
+    <div id="help" class="help" style="display:none;">{% autoescape off %}{{help_blurb}}{% endautoescape %}</div>
+  </div>
+</div>
 
 <div class="row left">
   <div class="large-6 columns">
@@ -201,8 +240,6 @@
   </div>
 </div>
 
-<div id="help" class="help" style="display:none;">{% autoescape off %}{{help_blurb}}{% endautoescape %}</div>
-
 <script>
   document.write('<script src=' +
   ('__proto__' in {} ? '/html/js/vendor/zepto' : '/html/js/vendor/jquery') +
@@ -224,7 +261,7 @@
   <script src="/html/js/foundation/foundation.topbar.js"></script>
   <script>
   $(document).foundation();
-  </script>
+</script>
 
 </body>
 </html>

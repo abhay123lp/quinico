@@ -61,7 +61,7 @@
      <tr>
       <td>Domain</td>
       <td>
-       <select class="standard" name="domain" id="domain" onChange="updateDropdown(this.name,this.form.name,this.form.keyword.name,'kw')">
+       <select name="domain" id="domain" onChange="updateDropdown(this.name,this.form.name,this.form.keyword.name,'kw')">
        {% for domain in list %}
            <option value="{{domain}}">{{domain}}</option>
        {% endfor %}
@@ -72,7 +72,7 @@
      <tr>
       <td>Keyword</td>
       <td>
-       <select class="standard" name="keyword" id="keyword">
+       <select name="keyword" id="keyword">
        </select>
       </td>
      </tr>
@@ -80,7 +80,7 @@
      <tr>
       <td>Gl</td>
       <td>
-       <select class="standard" name="gl" id="gl">
+       <select name="gl" id="gl">
        {% for item in gl_list %}
            <option value="{{item.gl}}">{{item.gl}}</option>
        {% endfor %}
@@ -91,7 +91,7 @@
      <tr>
       <td>Googlehost</td>
       <td>
-       <select class="standard" name="googlehost" id="googlehost">
+       <select name="googlehost" id="googlehost">
        {% for item in googlehost_list %}
            <option value="{{item.googlehost}}">{{item.googlehost}}</option>
        {% endfor %}

@@ -121,7 +121,7 @@ def trends(request):
                     return render_to_response(
                      'seomoz/trends-db.html',
                       {
-                        'title':'Quinico | SEO Trends',
+                        'title':'SEO Trends',
                         'url':url,
                         'metric_name':metric_details[0]['column_description'],
                         'trends':trends,
@@ -148,7 +148,7 @@ def trends(request):
                 return render_to_response(
                  'seomoz/trends.html',
                   {
-                    'title':'Quinico | SEO Trends',
+                    'title':'SEO Trends',
                     'url':url,
                     'metric_name':metric_details[0]['column_description'],
                     'metric_represent':metric_details[0]['represent'],
@@ -190,7 +190,7 @@ def trends(request):
     return render_to_response(
        'seomoz/trends_index.html',
        {
-          'title':'Quinico | SEO Trends',
+          'title':'SEO Trends',
           'account_type':account_type,
           'descriptions':descriptions,
           'form':form,
@@ -272,7 +272,7 @@ def dashboard(request):
                 return render_to_response(
                  'seomoz/dashboard.html',
                   {
-                    'title':'Quinico | SEO Dashboard',
+                    'title':'SEO Dashboard',
                     'date':date,
                     'account_type':account_type,
                     'url':url,
@@ -301,7 +301,7 @@ def dashboard(request):
         return render_to_response(
          'error/nodata.html',
           {
-            'title':'Quinico | No Data',
+            'title':'No Data',
             'type':'seomoz'
           },
           context_instance=RequestContext(request)
@@ -311,7 +311,7 @@ def dashboard(request):
     return render_to_response(
        'seomoz/dashboard_index.html',
        {
-          'title':'Quinico | SEO Dashboard',
+          'title':'SEO Dashboard',
           'form':form,
           'list':list,
           'today':today,
