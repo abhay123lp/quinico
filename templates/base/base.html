@@ -98,7 +98,7 @@
             </ul>
           </li>
           
-          {% if reports.disable_webmaster %}
+          {% if not reports.disable_webmaster %}
           <li class="has-dropdown"><a href="#">Webmaster</a>
             <ul class="dropdown">
               <li><a href="/webmaster/trends">Crawl Error Trends</a></li>
@@ -110,7 +110,7 @@
           </li>
           {% endif %}
           
-          {% if reports.disable_keyword_rank %}
+          {% if not reports.disable_keyword_rank %}
           <li class="has-dropdown"><a href="#">Keywords</a>
             <ul class="dropdown">
               <li><a href="/keyword_rank/dashboard">Dashboard</a></li>
@@ -119,7 +119,7 @@
           </li>
           {% endif %}
 
-          {% if reports.seomoz %}
+          {% if not reports.seomoz %}
           <li class="has-dropdown"><a href="#">SEO</a>
             <ul class="dropdown">
               <li><a href="/seomoz/dashboard">Dashboard</a></li>
@@ -130,7 +130,7 @@
 
           <li class="has-dropdown"><a href="#">Web Page</a>
             <ul class="dropdown">
-              {% if reports.disable_pagespeed %}
+              {% if not reports.disable_pagespeed %}
               <li class="has-dropdown"><a href="#">Optimization</a>
                 <ul class="dropdown">
                   <li><a href="/pagespeed/trends">Trends</a></li>
@@ -140,7 +140,7 @@
               <li>
               {% endif %}
 
-              {% if reports.disable_webpagetest %}
+              {% if not reports.disable_webpagetest %}
               <li class="has-dropdown"><a href="#">Performance</a>
                 <ul class="dropdown">
                   <li><a href="/webpagetest/trends">Trends</a></li>
