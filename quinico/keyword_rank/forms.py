@@ -101,9 +101,7 @@ class KeywordTrendForm(forms.Form):
 class KeywordDashboardForm(forms.Form):
     """Form for querying the Keyword Dashboard"""
 
-    domain = forms.CharField()
-    gl = forms.CharField()
-    googlehost = forms.CharField()
+    id = forms.IntegerField(required=True)
     format = FormatField()
     width = forms.IntegerField(required=False)
     height = forms.IntegerField(required=False)

@@ -296,19 +296,16 @@ def dashboard(request):
 
         if form.is_valid():
             # Obtain the cleaned data
-            domain = form.cleaned_data['domain']
+            id = form.cleaned_data['id']
             format = form.cleaned_data['format']
-            gl = form.cleaned_data['gl']
-            googlehost = form.cleaned_data['googlehost']
             width = form.cleaned_data['width']
             height = form.cleaned_data['height']
             step = form.cleaned_data['step']
 
     	    # Obtain all of the keywords for this domain, gl and googlehost
     	    # This will be the definitive source
-    	    keyword_list = Test.objects.filter(domain__domain=domain,
-                                               domain__gl=gl,
-                                               domain__googlehost=googlehost).values('keyword__keyword')
+    	    keyword_list = Test.objects.filter(domain__id=id).values('keyword__keyword')
+            print keyword_list
 
     	    # Setup an empty dictionary to hold the ranks, of the following form: {'keyword':[rank1,rank2,...]}
     	    ranks = {}
@@ -378,10 +375,9 @@ def dashboard(request):
                 updown_dates.append(current_date)
 
                 # Request all keywords and ranks for this date
-                ranks_date = Rank.objects.filter(domain__domain=domain,
-                                                 date=current_date,
-                                                 domain__gl=gl,
-                                                 domain__googlehost=googlehost).values('keyword__keyword','rank','url__url').order_by('keyword__keyword')
+                ranks_date = Rank.objects.filter(domain__id=id,
+                                                 date=current_date
+                                                ).values('keyword__keyword','rank','url__url').order_by('keyword__keyword')
 
                 # Look at each keyword and see if we have a result, otherwise set to 'n/a'
                 for k in keyword_list:
@@ -489,10 +485,7 @@ def dashboard(request):
             changes = sorted(changes.items(), reverse=True)
 
             # Obtain a count of all keywords
-            keyword_count = Test.objects.filter(domain__domain=domain,
-                                                domain__gl=gl,
-                                                domain__googlehost=googlehost
-                                               ).values('keyword__keyword').count()
+            keyword_count = Test.objects.filter(domain__id=id).values('keyword__keyword').count()
 
             # Obtain the keyword ranges for the small graphs for the past 30 days
             now = datetime.datetime.today()
@@ -509,32 +502,29 @@ def dashboard(request):
             headings.append('History')
             small_charts = {}
             # Obtain all the keywords first
-            sc_keywords = Test.objects.filter(domain__domain=domain,
-                                           domain__gl=gl,
-                                           domain__googlehost=googlehost
-                                          ).values('keyword__keyword')
+            sc_keywords = Test.objects.filter(domain__id=id).values('keyword__keyword')
 
             for keyword in sc_keywords:
-                sc_ranks = Rank.objects.filter(domain__domain=domain,
+                sc_ranks = Rank.objects.filter(domain__id=id,
                                             keyword__keyword=keyword['keyword__keyword'],
-                                            date__range=[date_from,date_to],
-                                            domain__gl=gl,
-                                            domain__googlehost=googlehost
+                                            date__range=[date_from,date_to]
                                             ).values('date','rank').order_by('date')
 
                 # Add this keyword range
                 small_charts[keyword['keyword__keyword']] = sc_ranks
 
-
             # Construct the dashboard, download and monitoring links
-            base_url = 'http://%s/keyword_rank/dashboard?domain' % (request.META['HTTP_HOST'])
-            db_link = '%s=%s&format=db&gl=%s&googlehost=%s' % (base_url,domain,gl,googlehost)
-            db_link1 = '%s=%s&format=db1&gl=%s&googlehost=%s' % (base_url,domain,gl,googlehost)
-            json_link1 = '%s=%s&format=json1&gl=%s&googlehost=%s' % (base_url,domain,gl,googlehost)
-            json_link2 = '%s=%s&format=json2&gl=%s&googlehost=%s' % (base_url,domain,gl,googlehost)
-            csv_link = '%s=%s&format=csv&gl=%s&googlehost=%s' % (base_url,domain,gl,googlehost)
+            base_url = 'http://%s/keyword_rank/dashboard?id' % (request.META['HTTP_HOST'])
+            db_link = '%s=%s&format=db' % (base_url,id)
+            db_link1 = '%s=%s&format=db1' % (base_url,id)
+            json_link1 = '%s=%s&format=json1' % (base_url,id)
+            json_link2 = '%s=%s&format=json2' % (base_url,id)
+            csv_link = '%s=%s&format=csv' % (base_url,id)
 
             # Print the page
+
+            # Obtain the domain, gl and googlehost
+            details = Domain.objects.filter(id=id).values('domain','gl','googlehost')
 
             # If this is a request for special formatting, give it, otherwise give everything
             if format: 
@@ -573,9 +563,9 @@ def dashboard(request):
                         'keyword_rank/dashboard-db.html',
                         {
                             'title':'Keyword Dashboard',
-                            'domain':domain,
-                            'gl':gl,
-                            'googlehost':googlehost,
+                            'domain':details[0]['domain'],
+                            'gl':details[0]['gl'],
+                            'googlehost':details[0]['googlehost'],
                             'first_page':first_page,
                             'dash_settings':dash_settings,
                             'width':width,
@@ -602,9 +592,9 @@ def dashboard(request):
                         'keyword_rank/dashboard-db1.html',
                         {
                             'title':'Keyword Dashboard',
-                            'domain':domain,
-                            'gl':gl,
-                            'googlehost':googlehost,
+                            'domain':details[0]['domain'],
+                            'gl':details[0]['gl'],
+                            'googlehost':details[0]['googlehost'],
                             'changes':changes,
                             'dash_settings':dash_settings
                         },
@@ -637,14 +627,14 @@ def dashboard(request):
                     'keyword_rank/dashboard.html',
                     {
                         'title':'Keyword Dashboard',
-                        'domain':domain,
+                        'domain':details[0]['domain'],
+                        'gl':details[0]['gl'],
+                        'googlehost':details[0]['googlehost'],
                         'headings':headings,
-                        'ranks':ranks,
+                        'ranks':sorted(ranks.iteritems()),
                         'first_page':first_page,
                         'changes':changes,
                         'keyword_count':keyword_count,
-                        'gl':gl,
-                        'googlehost':googlehost,
                         'small_charts':small_charts,
                         'maxValue':maxValue,
                         'db_link':db_link,
@@ -664,13 +654,7 @@ def dashboard(request):
         form = KeywordDashboardForm()
 
     # Obtain the domain list
-    list = Domain.objects.values('domain').order_by('domain').distinct()
-
-    # Obtain the gl list
-    gl_list = Domain.objects.values('gl').order_by('gl').distinct()
-
-    # Obtain the googlehost list
-    googlehost_list = Domain.objects.values('googlehost').order_by('googlehost').distinct()
+    list = Domain.objects.values('id','domain','gl','googlehost').order_by('domain')
 
     # Print the page
     return render_to_response(
@@ -678,9 +662,7 @@ def dashboard(request):
         {
             'title':'Keyword Dashboard',
             'form':form,
-            'list':list,
-            'gl_list':gl_list,
-            'googlehost_list':googlehost_list
+            'list':list
         },
         context_instance=RequestContext(request)
         )
