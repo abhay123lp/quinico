@@ -63,13 +63,15 @@ urlpatterns = patterns('',
     url(r'^dashboard/$',                'quinico.dashboard.views.index'),
     url(r'^dashboard/admin$',           'quinico.dashboard.views.admin'),
 
-    url(r'^webmaster/queries$',         'quinico.webmaster.views.queries'),
+    url(r'^webmaster/all$',             'quinico.webmaster.views.all'),
     url(r'^webmaster/messages$',        'quinico.webmaster.views.messages'),
     url(r'^webmaster/message_detail$',  'quinico.webmaster.views.message_detail'),
     url(r'^webmaster/message_delete$',  'quinico.webmaster.views.message_delete'),
     url(r'^webmaster/message_update$',  'quinico.webmaster.views.message_update'),
+    url(r'^webmaster/queries$',         'quinico.webmaster.views.queries'),
     url(r'^webmaster/summary$',         'quinico.webmaster.views.summary'),
     url(r'^webmaster/trends$',          'quinico.webmaster.views.trends'),
     url(r'^webmaster/total$',           'quinico.webmaster.views.total'),
+    
     url(r'^status/api$',                'quinico.status.views.api')
 )

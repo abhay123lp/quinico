@@ -1,0 +1,96 @@
+{% extends "base/base.html" %}
+
+{% comment %}
+
+ Copyright 2013 - Tom Alessi
+
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+
+     http://www.apache.org/licenses/LICENSE-2.0
+
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and 
+ limitations under the License.
+
+{% endcomment %}
+
+
+{% block content %}
+
+  <script>
+   // Date Pickers and Submit
+   $(function() {
+
+      //From Date
+      $("#date_from").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //To Date
+      $("#date_to").datepicker({dateFormat: 'yy-mm-dd'});
+
+      //Submit
+      $("#submit").button();
+   });
+  </script>
+
+  
+  <script>
+   // Submit
+   $(function() {
+
+      //Submit
+      $("#submit").button();
+   });
+  </script>
+
+
+
+   <form name="all_select" action="/webmaster/all" method="get">
+    <table class="index">
+
+     <tr>
+       <td>
+        Date from
+       </td>
+       <td>
+        <input name="date_from" id="date_from" type="text" value="{{date_from}}" placeholder="Enter date" class="date_box">
+       </td>
+     <tr>
+
+     <tr>
+       <td>
+        Date to
+       </td>
+       <td>
+        <input name="date_to" id="date_to" type="text" value="{{date_to}}" placeholder="Enter date" class="date_box">
+       </td>
+     <tr>
+
+     <tr>
+      <td></td>
+      <td>
+       <input class="submit-button" id="submit" type="submit" value="submit" style="width:75"/>
+      </td>
+     </tr>
+
+     {% if form.errors %}
+     <tr>
+      <td></td>
+      <td>
+       <div class="alert-box alert">
+         {% for key, value in form.errors.items %}
+           {{key}}:{{value}}
+         {% endfor %}
+       </div>
+      </td>
+     </tr>
+     {% endif %}
+
+    </table>
+   </form>
+
+
+{% endblock %}

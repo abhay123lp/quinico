@@ -46,6 +46,7 @@ from quinico.webmaster.models import Message_Update
 from quinico.webmaster.forms import QueriesForm
 from quinico.webmaster.forms import CrawlErrorTrendForm
 from quinico.webmaster.forms import TotalCrawlErrorTrendForm
+from quinico.webmaster.forms import AllCrawlErrorTrendForm
 from quinico.webmaster.forms import CrawlErrorSummaryForm
 from quinico.webmaster.forms import MessageUpdateForm
 from quinico.webmaster.forms import MessageDetailForm
@@ -291,7 +292,7 @@ def trends(request):
 				    return render_to_response(
 				     'webmaster/trends-db.html',
 				      {
-						'title':'Webmaster Crawl Error Trends',
+						'title':'Webmaster Crawl Error - Individual Trends',
 						'domain':domain,
 						'error_name':error_name,
 						'counts':counts,
@@ -324,7 +325,7 @@ def trends(request):
 				return render_to_response(
 				   'webmaster/trends.html',
 				   {
-				    'title':'Webmaster Crawl Error Trends',
+				    'title':'Webmaster Crawl Error - Individual Trends',
 				    'domain':domain,
 				    'error_name':error_name,
 				    'counts':counts,
@@ -362,7 +363,7 @@ def trends(request):
     return render_to_response(
        'webmaster/trends_index.html',
        {
-          'title':'Webmaster Crawl Error Trends',
+          'title':'Webmaster Crawl Error - Individual Trends',
           'form':form,
           'domains':domains,
           'error_types':error_types,
@@ -438,7 +439,7 @@ def total(request):
 				    return render_to_response(
 				     'webmaster/total-db.html',
 				      {
-						'title':'Total Webmaster Crawl Error Trends',
+						'title':'Webmaster Crawl Error - Domain Total',
 						'domain':domain,
 						'counts':counts,
 						'dash_settings':dash_settings,
@@ -470,7 +471,7 @@ def total(request):
 				return render_to_response(
 				   'webmaster/total.html',
 				   {
-				    'title':'Total Webmaster Crawl Error Trends',
+				    'title':'Webmaster Crawl Error - Domain Total',
 				    'domain':domain,
 				    'counts':counts,
 				    'db_link':db_link,
@@ -504,8 +505,140 @@ def total(request):
     return render_to_response(
        'webmaster/total_index.html',
        {
-          'title':'Webmaster Total Crawl Error Trends',
+          'title':'Webmaster Crawl Error - Domain Total',
           'domains':domains,
+          'date_from':date_from,
+          'date_to':date_to
+       },
+       context_instance=RequestContext(request)
+    )
+
+
+def all(request):
+    """Webmaster All Crawl Error Trends View (so, everything)
+
+    """
+
+    # If request.GET is empty, show the index, otherwise validate
+    # the form and provide the results
+
+    if request.GET:
+        # Check the form elements
+        form = AllCrawlErrorTrendForm(request.GET)
+
+        if form.is_valid():
+			# Obtain the cleaned data
+			date_to = form.cleaned_data['date_to']
+			date_from = form.cleaned_data['date_from']
+			format = form.cleaned_data['format']
+			width = form.cleaned_data['width']
+			height = form.cleaned_data['height']
+			step = form.cleaned_data['step']
+
+			# If the from or to dates are missing, set them b/c this is probably
+			# an API or DB request (just give the last 30 days of data)
+			if not date_to or not date_from:
+				now = datetime.datetime.today()
+				date_to = now.strftime("%Y-%m-%d")
+
+				# Move back 30 days
+				then = datetime.timedelta(days=30)
+				date_from = now - then
+				date_from = date_from.strftime("%Y-%m-%d")
+			
+			# Obtain the error counts for this domain and error type
+			counts = Crawl_Error.objects.filter(date__range=[date_from,date_to]
+						       				   ).values('date').annotate(Sum('count')).order_by('date')
+
+			# Construct the dashboard, download and monitoring links
+			base_url = 'http://%s/webmaster/all?' % request.META['HTTP_HOST']
+			db_link = '%sformat=db' % (base_url)
+			json_link = '%sformat=json' % (base_url)
+			csv_link = '%sdate_from=%s&date_to=%s&format=csv' % (base_url,date_from,date_to)
+
+		    # Print the page
+
+			# If this is a request for special formatting, give it, otherwise give everything
+			if format:
+				# Dashboard request
+				if format == 'db':
+				    # If the user is authenticated and has a preference for size, set it
+				    dash_settings = None
+				    if request.user.is_authenticated():
+						# Obtain the user's dashboard settings
+						dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+
+				    if not dash_settings:
+						# Give the default
+						dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+		                              	  'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+		                              	  'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+
+				    return render_to_response(
+				     'webmaster/all-db.html',
+				      {
+						'title':'Webmaster Crawl Error Trends - All',
+						'counts':counts,
+						'dash_settings':dash_settings,
+			            'width':width,
+			            'height':height,
+			            'step':step
+				      },
+				      context_instance=RequestContext(request)
+				    )
+
+				# JSON request
+				elif format == 'json':
+					return HttpResponse(simplejson.dumps([{'date': row['date'].strftime("%Y-%m-%d"),
+							   			'count': row['count__sum']} for row in counts]),
+		                                 mimetype="application/json")
+
+				# CSV download (there is no template for this)
+				elif format == 'csv':
+				    response = HttpResponse(mimetype='text/csv')
+				    response['Content-Disposition'] = 'attachment;filename=quinico_data.csv'
+				    writer = csv.writer(response)
+				    writer.writerow(['date','count'])
+				    for item in counts:
+						writer.writerow([item['date'],item['count']])
+				    return response
+
+		    # Just a standard HTML response is being requested
+			else:
+				return render_to_response(
+				   'webmaster/all.html',
+				   {
+				    'title':'Webmaster Crawl Error Trends - All',
+				    'counts':counts,
+				    'db_link':db_link,
+				    'json_link':json_link,
+				    'csv_link':csv_link
+				   },
+				   context_instance=RequestContext(request)
+				)
+
+        else:
+            # Invalid form submit
+            logger.error('Invalid form: AllCrawlErrorTrendForm: %s' % form.errors)
+
+    # Its not a form submit, or its a failed form submit
+    else:
+        form = AllCrawlErrorTrendForm()
+
+    # Obtain the current date for the to date field
+    now = datetime.datetime.today()
+    date_to = now.strftime("%Y-%m-%d")
+
+    # Move back 30 days
+    then = datetime.timedelta(days=30)
+    date_from = now - then
+    date_from = date_from.strftime("%Y-%m-%d")
+
+    # Print the page
+    return render_to_response(
+       'webmaster/all_index.html',
+       {
+          'title':'Webmaster Crawl Error Trends - All',
           'date_from':date_from,
           'date_to':date_to
        },
@@ -558,7 +691,7 @@ def summary(request):
 		return render_to_response(
 	       'webmaster/summary.html',
 	       {
-		  'title':'Webmaster Crawl Error Summary',
+		  'title':'Webmaster Crawl Error - Daily Summary',
 		  'date':date,
 		  'domain':domain,
                   'back_link':back_link,
@@ -582,7 +715,7 @@ def summary(request):
     return render_to_response(
        'webmaster/summary_index.html',
        {
-          'title':'Webmaster Crawl Error Summary',
+          'title':'Webmaster Crawl Error - Daily Summary',
           'form':form,
           'domains':domains,
           'date':date
