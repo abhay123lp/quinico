@@ -524,6 +524,7 @@ def dashboard(request):
             base_url = 'http://%s/keyword_rank/dashboard?id' % (request.META['HTTP_HOST'])
             db_link = '%s=%s&format=db' % (base_url,id)
             db_link1 = '%s=%s&format=db1' % (base_url,id)
+            db_link2 = '%s=%s&format=db2' % (base_url,id)
             json_link1 = '%s=%s&format=json1' % (base_url,id)
             json_link2 = '%s=%s&format=json2' % (base_url,id)
             csv_link = '%s=%s&format=csv' % (base_url,id)
@@ -608,6 +609,33 @@ def dashboard(request):
                         context_instance=RequestContext(request)
                     )
 
+                elif format == 'db2': 
+                    # If the user is authenticated and has a preference for size, set it
+                    dash_settings = None
+                    if request.user.is_authenticated():
+                        # Obtain the user's dashboard settings
+                        dash_settings = Dash_Settings.objects.filter(user__username=request.user.username)
+
+                    if not dash_settings:
+                        # Give the default
+                        dash_settings = [{'width':Config.objects.filter(config_name='dashboard_width').values('config_value')[0]['config_value'],
+                                          'height':Config.objects.filter(config_name='dashboard_height').values('config_value')[0]['config_value'],
+                                          'font':Config.objects.filter(config_name='dashboard_font').values('config_value')[0]['config_value']}]
+
+                    return render_to_response(
+                        'keyword_rank/dashboard-db2.html',
+                        {
+                            'title':'Keyword Dashboard',
+                            'domain':details[0]['domain'],
+                            'gl':details[0]['gl'],
+                            'googlehost':details[0]['googlehost'],
+                            'first_page':first_page,
+                            'changes':changes,
+                            'dash_settings':dash_settings
+                        },
+                        context_instance=RequestContext(request)
+                    )
+
                 # CSV download (there is no template for this)
                 elif format == 'csv':
                     response = HttpResponse(mimetype='text/csv')
@@ -646,6 +674,7 @@ def dashboard(request):
                         'maxValue':maxValue,
                         'db_link':db_link,
                         'db_link1':db_link1,
+                        'db_link2':db_link2,
                         'json_link1':json_link1,
                         'json_link2':json_link2,
                         'csv_link':csv_link
