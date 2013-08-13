@@ -50,6 +50,7 @@ from quinico.webmaster.forms import CrawlErrorSummaryForm
 from quinico.webmaster.forms import MessageUpdateForm
 from quinico.webmaster.forms import MessageDetailForm
 from quinico.webmaster.forms import MessageForm
+from quinico.webmaster.forms import MessageDeleteForm
 from quinico.dashboard.models import Dash_Settings
 
 
@@ -770,4 +771,34 @@ def message_detail(request):
        },
        context_instance=RequestContext(request)
     )
+
+@login_required
+@staff_member_required
+def message_delete(request):
+	"""Delete Webmaster Messages
+	
+	"""
+
+	form = MessageDeleteForm(request.GET)
     
+	# Check the params
+	if form.is_valid():
+		# Obtain the cleaned data
+		id = form.cleaned_data['id']
+
+		# Delete the message	
+		Messages.objects.filter(id=id).delete()
+
+		# Redirect back to the messages detail view
+		return HttpResponseRedirect('/webmaster/messages')
+    
+	# Invalid params
+	else:
+		logger.error('Invalid Form: %s' % 'MessageDeleteForm')
+		
+	# If a request made it this far, its a bad one, send back
+	# to the messages view
+	return HttpResponseRedirect('/webmaster/messages')
+    
+	
+

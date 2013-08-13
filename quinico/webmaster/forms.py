@@ -158,4 +158,11 @@ class MessageForm(forms.Form):
     filter = forms.IntegerField(required=False)
     format = FormatField() 
     color = forms.CharField(required=False)
-    size = forms.IntegerField(required=False)   
+    size = forms.IntegerField(required=False)  
+
+
+class MessageDeleteForm(forms.Form):
+    """Form for deleting messages"""
+
+    id = forms.IntegerField(required=True)
+   

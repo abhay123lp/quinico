@@ -372,7 +372,9 @@ def dashboard(request):
 
                 # Add the formatted date to our headings
                 headings.append(current_date)
+                logger.debug('Headings is now: %s' % headings)
                 updown_dates.append(current_date)
+                logger.debug('Updown_dates is now: %s' % updown_dates)
 
                 # Request all keywords and ranks for this date
                 ranks_date = Rank.objects.filter(domain__id=id,
@@ -427,9 +429,13 @@ def dashboard(request):
 
             for keyword in ranks:
 
+                logger.debug('Processing new keyword')
+
                 # Skip the last one since we don't have a previous one to compare it to
                 # Also note that the first entry in the ranks array is the url so need to account for that
                 for day in range(len(ranks[keyword]) - 2):
+                    logger.debug('Keyword Ranks for day: %s' % ranks[keyword])
+                    logger.debug('Processing data for day: %s' % day)
 
                     up = 0    # Improved
                     down = 0  # Declined
@@ -475,6 +481,7 @@ def dashboard(request):
 
                     # Add to our list
                     if not updown_dates[day + 1] in changes:
+                        logger.debug('Adding %s to changes dict' % updown_dates[day + 1])
                         changes[updown_dates[day + 1]] = {'up':0,'down':0,'unch':0}
 
                     changes[updown_dates[day + 1]]['up'] += up

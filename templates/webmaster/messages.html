@@ -77,6 +77,7 @@
           <th>Subject</th>
           <th>Updates</th>
           <th>Status</th>
+          <th>Delete</th>
         </tr>
       </thead>
       <tbody>
@@ -88,6 +89,7 @@
           <td>{{message.subject}}</td>
           <td>{{message.num_updates}}</td>
           <td>{{message.status__status}}</td>
+          <td><a href="/webmaster/message_delete?id={{message.id}}"><img src="/html/images/trash.png"></a></td>
         </tr>
       {% endfor %}
       </tbody>
