@@ -26,6 +26,9 @@
 $(function () {
         
         $('#graph').highcharts({
+            credits: {
+              enabled: false
+            },
             chart: {
                 type: 'spline',
                 marginRight: 10,
@@ -175,6 +178,9 @@ $(function () {
                 
                 // Vulnerability Chart
                 $('#chart_div_{{keyword|urlencode|slugify|escapejs}}').highcharts({
+                    credits: {
+                      enabled: false
+                    },
                     chart: {
                         type: 'spline',
                         marginRight: 10,
