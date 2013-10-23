@@ -109,9 +109,5 @@ class Message_Update(models.Model):
 class Message_Pattern(models.Model):
     """Webmaster Message Patterns that will trigger actions"""
 
-    domain = models.ForeignKey(Domain)
-    pattern = models.CharField(null=False, blank=False, max_length=100)
+    pattern = models.CharField(null=False, blank=False, max_length=250, unique=True)
     user = models.ForeignKey(User)    
-
-    class Meta:
-        unique_together = ['domain','pattern']

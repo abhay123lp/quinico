@@ -47,10 +47,10 @@ class Message_PatternAdmin(admin.ModelAdmin):
     """Domain admin class for manipulating message patterns"""
 
     fieldsets = [
-       ('Message Pattern',{'fields':['domain','pattern','user']})
+       ('Message Pattern',{'fields':['pattern','user']})
     ]
 
-    list_display = ('domain','pattern','user')
+    list_display = ('pattern','user')
 
 
 # Register the classes with the admin

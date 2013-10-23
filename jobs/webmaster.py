@@ -371,10 +371,10 @@ def obtain_messages_patterns(qs,qm):
     """
     
     sql = """
-           SELECT domain,pattern,user_id
+           SELECT pattern,user_id
            FROM webmaster_message_pattern
-           INNER JOIN webmaster_domain on webmaster_message_pattern.domain_id=webmaster_domain.id"""
-
+          """
+    
     (rowcount,rows) = qs.execute(sql)
     if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
@@ -445,12 +445,12 @@ def query_webmaster_api_messages(qs,ql,qm):
             # Check if the message should be assigned to someone based on patterns (the first match gets the assignment)
             assignee = None
             for pattern in patterns:
-                # The subject needs to match both the domain and the pattern to be assigned
-                logger.debug('Checking message against the following pattern: domain(%s) and pattern(%s)' % (pattern[0],pattern[1]))
-                # Check the domain and the pattern
-                if re.search(pattern[0],subject) and re.search(pattern[1],subject):
-                    logger.debug('Pattern matched, assigning message to user id: %s' % pattern[2])
-                    assignee = pattern[2]
+                # The subject needs to match the pattern to be assigned
+                logger.debug('Checking message against the following pattern: %s' % pattern[0])
+                # Check the subject against the pattern
+                if re.search(pattern[0],subject):
+                    logger.debug('Pattern matched, assigning message to user id: %s' % pattern[1])
+                    assignee = pattern[1]
                     message_status = 'urgent'
                     break
 
