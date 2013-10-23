@@ -23,8 +23,7 @@
 """
 
 
-from quinico.webmaster.models import Domain
-from quinico.webmaster.models import Message_Status
+from quinico.webmaster.models import Domain, Message_Status, Message_Pattern
 from django.contrib import admin
 
 
@@ -44,6 +43,17 @@ class Message_StatusAdmin(admin.ModelAdmin):
     ]
 
 
+class Message_PatternAdmin(admin.ModelAdmin):
+    """Domain admin class for manipulating message patterns"""
+
+    fieldsets = [
+       ('Message Pattern',{'fields':['domain','pattern','user']})
+    ]
+
+    list_display = ('domain','pattern','user')
+
+
 # Register the classes with the admin
 admin.site.register(Domain,DomainAdmin)
 admin.site.register(Message_Status,Message_StatusAdmin)
+admin.site.register(Message_Pattern,Message_PatternAdmin)

@@ -31,7 +31,6 @@
     });
 </script>
 
-
 <div class="row">
   <div class="large-4 columns">
   	<span class="navigation">
@@ -46,6 +45,13 @@
 <div class="row">
   <div class="large-12 columns">
   	<b>Subject:</b> {{detail.0.subject}}
+	<br><br>
+  </div>
+</div>
+
+<div class="row">
+  <div class="large-12 columns">
+  	<b>Assigned to:</b> {% if detail.0.assignee__first_name and detail.0.assignee__last_name %}{{detail.0.assignee__first_name}} {{detail.0.assignee__last_name}}{% else %}UNASSIGNED{% endif %}
 	<br><br>
   </div>
 </div>
@@ -73,6 +79,18 @@
 	              <option value="{{status.id}}" selected="true">{{status.status}}</option>
 	            {% else %}
 	              <option value="{{status.id}}" >{{status.status}}</option>
+	            {% endif %}
+		      {% endfor %}
+	        </select>
+      	  </label>
+    	  <label>Assignee:
+	        <select name="assignee" class="assignee">
+	       	  <option value="" selected="true">--</option>
+	          {% for user in users %}
+	            {% if user.id == detail.0.assignee__id %}
+	              <option value="{{user.id}}" selected="true">{{user.first_name}} {{user.last_name}}</option>
+	            {% else %}
+	              <option value="{{user.id}}">{{user.first_name}} {{user.last_name}}</option>
 	            {% endif %}
 		      {% endfor %}
 	        </select>

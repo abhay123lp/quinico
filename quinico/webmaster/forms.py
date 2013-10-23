@@ -174,8 +174,9 @@ class MessageUpdateForm(forms.Form):
     """Form for updating details of a Google Webmaster message"""
 
     id = forms.IntegerField(required=True)
-    update = forms.CharField(required=True)
-    status = forms.IntegerField(required=True)
+    update = forms.CharField(required=False)
+    status = forms.IntegerField(required=False)
+    assignee = forms.IntegerField(required=False)
 
 
 class MessageForm(forms.Form):

@@ -127,6 +127,9 @@ div.graph_container {
 select.status {
    width: 250px
 }
+select.assignee {
+   width: 250px
+}
 
 
 

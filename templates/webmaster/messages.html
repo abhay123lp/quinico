@@ -77,6 +77,7 @@
           <th>Subject</th>
           <th>Updates</th>
           <th>Status</th>
+          <th>Assigned To</th>
           <th>Delete</th>
         </tr>
       </thead>
@@ -89,6 +90,12 @@
           <td>{{message.subject}}</td>
           <td>{{message.num_updates}}</td>
           <td>{{message.status__status}}</td>
+          <td>{% if message.assignee__first_name and message.assignee__last_name %}
+                {{message.assignee__first_name}} {{message.assignee__last_name}}
+              {% else %}
+                UNASSIGNED
+              {% endif %}
+          </td>
           <td><a href="/webmaster/message_delete?id={{message.id}}"><img src="/html/images/trash.png"></a></td>
         </tr>
       {% endfor %}

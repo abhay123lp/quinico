@@ -35,6 +35,7 @@ from django.shortcuts import render_to_response
 from django.template import RequestContext
 from django.db.models import Sum, Count
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.core.mail import send_mail
 from quinico.main.models import Config
 from quinico.webmaster.models import Domain
 from quinico.webmaster.models import Crawl_Error
@@ -770,9 +771,9 @@ def messages(request):
 		# We'll show these in pages but first select them all
 		# If there is no filter or filter is empty, select everything, otherwise filter
 		if filter:
-			message_list = Messages.objects.filter(status_id=filter).values('id','date','date_discovered','subject','status__status').annotate(num_updates=Count('message_update')).order_by('-date_discovered')
+			message_list = Messages.objects.filter(status_id=filter).values('id','date','date_discovered','subject','status__status','assignee__first_name','assignee__last_name').annotate(num_updates=Count('message_update')).order_by('-date_discovered')
 		else:
-			message_list = Messages.objects.values('id','date','date_discovered','subject','status__status').annotate(num_updates=Count('message_update')).order_by('-date_discovered')
+			message_list = Messages.objects.values('id','date','date_discovered','subject','status__status','assignee__first_name','assignee__last_name').annotate(num_updates=Count('message_update')).order_by('-date_discovered')
 
 		paginator = Paginator(message_list, 20) # Show 20 messages per page
 		    
@@ -822,15 +823,30 @@ def message_update(request):
 			id = form.cleaned_data['id']
 			update = form.cleaned_data['update']
 			status = form.cleaned_data['status']
+			assignee = form.cleaned_data['assignee']
 
 			# Get the user's ID
 			user_id = User.objects.filter(username=request.user.username).values('id')[0]['id']
 			
-			# Add the update
-			Message_Update(message_id=id,user_id=user_id,update=update).save()
+			# Add the update, if there is one
+			if update:
+				Message_Update(message_id=id,user_id=user_id,update=update).save()
 			
-			# Update the message status
-			Messages.objects.filter(id=id).update(status=status)
+			# Update the message status, if provided
+			if status:
+				Messages.objects.filter(id=id).update(status=status)
+
+			# Update the assignment, if provided
+			if assignee:
+				Messages.objects.filter(id=id).update(assignee=assignee)
+
+				# Send an email to the assignee about this update
+				subject = Messages.objects.filter(id=id).values('subject')[0]['subject']
+				url = 'http://%s/webmaster/message_detail?id=%s' % (request.META['HTTP_HOST'],id)
+				email_address = User.objects.filter(id=assignee).values('email')[0]['email']
+				if email_address:
+					m = 'The following Google webmaster message is assigned to you and has been updated:\n\nMessage Subject: %s.\nMessage URL: %s' % (subject,url)
+					send_mail('Quinico: Google Webmaster Message Update', m, settings.SMTP_URGENT_MESSAGES,[email_address], fail_silently=True)
 
 			# Send them to the message detail page with the updated data
 			return HttpResponseRedirect('/webmaster/message_detail?id=%s' % id)
@@ -887,10 +903,12 @@ def message_detail(request):
 	else:
 		logger.error('Invalid Form: %s' % 'MessageDetailForm')
 		return HttpResponseRedirect('/webmaster/messages')
-    	
-	detail = Messages.objects.filter(id=id).values('subject','body','status__status')
+    
+    # Obtain all of the details
+	detail = Messages.objects.filter(id=id).values('subject','body','status__status','assignee__id','assignee__first_name','assignee__last_name')
 	statuses = Message_Status.objects.values('id','status').order_by('status')
 	updates = Message_Update.objects.filter(message_id=id).values('date','user_id__first_name','user_id__last_name','update')
+	users = User.objects.values('id','first_name','last_name')
 
 	# Print the page
 	return render_to_response(
@@ -900,7 +918,8 @@ def message_detail(request):
           'id':id,
           'detail':detail,
           'statuses':statuses,
-          'updates':updates
+          'updates':updates,
+          'users':users
        },
        context_instance=RequestContext(request)
     )

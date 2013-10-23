@@ -85,14 +85,16 @@ class Message_Status(models.Model):
     def __unicode__(self):
         return self.status
 
+
 class Messages(models.Model):
     """Webmaster Messages"""
 
-    date = models.DateTimeField(null=False,blank=False)
-    date_discovered = models.DateTimeField(null=False,blank=False)
-    subject = models.CharField(max_length=500)
-    body = models.CharField(max_length=8000)
-    status = models.ForeignKey(Message_Status,null=True)
+    date = models.DateTimeField(null=False, blank=False)
+    date_discovered = models.DateTimeField(null=False, blank=False)
+    subject = models.CharField(max_length=500, null=False, blank=False)
+    body = models.CharField(max_length=8000, null=False, blank=False)
+    status = models.ForeignKey(Message_Status, null=True, blank=True)
+    assignee = models.ForeignKey(User, null=True, blank=True)
 
 
 class Message_Update(models.Model):
@@ -102,4 +104,14 @@ class Message_Update(models.Model):
     message = models.ForeignKey(Messages)
     user = models.ForeignKey(User)
     update = models.CharField(max_length=2000)
-    
+
+
+class Message_Pattern(models.Model):
+    """Webmaster Message Patterns that will trigger actions"""
+
+    domain = models.ForeignKey(Domain)
+    pattern = models.CharField(null=False, blank=False, max_length=100)
+    user = models.ForeignKey(User)    
+
+    class Meta:
+        unique_together = ['domain','pattern']

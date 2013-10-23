@@ -27,6 +27,7 @@
 import os
 import re
 import csv
+import pytz
 import logging
 import urllib
 import urllib2
@@ -41,6 +42,7 @@ import requests
 from xml.dom import minidom
 from optparse import OptionParser
 from django.conf import settings
+from django.core.mail import send_mail
 from qclasses import qemail
 from qclasses import qsql
 from qclasses import qlib
@@ -327,11 +329,65 @@ def auth_webmaster(ql):
         auth_key = match.group(1)
 
 
+def send_urgent_messages(qs,ql,qm):
+    """
+    If there are any messages in the DB that are marked as urgent, acquire them
+    and send out a status message
+    """
+
+    sql = """
+        SELECT subject,date,date_discovered,first_name,last_name
+        FROM webmaster_messages
+        INNER JOIN auth_user on webmaster_messages.assignee_id=auth_user.id
+        """
+
+    (rowcount,rows) = qs.execute(sql)
+    if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+        qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
+
+    # Compose the message
+    if rows:
+        m = 'The following Google Webmaster messages are currently in urgent state:\n\n'
+
+        # Dates are in UTC
+        tz = pytz.timezone('Etc/UTC')
+
+        for row in rows:
+            m += '---\n'
+            m += 'Subject: %s\nDate Discovered: %s\nDate Added: %s\nAssigned to: %s %s\n\n' % (row[0],
+                                                                                               tz.localize(row[1]).astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S"),
+                                                                                               tz.localize(row[2]).astimezone(pytz.timezone(settings.TIME_ZONE)).strftime("%Y-%m-%d %H:%M:%S"),
+                                                                                               row[3],
+                                                                                               row[4]
+                                                                                              )
+
+        send_mail('Quinico: Google Webmaster Urgent Messages', m, settings.SMTP_SENDER, [settings.SMTP_URGENT_MESSAGES], fail_silently=True)
+
+
+def obtain_messages_patterns(qs,qm):
+    """
+    Obtain the Webmaster patterns that we want to match against so that 
+    certain high priority messages can be assigned for follow-up
+    """
+    
+    sql = """
+           SELECT domain,pattern,user_id
+           FROM webmaster_message_pattern
+           INNER JOIN webmaster_domain on webmaster_message_pattern.domain_id=webmaster_domain.id"""
+
+    (rowcount,rows) = qs.execute(sql)
+    if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+        qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
+
+    # return the data
+    return rows
+
+
 def query_webmaster_api_messages(qs,ql,qm):
     """
     Query the Google Webmaster for any messages
     These queries are not domain specific as Google does not store
-    them that way
+    them that way and the 'test' directive does not apply here
     """
 
     url = 'https://www.google.com/webmasters/tools/feeds/messages/'
@@ -362,7 +418,11 @@ def query_webmaster_api_messages(qs,ql,qm):
 
     # Obtain the XML from the response
     xml = minidom.parseString(response)
-    
+
+    # Obtain the list of patterns
+    logger.debug('Obtaining messages patterns')
+    patterns = obtain_messages_patterns(qs,qm)
+
     # Parse each message and add it to the queue, if it is unread
     for entry in xml.getElementsByTagNameNS(ATOM_NS, u'entry'):
             
@@ -378,6 +438,22 @@ def query_webmaster_api_messages(qs,ql,qm):
         # in webmaster
         if read != 'true':
 
+            # All messages will start with status of unread, unless there is a pattern match, in which case they are
+            # marked as urgent
+            message_status = 'unread'
+
+            # Check if the message should be assigned to someone based on patterns (the first match gets the assignment)
+            assignee = None
+            for pattern in patterns:
+                # The subject needs to match both the domain and the pattern to be assigned
+                logger.debug('Checking message against the following pattern: domain(%s) and pattern(%s)' % (pattern[0],pattern[1]))
+                # Check the domain and the pattern
+                if re.search(pattern[0],subject) and re.search(pattern[1],subject):
+                    logger.debug('Pattern matched, assigning message to user id: %s' % pattern[2])
+                    assignee = pattern[2]
+                    message_status = 'urgent'
+                    break
+
             # Convert the date to our server timezone and format
             date_now = ql.convert_datetime_now(settings.TIME_ZONE)
             date_discovered = ql.convert_datetime('Etc/UTC',date_discovered)
@@ -386,38 +462,40 @@ def query_webmaster_api_messages(qs,ql,qm):
             logger.debug('Adding webmaster message to database')
 
             sql = """
-                  INSERT INTO webmaster_messages (date,date_discovered,subject,body)
-                  VALUES (%s,%s,%s,%s)"""
+                  INSERT INTO webmaster_messages (date,date_discovered,subject,body,status_id,assignee_id)
+                  VALUES (%s,%s,%s,%s,
+                          (SELECT id from webmaster_message_status where status=%s),
+                          %s)"""
+            if not options.test:
+                qs.execute(sql,(date_now,date_discovered,subject,body,message_status,assignee))
+                # If there was an error adding to our database, then don't mark as read
+                # we'll try to get it next time
+                if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
+                    qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
+                else:
+                    # Mark as read
+                    read_url = 'https://www.google.com/webmasters/tools/feeds/messages/%s' % urllib.quote_plus(id)
+                    payload = """<?xml version="1.0" encoding="UTF-8"?>
+                                
+                                <atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:wt="http://schemas.google.com/webmasters/tools/2007">
+                                    <atom:id>%s</atom:id>
+                                    <atom:category scheme='http://schemas.google.com/g/2005#kind'
+                                        term='http://schemas.google.com/webmasters/tools/2007#message'>
+                                    </atom:category>
+                                    <wt:read>true</wt:read>
+                                </atom:entry>"""
 
-            qs.execute(sql,(date_now,date_discovered,subject,body))
-            # If there was an error adding to our database, then don't mark as read
-            # we'll try to get it next time
-            if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
-                qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
-            else:
-                # Mark as read
-                read_url = 'https://www.google.com/webmasters/tools/feeds/messages/%s' % urllib.quote_plus(id)
-                payload = """<?xml version="1.0" encoding="UTF-8"?>
-                            
-                            <atom:entry xmlns:atom='http://www.w3.org/2005/Atom' xmlns:wt="http://schemas.google.com/webmasters/tools/2007">
-                                <atom:id>%s</atom:id>
-                                <atom:category scheme='http://schemas.google.com/g/2005#kind'
-                                    term='http://schemas.google.com/webmasters/tools/2007#message'>
-                                </atom:category>
-                                <wt:read>true</wt:read>
-                            </atom:entry>"""
+                    r_read = requests.put(read_url, 
+                                          headers={
+                                                 'Content-Type': ' application/atom+xml',
+                                                 'Authorization': 'GoogleLogin auth=%s' % auth_key,
+                                                 'GData-Version': '2'
+                                                  },
+                                          data=payload % id,
+                                        )
 
-                r_read = requests.put(read_url, 
-                                      headers={
-                                             'Content-Type': ' application/atom+xml',
-                                             'Authorization': 'GoogleLogin auth=%s' % auth_key,
-                                             'GData-Version': '2'
-                                              },
-                                      data=payload % id,
-                                    )
-
-                logger.debug('Message read put status code: %s' % r_read.status_code)
-                logger.debug('Message read put response text: %s' % r_read.content)
+                    logger.debug('Message read put status code: %s' % r_read.status_code)
+                    logger.debug('Message read put response text: %s' % r_read.content)
 
         else:
             # Already read
@@ -681,7 +759,10 @@ def main():
     # All other Google data queries will be threaded so they can progress faster
     query_webmaster_api_messages(qs,ql,qm)
 
-    # Check all domains - we'll perform the tests serially so as not to overload the API
+    # Sent a summary email of all urgent messages
+    send_urgent_messages(qs,ql,qm)
+
+    # Check all domains for crawl errors - we'll perform the tests serially so as not to overload the API
     domains = obtain_domains(qs,qm)
 
     if not domains:
