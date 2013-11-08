@@ -339,9 +339,11 @@ def send_urgent_messages(qs,ql,qm):
         SELECT subject,date,date_discovered,first_name,last_name
         FROM webmaster_messages
         INNER JOIN auth_user on webmaster_messages.assignee_id=auth_user.id
+        INNER JOIN webmaster_message_status on webmaster_messages.status_id=webmaster_message_status.id
+        WHERE status=%s
         """
 
-    (rowcount,rows) = qs.execute(sql)
+    (rowcount,rows) = qs.execute(sql,('urgent'))
     if qs.status != 0 and settings.SMTP_NOTIFY_ERROR:
         qm.send('Error','Error executing sql statement:\n%s\n\nERROR:\n%s' % (sql,qs.emessage))
 
