@@ -174,14 +174,14 @@ def query_webpagetest(qs,qm,ql,t_id,domain,u,l):
 
     logger.info('Checking %s for url %s from location %s' % (domain,u,l))
 
-    test_url = 'http://www.webpagetest.org/runtest.php?f=json&runs=1&%s'
-    stat_url = 'http://www.webpagetest.org/testStatus.php?test=%s&f=json'
+    test_url = 'http://%s/runtest.php?f=json&runs=1&%s'
+    stat_url = 'http://%s/testStatus.php?test=%s&f=json'
 
     params = {}
     params['url'] = '%s%s' % (domain,u)
     params['location'] = l
 
-    url = test_url % urllib.urlencode(params) 
+    url = test_url % (settings.WPT_SERVER,urllib.urlencode(params)) 
 
     # Can't url_encode the key
     url += '&k=%s' % wpt_key
@@ -217,7 +217,7 @@ def query_webpagetest(qs,qm,ql,t_id,domain,u,l):
 
     # We'll check at periodic intervals to see if the test has completed and we'll check a maximum
     # number of times and then give up
-    status_url = stat_url % testId 
+    status_url = stat_url % (settings.WPT_SERVER,testId) 
     test_status_code = ''
     counter = 0
     while test_status_code != 200:
